@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.66"
+export EPMVERSION="3.64.67"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1095,7 +1095,8 @@ is_package_file()
 get_package_type()
 {
     local i
-    case $1 in
+    local _bn="$(basename "$1")"
+    case $_bn in
         *.deb)
             echo "deb"
             return
@@ -1125,7 +1126,7 @@ get_package_type()
             return
             ;;
         *.pkg.tar.*)
-            echo "pkg.tar.$(echo "$1" | sed -e 's|.*\.pkg\.tar\.||')"
+            echo "pkg.tar.$(echo "$_bn" | sed -e 's|.*\.pkg\.tar\.||')"
             return
             ;;
         *)
@@ -1134,7 +1135,7 @@ get_package_type()
                 return
             fi
             # print extension by default
-            basename "$1" | sed -e 's|.*\.||'
+            echo "$_bn" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
@@ -3342,7 +3343,8 @@ __epm_check_apt_db_days()
     # set ts to newest file ctime
     # shellcheck disable=SC2044
     for i in $(find $LISTS -name "*_$pkg*" 2>/dev/null); do
-        t=$(stat -c%Z "$i")
+        # skip entries that cannot be stat'ed (e.g. a stale eepm-fake_pkglist.)
+        t=$(stat -c%Z "$i" 2>/dev/null) || continue
         [ "$t" -gt "$ts" ] && ts=$t
     done
 
@@ -4108,6 +4110,12 @@ install_de()
     run_script "$de_name-postin" $de_name
     message "$de_name successfully installed."
 
+    # install a preferred display manager if none is installed yet
+    local preferred_dm="$(get_values "$de_name" "preferred_dm")"
+    if [ -n "$preferred_dm" ] ; then
+        ensure_dm $preferred_dm
+    fi
+
 }
 
 
@@ -4204,6 +4212,7 @@ epm_desktop_help()
 Examples:
   epm desktop install kde
   epm desktop install kde=small
+  epm desktop manager install lightdm
 '
 }
 
@@ -4253,11 +4262,293 @@ epm_desktop()
         list-installed)               # HELPCMD:             List installed desktop environments
             list_installed_des
             ;;
+        manager)                      # HELPCMD: <command>   Manage display managers (install, remove, list, ...)
+            epm_desktop_manager "$@"
+            ;;
         installed)
             is_de_installed "$1"
             ;;
         version)
             get_repo_version "$1"
+            ;;
+        *)
+            fatal 'Unknown option $cmd. Run with --help to get help'
+            ;;
+    esac
+}
+
+# File bin/epm-desktop-manager:
+
+
+
+KNOWN_DMS="lightdm sddm gdm greetd lxde-lxdm xdm ly slim"
+
+
+get_dm_json()
+{
+    local dm_name="$1"
+    realpath $CONFIGDIR/desktop-manager.d/$dm_name.json
+}
+
+get_dm_value()
+{
+    local dm_name="$1"
+    local key="$2"
+
+    get_json_value "$(get_dm_json $dm_name)" "$key"
+}
+
+
+get_dm_values()
+{
+    local dm_name="$1"
+    local key="$2"
+
+    get_json_values "$(get_dm_json $dm_name)" "$key" | xargs
+}
+
+
+check_dm_exists()
+{
+    local dm_name="$1"
+
+    [ -n "$dm_name" ] || fatal "Missed DM name."
+
+    local json="$(get_dm_json $dm_name)"
+
+    [ -s "$json" ] && return
+
+    fatal 'Manifest for $dm_name is not found.'
+}
+
+
+get_dm_main_package()
+{
+    local dm_name="$1"
+    local package="$(get_dm_values "$dm_name" "dependencies" | cut -d' ' -f1)"
+    [ -n "$package" ] || fatal 'Cannot get package name for $dm_name'
+    echo "$package"
+}
+
+
+get_dm_service()
+{
+    local dm_name="$1"
+    local service="$(get_dm_value "$dm_name" "service")"
+    [ -n "$service" ] || service="$dm_name"
+    echo "$service"
+}
+
+
+is_dm_installed()
+{
+    local dm_name="$1"
+
+    is_installed $(get_dm_main_package $dm_name)
+}
+
+
+any_dm_installed()
+{
+    local dm
+    for dm in $KNOWN_DMS ; do
+        is_installed "$dm" && return 0
+    done
+    return 1
+}
+
+
+install_dm()
+{
+    local dm_name="$1"
+    check_dm_exists "$dm_name"
+
+    if [ -z "$force" ] && is_dm_installed "$dm_name" ; then
+        message "$dm_name is already installed."
+        return 0
+    fi
+
+    local dependencies="$(get_dm_values "$dm_name" "dependencies")"
+    local service="$(get_dm_service "$dm_name")"
+
+    message "Installing $dm_name with dependencies: $dependencies"
+
+    if ! docmd epm install $dependencies ; then
+        fatal "Failed to install $dm_name."
+    fi
+
+    # Enable the DM so it becomes the active display-manager.service
+    # (each DM unit ships Alias=display-manager.service).
+    if serv "$service" exists 2>/dev/null ; then
+        docmd serv enable "$service"
+    else
+        warning "Service '$service' for $dm_name is not found, skip enabling."
+    fi
+
+    message "$dm_name successfully installed."
+}
+
+
+remove_dm()
+{
+    local dm_name="$1"
+    check_dm_exists "$dm_name"
+
+    if [ -z "$force" ] && ! is_dm_installed "$dm_name" ; then
+        message "$dm_name is not installed."
+        return 0
+    fi
+
+    local dependencies="$(get_dm_values "$dm_name" "dependencies")"
+
+    message "Removing $dm_name with dependencies: $dependencies"
+
+    if ! docmd epm remove $dependencies ; then
+        fatal "Failed to remove $dm_name."
+    fi
+
+    message "$dm_name successfully removed."
+}
+
+
+ensure_dm()
+{
+    [ $# -ge 1 ] || return 0
+
+    if any_dm_installed ; then
+        message "A display manager is already installed; skip preferred DM setup."
+        return 0
+    fi
+
+    local dm
+    for dm in "$@" ; do
+        if [ -s "$CONFIGDIR/desktop-manager.d/$dm.json" ] ; then
+            message "No display manager found; installing preferred '$dm'."
+            install_dm "$dm"
+            return $?
+        fi
+    done
+
+    warning "No supported display manager manifest found among candidates: $*"
+    return 0
+}
+
+
+get_dm_info()
+{
+    local dm_name="$1"
+    local json_flag="$2"
+
+    local installed="$(is_dm_installed "$dm_name" && echo 'true' || echo 'false')"
+
+    if [ -n "$json_flag" ]; then
+        local json="$(get_dm_json $dm_name)"
+        # "installed" is never the last key in the manifest, keep the trailing comma
+        cat "$json" | sed 's/"installed":.*/"installed": '$installed',/g'
+        return
+    fi
+
+    message "Information for $dm_name:
+    Name: $(get_dm_value $dm_name name)
+    Version: $(get_dm_value $dm_name version)
+    Installed: $installed
+    Service: $(get_dm_service $dm_name)
+    Description: $(get_dm_value $dm_name description)"
+}
+
+
+list_dms()
+{
+    local json_flag="$1"
+    if [ -z "$json_flag" ]; then
+        for dm in $CONFIGDIR/desktop-manager.d/*.json ; do
+            basename "$dm" .json || fatal
+        done
+        return
+    fi
+
+    echo '['
+    local first=1
+    for dm in $CONFIGDIR/desktop-manager.d/*.json ; do
+        if [ $first = 1 ] ; then
+            first=0
+        else
+            echo ','
+        fi
+
+        dm_name="$(basename $dm .json)" || fatal
+        get_dm_info "$dm_name" "$json_flag"
+
+    done
+    echo ']'
+}
+
+
+list_installed_dms()
+{
+    local dm dm_name
+    for dm in $CONFIGDIR/desktop-manager.d/*.json ; do
+        dm_name="$(basename "$dm" .json)" || fatal
+        is_dm_installed "$dm_name" && echo "$dm_name"
+    done
+}
+
+
+epm_desktop_manager_help()
+{
+    message 'Usage: epm desktop manager <command> [--json] [option]'
+            get_help HELPCMD $SHAREDIR/epm-desktop-manager
+    message '
+Examples:
+  epm desktop manager install lightdm
+  epm desktop manager info greetd
+'
+}
+
+
+epm_desktop_manager()
+{
+
+    local cmd="$1"
+    shift
+
+    local json_flag=''
+
+    case "$1" in
+        --json)
+            json_flag=1
+            shift
+            ;;
+    esac
+
+    case "$cmd" in
+        "-h"|"--help"|"help")        # HELPCMD: help
+            epm_desktop_manager_help
+            return
+            ;;
+        install)                     # HELPCMD: <dm_name>   Install a display manager
+            check_dm_exists "$1"
+            install_dm "$1"
+            ;;
+        remove)                      # HELPCMD: <dm_name>   Remove a display manager
+            check_dm_exists "$1"
+            remove_dm "$1"
+            ;;
+        info)                        # HELPCMD: <dm_name>   Get information about a display manager
+            check_dm_exists "$1"
+            get_dm_info "$1" $json_flag
+            ;;
+        list)                        # HELPCMD:             List all available display managers
+            list_dms $json_flag
+            ;;
+        list-installed)              # HELPCMD:             List installed display managers
+            list_installed_dms
+            ;;
+        installed)
+            is_dm_installed "$1"
+            ;;
+        any-installed)
+            any_dm_installed
             ;;
         *)
             fatal 'Unknown option $cmd. Run with --help to get help'
@@ -4430,6 +4721,7 @@ __epm_downgrade_do()
         local apt_force_yes="$force_yes"
         [ "$apt_force_yes" = "--force-yes" ] && apt_force_yes="--allow-unauthenticated --allow-downgrades --allow-change-held-packages"
         local APTOPTIONS="$(subst_option non_interactive -y) $apt_force_yes"
+        [ -n "$download_only" ] && APTOPTIONS="$APTOPTIONS -d"
         __epm_add_deb_apt_downgrade_preferences || return
         if [ -n "$pkg_filenames" ] ; then
             sudocmd apt-get $APTOPTIONS install $pkg_filenames
@@ -4441,16 +4733,16 @@ __epm_downgrade_do()
     yum-rpm)
         # can do update repobase automagically
         if [ -n "$pkg_filenames" ] ; then
-            sudocmd yum downgrade $pkg_filenames
+            sudocmd yum downgrade $(subst_option download_only --downloadonly) $pkg_filenames
         else
-            sudocmd yum distro-sync
+            sudocmd yum distro-sync $(subst_option download_only --downloadonly)
         fi
         ;;
     dnf-rpm|dnf5-rpm)
         if [ -n "$pkg_filenames" ] ; then
-            sudocmd dnf downgrade $pkg_filenames
+            sudocmd dnf downgrade $(subst_option download_only --downloadonly) $pkg_filenames
         else
-            sudocmd dnf distro-sync
+            sudocmd dnf distro-sync $(subst_option download_only --downloadonly)
         fi
         ;;
     urpm-rpm)
@@ -5162,82 +5454,6 @@ epm_filelist()
 
 }
 
-# File bin/epm-filter:
-
-
-epm_filter_help()
-{
-    message 'epm filter - filter package list by install status
-Usage: epm filter [options] [package(s)]
-
-If packages are not specified, reads from stdin.
-
-Options:
-'
-    get_help HELPOPT $SHAREDIR/epm-filter
-    message '
-Examples:
-    echo "bash coreutils nonexistent-pkg" | epm filter --installed
-    echo "bash coreutils nonexistent-pkg" | epm filter --not-installed
-    epm filter --installed bash coreutils nonexistent-pkg
-'
-}
-
-epm_filter()
-{
-    local option
-    local filter_type=""
-    local packages=""
-
-    while [ -n "$1" ] ; do
-        option="$1"
-        case "$option" in
-            -h|--help)           # HELPOPT: show this help
-                epm_filter_help
-                return
-                ;;
-            --installed)         # HELPOPT: filter only installed packages
-                filter_type="installed"
-                ;;
-            --not-installed)     # HELPOPT: filter only not installed packages
-                filter_type="not_installed"
-                ;;
-            -*)
-                fatal "Unknown option: $option"
-                ;;
-            *)
-                [ -n "$packages" ] && packages="$packages $option" || packages="$option"
-                ;;
-        esac
-        shift
-    done
-
-    if [ -z "$filter_type" ] ; then
-        fatal "Specify --installed or --not-installed option"
-    fi
-
-    # Read packages from stdin if not provided as arguments
-    if [ -z "$packages" ] ; then
-        case "$filter_type" in
-            installed)
-                __filter_pkglist_installed
-                ;;
-            not_installed)
-                __filter_pkglist_not_installed
-                ;;
-        esac
-    else
-        case "$filter_type" in
-            installed)
-                echo "$packages" | __filter_pkglist_installed
-                ;;
-            not_installed)
-                echo "$packages" | __filter_pkglist_not_installed
-                ;;
-        esac
-    fi
-}
-
 # File bin/epm-full_upgrade:
 
 epm_full_upgrade_help()
@@ -5407,6 +5623,29 @@ confirm_action()
         [ -n "$quiet" ] || echo
         docmd epm $dryrun clean
     fi
+}
+
+# File bin/epm-hedgehog:
+
+
+epm_hedgehog()
+{
+	local figlet docmd
+	epm assure figlet && figlet="figlet"
+
+	[ -n "$verbose" ] && docmd="docmd"
+	[ -n "$figlet" ] && $docmd $figlet "EPM"
+
+	cat <<'EOF'
+       ..::::::::.
+      :::::::::::::
+     /. `:::::::::::
+    o__,_::::::::::'
+   ~                  ~
+EOF
+
+	echo
+	echo 'Ёжик вышел из тумана. Пакеты доставлены.'
 }
 
 # File bin/epm-history:
@@ -6062,7 +6301,7 @@ __epm_check_packages_not_found()
 {
     local pkg
     for pkg in "$@" ; do
-        epm status --available "$pkg" </dev/null >/dev/null 2>&1 || return 0
+        epm status --valid "$pkg" </dev/null >/dev/null 2>&1 || return 0
     done
     return 1
 }
@@ -6126,7 +6365,7 @@ epm_install_names()
     warmup_hibase
 
     if [ -n "$dryrun" ] ; then
-        epm simulate "$@"
+        pkg_filenames="$*" epm_simulate
         return
     fi
 
@@ -6981,10 +7220,12 @@ apt_repo_after()
 prepare_task_packages()
 {
     # Sets global vars:
-    #   installlist  — final list of packages to install
-    #   unique_tasks — unique task names from args
+    #   installlist             — final list of packages to install
+    #   requested_task_packages — packages explicitly requested from a task
+    #   unique_tasks            — unique task names from args
 
     installlist=""
+    requested_task_packages=""
     unique_tasks=""
     local seen_tasks=""
     local task_packages=""
@@ -7006,6 +7247,7 @@ prepare_task_packages()
         # Add specific package or all task packages to install list
         if [ -n "$pkg" ]; then
             installlist="$installlist $pkg"
+            requested_task_packages="$requested_task_packages $pkg"
         else
             installlist="$installlist $task_packages"
         fi
@@ -7024,6 +7266,9 @@ epm_install_alt_tasks()
     else
         # hack: drop -devel packages to avoid package provided by multiple packages
         installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
+        # Keep packages explicitly requested as task/PACKAGE.  In particular,
+        # a task may be used to install a -devel subpackage.
+        installlist="$(estrlist union "$installlist $requested_task_packages")"
     fi
 
     # TODO: need we this option?
@@ -8001,73 +8246,6 @@ fi
 
 }
 
-# File bin/epm-list_extras:
-
-
-__epm_list_extras_compare()
-{
-
-    # List installed packages that are not available in any repository
-    # installed packages listed once, available packages listed twice (via sed p)
-    # uniq -u shows only unique lines (installed but not available)
-    {
-        (short=1 epm_packages) | sort -u
-        (direct='' short=1 epm_list_available) | sort -u | sed 'p'
-    } | sort | uniq -u
-}
-
-epm_list_extras()
-{
-
-if [ -n "$direct" ] ; then
-    __epm_list_extras_compare
-    return
-fi
-
-case $PMTYPE in
-    apt-rpm)
-        warmup_rpmbase
-        # use apt-scripts if available (faster and more accurate)
-        if [ -r /usr/share/apt/scripts/list-extras.lua ] ; then
-            docmd apt-cache list-extras
-        else
-            info "Install apt-scripts for faster results"
-            __epm_list_extras_compare
-        fi
-        ;;
-    apt-dpkg)
-        warmup_dpkgbase
-        # apt 2.0+ supports ?obsolete pattern
-        docmd apt list '?obsolete'
-        ;;
-    dnf-*|yum-*)
-        warmup_rpmbase
-        if [ -n "$short" ] ; then
-            docmd dnf list extras 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
-        else
-            docmd dnf list extras
-        fi
-        ;;
-    pacman)
-        # Foreign packages (installed but not in sync databases)
-        if [ -n "$short" ] ; then
-            docmd pacman -Qmq
-        else
-            docmd pacman -Qm
-        fi
-        ;;
-    zypper-rpm)
-        # List orphaned packages (no repository)
-        docmd zypper packages --orphaned
-        ;;
-    *)
-        # Universal fallback: compare installed vs available
-        __epm_list_extras_compare
-        ;;
-esac
-
-}
-
 # File bin/epm-list_installed:
 
 
@@ -8201,112 +8379,6 @@ case $PMTYPE in
 esac
 
 docmd $CMD | __fo_pfn "$@"
-
-}
-
-# File bin/epm-list_obsoletes:
-
-
-epm_list_obsoletes()
-{
-
-case $PMTYPE in
-    apt-rpm)
-        warmup_rpmbase
-        # List installed packages that are obsoleted by packages in repositories
-        # apt-cache show provides Obsoletes field
-        info "Checking for obsoleted packages..."
-        local installed
-        installed=$(short=1 epm_packages)
-        for pkg in $installed ; do
-            # Check if any available package obsoletes this one
-            if LC_ALL=C apt-cache showpkg "$pkg" 2>/dev/null | grep -q "^Reverse Provides:" ; then
-                # This is a simplified check; full implementation would parse Obsoletes
-                continue
-            fi
-        done
-        # TODO: implement proper Obsoletes checking for apt-rpm
-        warning "Obsoletes checking is not fully implemented for apt-rpm yet"
-        ;;
-    apt-dpkg)
-        warmup_dpkgbase
-        warning "Obsoletes checking is not implemented for apt-dpkg yet"
-        ;;
-    dnf-*|yum-*)
-        warmup_rpmbase
-        if [ -n "$short" ] ; then
-            docmd dnf list obsoletes 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
-        else
-            docmd dnf list obsoletes
-        fi
-        ;;
-    pacman)
-        # Pacman doesn't have a direct obsoletes concept
-        warning "Obsoletes concept is not applicable for pacman"
-        ;;
-    zypper)
-        # List packages that would be removed by distribution upgrade
-        docmd zypper packages --unneeded
-        ;;
-    *)
-        fatal 'Have no suitable query command for $PMTYPE'
-        ;;
-esac
-
-}
-
-# File bin/epm-list_recent:
-
-
-epm_list_recent()
-{
-
-case $PMTYPE in
-    apt-rpm)
-        warmup_rpmbase
-        # List packages recently added to repositories
-        # Version format: version@timestamp, extract timestamp and sort
-        info "Listing recently added packages..."
-        # Extract Package and Version lines, parse timestamp from Version@timestamp format
-        a= apt-cache dumpavail | awk '
-            /^Package:/ { pkg = $2 }
-            /^Version:/ {
-                if (match($2, /@([0-9]+)$/, arr)) {
-                    print arr[1], pkg
-                }
-            }
-        ' | sort -rn | head -100 | awk '{print $2}'
-        ;;
-    apt-dpkg)
-        warmup_dpkgbase
-        # Debian doesn't have build date in package metadata typically
-        warning "Recent packages listing is not well supported for apt-dpkg"
-        ;;
-    dnf-*|yum-*)
-        warmup_rpmbase
-        if [ -n "$short" ] ; then
-            docmd dnf list recent 2>/dev/null | tail -n +2 | sed -e "s|\..*||g"
-        else
-            docmd dnf list recent
-        fi
-        ;;
-    pacman)
-        # List recently updated packages in sync database
-        info "Listing recently updated packages..."
-        if [ -n "$short" ] ; then
-            docmd pacman -Sl | sort -k3 -rn | head -100 | awk '{print $2}'
-        else
-            docmd pacman -Sl | sort -k3 -rn | head -100
-        fi
-        ;;
-    zypper)
-        # Show recently added packages
-        docmd zypper packages --sort-by-repo
-        ;;
-    *)
-        fatal 'Have no suitable query command for $PMTYPE'
-        ;;
-esac
 
 }
 
@@ -8871,292 +8943,6 @@ case $PMTYPE in
         ;;
 esac
 
-}
-
-# File bin/epm-override:
-
-STATOVERRIDE_FILE=/var/lib/eepm/statoverride
-
-__epm_override_check_args()
-{
-    local group="$1"
-    local path="$2"
-
-    [ -n "$group" ] || { warning 'group is missing' ; return 1 ; }
-    [ -n "$path" ] || { warning 'path is missing' ; return 1 ; }
-
-    # check group exists
-    if ! getent group "$group" >/dev/null 2>&1 ; then
-        warning 'group $group does not exist. Create it first: groupadd $group'
-        return 1
-    fi
-
-    # check path is absolute
-    if ! echo "$path" | grep -q '^/' ; then
-        warning 'path $path must be absolute'
-        return 1
-    fi
-
-    # check file exists
-    if [ ! -e "$path" ] ; then
-        warning 'file $path does not exist'
-        return 1
-    fi
-
-    # check file is regular and executable
-    if [ ! -f "$path" ] || [ ! -x "$path" ] ; then
-        warning '$path is not an executable file'
-        return 1
-    fi
-
-    # check permissions are 755/750 or 4755/4750 (setuid)
-    local mode
-    mode=$(stat -c '%a' "$path" 2>/dev/null)
-    case "$mode" in
-        755|750|4755|4750)
-            ;;
-        *)
-            warning '$path has mode $mode, expected 755 or 4755. This command is for restricting regular binaries only.'
-            return 1
-            ;;
-    esac
-
-    return 0
-}
-
-__epm_override_apply_path()
-{
-    local group="$1"
-    local path="$2"
-
-    [ -e "$path" ] || return 0
-
-    # get current mode and preserve setuid bit
-    local mode newmode
-    mode=$(stat -c '%a' "$path" 2>/dev/null)
-    case "$mode" in
-        4755|4750) newmode=4750 ;;
-        *)         newmode=750 ;;
-    esac
-
-    sudocmd chown "root:$group" "$path" || return
-    sudocmd chmod "$newmode" "$path"
-}
-
-__epm_have_overrides()
-{
-    case $PMTYPE in
-        apt-dpkg|aptitude-dpkg)
-            # dpkg handles it automatically
-            return 1
-            ;;
-    esac
-    [ -s "$STATOVERRIDE_FILE" ]
-}
-
-__epm_override_apply_package()
-{
-    local pkg="$1"
-    local filelist
-
-    filelist="$(epm filelist "$pkg" 2>/dev/null)" || return 0
-
-    local group opath
-    while read -r group opath ; do
-        [ -n "$opath" ] || continue
-        # check if this path belongs to the package
-        if echo "$filelist" | grep -qx "$opath" ; then
-            info 'Applying override for $opath (root:$group)'
-            __epm_override_apply_path "$group" "$opath"
-        fi
-    done < "$STATOVERRIDE_FILE"
-}
-
-__epm_override_after_install()
-{
-    local names="$1"
-    local files="$2"
-
-    __epm_have_overrides || return 0
-
-    local pkg
-    # process package names
-    for pkg in $names ; do
-        __epm_override_apply_package "$pkg"
-    done
-
-    # process package files
-    local file
-    for file in $files ; do
-        pkg="$(epm query --short "$file" 2>/dev/null)"
-        [ -n "$pkg" ] && __epm_override_apply_package "$pkg"
-    done
-}
-
-__epm_override_add_internal()
-{
-    local group="$1"
-    local path="$2"
-
-    # create directory if needed
-    sudocmd mkdir -p "$(dirname "$STATOVERRIDE_FILE")" || return
-
-    # remove existing entry for this path
-    if [ -f "$STATOVERRIDE_FILE" ] ; then
-        sudocmd sed -i "\|^[^ ]* ${path}$|d" "$STATOVERRIDE_FILE"
-    fi
-
-    # add new entry
-    echo "$group $path" | sudorun tee -a "$STATOVERRIDE_FILE" >/dev/null
-
-    # apply immediately if file exists
-    __epm_override_apply_path "$group" "$path"
-}
-
-epm_override_add()
-{
-    local group="$1"
-    local path="$2"
-
-    __epm_override_check_args "$group" "$path" || return 1
-
-    # get current mode and calculate new mode preserving setuid
-    local mode newmode
-    mode=$(stat -c '%a' "$path" 2>/dev/null)
-    case "$mode" in
-        4755|4750) newmode=4750 ;;
-        *)         newmode=750 ;;
-    esac
-
-    case $PMTYPE in
-        apt-dpkg|aptitude-dpkg)
-            sudocmd dpkg-statoverride --update --add root "$group" "$newmode" "$path"
-            ;;
-        *)
-            __epm_override_add_internal "$group" "$path"
-            ;;
-    esac
-}
-
-epm_override_remove()
-{
-    local path="$1"
-
-    [ -n "$path" ] || fatal 'path is missing'
-
-    case $PMTYPE in
-        apt-dpkg|aptitude-dpkg)
-            sudocmd dpkg-statoverride --remove "$path"
-            ;;
-        *)
-            [ -f "$STATOVERRIDE_FILE" ] || { warning 'no overrides configured' ; return 1 ; }
-            if ! grep -q " ${path}$" "$STATOVERRIDE_FILE" ; then
-                warning 'no override for $path'
-                return 1
-            fi
-            sudocmd sed -i "\| ${path}$|d" "$STATOVERRIDE_FILE"
-            info 'Override for $path removed. Run epm reinstall <package> to restore original permissions.'
-            ;;
-    esac
-}
-
-epm_override_list()
-{
-    case $PMTYPE in
-        apt-dpkg|aptitude-dpkg)
-            docmd dpkg-statoverride --list "$@"
-            ;;
-        *)
-            if [ ! -s "$STATOVERRIDE_FILE" ] ; then
-                info 'No overrides configured'
-                return 0
-            fi
-            if [ -n "$1" ] ; then
-                grep " $1$" "$STATOVERRIDE_FILE" || info 'No override for $1'
-            else
-                cat "$STATOVERRIDE_FILE"
-            fi
-            ;;
-    esac
-}
-
-epm_override_apply()
-{
-    local path="$1"
-
-    case $PMTYPE in
-        apt-dpkg|aptitude-dpkg)
-            info 'dpkg applies overrides automatically during package installation'
-            return 0
-            ;;
-    esac
-
-    [ -s "$STATOVERRIDE_FILE" ] || { info 'No overrides configured' ; return 0 ; }
-
-    local group fpath
-    while read -r group fpath ; do
-        [ -n "$fpath" ] || continue
-        # if path specified, apply only for it
-        if [ -n "$path" ] ; then
-            [ "$fpath" = "$path" ] || continue
-        fi
-        if [ -e "$fpath" ] ; then
-            info 'Applying override for $fpath (root:$group)'
-            __epm_override_apply_path "$group" "$fpath"
-        else
-            warning '$fpath does not exist, skipping'
-        fi
-    done < "$STATOVERRIDE_FILE"
-}
-
-epm_override_help()
-{
-    message 'epm override - restrict application execution to a group
-
-This command restricts binary execution to users of a specific group
-by changing ownership to root:<group> and permissions to 750.
-Overrides are preserved across package updates.
-
-On Debian/Ubuntu systems, uses native dpkg-statoverride.
-On other systems, uses /var/lib/eepm/statoverride database.
-'
-    get_help HELPOPT $SHAREDIR/epm-override
-    get_help HELPCMD $SHAREDIR/epm-override
-    message '
-Examples:
-  groupadd wireshark
-  usermod -aG wireshark user1
-  epm override add wireshark /usr/bin/dumpcap
-
-  epm override list
-  epm override remove /usr/bin/dumpcap
-'
-}
-
-epm_override()
-{
-    local CMD="$1"
-    [ -n "$CMD" ] && shift
-    case "$CMD" in
-    ""|"-h"|"--help"|help)       # HELPOPT: print this help
-        epm_override_help
-        ;;
-    add)                         # HELPCMD: add override: add <group> <path>
-        epm_override_add "$@"
-        ;;
-    remove|rm|delete|del)        # HELPCMD: remove override for path
-        epm_override_remove "$@"
-        ;;
-    list|ls)                     # HELPCMD: list overrides (optionally for specific path)
-        epm_override_list "$@"
-        ;;
-    apply)                       # HELPCMD: apply all overrides (or for specific path)
-        epm_override_apply "$@"
-        ;;
-    *)
-        fatal 'Unknown command epm override $CMD. Run epm override help for usage.'
-        ;;
-    esac
 }
 
 # File bin/epm-pack:
@@ -12055,10 +11841,22 @@ epm_reinstall_names()
 {
     [ -n "$1" ] || return
 
+    # check backend:package syntax (snap:pkg, nix:pkg)
+    if __has_backend_syntax "$@" ; then
+        __process_backend_arguments epm_reinstall_names "$@"
+        return
+    fi
+
+    # check repo/package syntax (p10/pkg, sisyphus/pkg)
+    if __has_repo_syntax "$@" ; then
+        __process_repo_arguments epm_reinstall_names "$@"
+        return
+    fi
+
     case $PMTYPE in
         apt-rpm|apt-dpkg)
             local APTOPTIONS="$(subst_option non_interactive -y)"
-            sudocmd apt-get --reinstall $APTOPTIONS install $@
+            sudocmd apt-get $__EPM_APT_REPO_OPTIONS --reinstall $APTOPTIONS install $@
             return ;;
         aptitude-dpkg)
             sudocmd aptitude reinstall $@
@@ -12355,9 +12153,13 @@ __wcount()
 
 __p11_upgrade_fix()
 {
-    if ! docmd epm installed apt-conf-branch ; then 
-        info "Need to install default apt-conf-branch package to avoid missing $TO repo"
-        docmd epm install apt-conf-branch || fatal
+    # Only stable branches need apt-conf-branch. Deferred and Sisyphus use
+    # apt-conf-sisyphus, which must not be replaced with the conflicting package.
+    if [ "$TO" != "Deferred" ] && [ "$TO" != "Sisyphus" ] ; then
+        if ! docmd epm installed apt-conf-branch ; then
+            info "Need to install default apt-conf-branch package to avoid missing $TO repo"
+            docmd epm install apt-conf-branch || fatal
+        fi
     fi
     # файл /etc/openssl/openssl.cnf из устанавливаемого пакета openssl-config-3.2.0-alt1.noarch конфликтует с файлом из пакета libcrypto10-1.0.2u-alt1.p9.2.x86_64
     docmd epm remove libcrypto10 libssl10
@@ -12376,31 +12178,13 @@ __sisyphus_downgrade_fix()
 
 __detect_alt_release_by_repo()
 {
-    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-        | grep -v "^#" \
-        | grep -E "[tpc][1-3]?[5-9][f.]?[0-9]?/branch/" \
-        | sed -e "s|.*\([tpc][1-3]\?[5-9][f.]\?[0-9]\?\)/branch.*|\1|g" \
-        | sort -u )
-    if [ "$(__wcount $BRD)" = "1" ] ; then
-        echo "$BRD"
-        return
-    fi
-
-    # check Deferred first (its URLs also contain Sisyphus/)
-    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-        | grep -v "^#" \
-        | grep "Etersoft/Sisyphus/Deferred/" \
-        | head -1 )
-    if [ -n "$BRD" ] ; then
-        echo "Deferred"
-        return
-    fi
-
-    local BRD=$(cat /etc/apt/sources.list /etc/apt/sources.list.d/*.list \
-        | grep -v "^#" \
-        | grep "Sisyphus/" \
-        | sed -e "s|.*\(Sisyphus\).*|\1|g" \
-        | sort -u )
+    local BRD
+    BRD="$(epm --quiet repo list | sed -n -E '
+        /^[[:space:]]*#/d
+        /Etersoft\/Sisyphus\/Deferred\// { s/.*//; s/^/Deferred/; p; d; }
+        /[/ ]Sisyphus\// { s/.*//; s/^/Sisyphus/; p; d; }
+        s!.*[/ ]([tpc][0-9]+([f.][0-9]+)?)/branch/.*!\1!p
+    ' | sort -u)"
     if [ "$(__wcount $BRD)" = "1" ] ; then
         echo "$BRD"
         return
@@ -12428,12 +12212,8 @@ get_fix_release_pkg()
 
     local TO="$1"
 
-    if [ "$TO" = "Deferred" ] ; then
-        # Deferred is a Sisyphus snapshot, use apt-conf-sisyphus (apt-conf-deferred does not exist)
-        echo "apt-conf-sisyphus"
-        epm installed apt-conf-branch && echo "apt-conf-branch-"
-
-    elif [ "$TO" = "Sisyphus" ] ; then
+    if [ "$TO" = "Sisyphus" ] || [ "$TO" = "Deferred" ] ; then
+        # Deferred uses the Sisyphus configuration and release packages.
         echo "apt-conf-sisyphus"
         # apt-conf-sisyphus conflicts with apt-conf-branch and apt-conf-deferred
         epm installed apt-conf-branch && echo "apt-conf-branch-"
@@ -12605,12 +12385,20 @@ __switch_alt_to_distro()
     local FROM="$1"
     info
 
+    local repo_already_switched=""
+    if [ "$(__detect_alt_release_by_repo)" = "$TO" ] ; then
+        repo_already_switched=1
+        info 'Repositories already point to $TO; skipping preparation from $FROM.'
+    fi
+
     try_change_alt_repo
 
     case "$*" in
         "p6"|"p6 p7"|"t6 p7"|"c6 c7")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             end_change_alt_repo
@@ -12620,7 +12408,9 @@ __switch_alt_to_distro()
             ;;
         "p7"|"p7 p8"|"t7 p8"|"c7 c8")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             end_change_alt_repo
@@ -12631,7 +12421,9 @@ __switch_alt_to_distro()
             ;;
         "c8"|"c8.1"|"c8.2"|"c8 c8.1"|"c8.1 c8.2"|"c8 c8.2")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             end_change_alt_repo
@@ -12641,7 +12433,9 @@ __switch_alt_to_distro()
             ;;
         "p8 c8"|"p8 c8.1"|"p8 c8.2")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+            fi
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             if epm installed libcrypt ; then
@@ -12656,10 +12450,12 @@ __switch_alt_to_distro()
             ;;
         "p8"|"p8 p9"|"t8 p9"|"c8 c9"|"c8 p9"|"c8.1 p9"|"c8.2 p9"|"p9 p9"|"p9 c9f2")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
-            if epm installed gdb >/dev/null ; then
-                docmd epm remove gdb || fatal
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                info "Workaround for https://bugzilla.altlinux.org/show_bug.cgi?id=35492 ..."
+                if epm installed gdb >/dev/null ; then
+                    docmd epm remove gdb || fatal
+                fi
             fi
             __switch_repo_to $TO
             end_change_alt_repo
@@ -12670,11 +12466,13 @@ __switch_alt_to_distro()
             info "Run epm release-upgrade again for update to p10"
             ;;
         "p9"|"p9 p10"|"p10 p10")
-            info "Upgrade all packages to current $FROM repository"
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            if [ $TO = "p11" ]; then __p11_upgrade_fix; fi
+            if [ -z "$repo_already_switched" ] ; then
+                info "Upgrade all packages to current $FROM repository"
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                if [ $TO = "p11" ]; then __p11_upgrade_fix; fi
+            fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -12683,11 +12481,13 @@ __switch_alt_to_distro()
             docmd epm update-kernel -t std-def || fatal
             ;;
         "p10 p11")
-            info "Upgrade all packages to current $FROM repository"
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            __p11_upgrade_fix
+            if [ -z "$repo_already_switched" ] ; then
+                info "Upgrade all packages to current $FROM repository"
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                __p11_upgrade_fix
+            fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -12697,11 +12497,13 @@ __switch_alt_to_distro()
             docmd epm update-kernel -t 6.12 || fatal
             ;;
         "c10f1 c10f2"|"c10f2 c10f3")
-            info "Upgrade all packages to current $FROM repository"
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            #__p11_upgrade_fix
+            if [ -z "$repo_already_switched" ] ; then
+                info "Upgrade all packages to current $FROM repository"
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                #__p11_upgrade_fix
+            fi
             __switch_repo_to $TO
             end_change_alt_repo
             __do_upgrade
@@ -12713,7 +12515,9 @@ __switch_alt_to_distro()
             ;;
         "p9 p8"|"c8.1 c8"|"c8.1 p8"|"p8 p8")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             if epm installed libcrypt >/dev/null ; then
@@ -12727,7 +12531,9 @@ __switch_alt_to_distro()
             ;;
         "p9 c8"|"p9 c8.1"|"p9 c8.2")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             #if epm installed libcrypt >/dev/null ; then
@@ -12741,7 +12547,9 @@ __switch_alt_to_distro()
             ;;
         "p10 p9"|"p11 p9")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install $(get_fix_release_pkg "$FROM")
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
@@ -12752,10 +12560,10 @@ __switch_alt_to_distro()
         "Sisyphus p8"|"Sisyphus p9"|"Sisyphus p10"|"Sisyphus p11"|"Sisyphus c8"|"Sisyphus c8.1"|"Sisyphus c9f2"|"Sisyphus c10f1"|"Sisyphus c10f2"|"Sisyphus c10f3"|\
         "Deferred p8"|"Deferred p9"|"Deferred p10"|"Deferred p11"|"Deferred c8"|"Deferred c8.1"|"Deferred c9f2"|"Deferred c10f1"|"Deferred c10f2"|"Deferred c10f3")
             confirm_info 'Downgrade $DISTRNAME from $FROM to $TO ...'
-            # remove Deferred repo before switching
-            epm --quiet repo remove "Etersoft/Sisyphus/Deferred"
-            docmd epm install $(get_fix_release_pkg "$FROM")
-            if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install $(get_fix_release_pkg "$FROM")
+                if [ $TO = "p11" ]; then __sisyphus_downgrade_fix; fi
+            fi
             __switch_repo_to $TO
             docmd epm downgrade rpm apt $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
@@ -12764,11 +12572,13 @@ __switch_alt_to_distro()
             docmd epm upgrade || fatal
             ;;
         "p11 Deferred")
-            info 'Upgrade all packages to current $FROM repository'
-            __do_upgrade
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            __p11_upgrade_fix
+            if [ -z "$repo_already_switched" ] ; then
+                info 'Upgrade all packages to current $FROM repository'
+                __do_upgrade
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                __p11_upgrade_fix
+            fi
             __switch_repo_to $TO
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
             [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
@@ -12777,27 +12587,32 @@ __switch_alt_to_distro()
             # apt-conf-sisyphus may overwrite sources.list during upgrade, restore Deferred URLs
             __switch_repo_to $TO
             docmd epm install rpm apt $(get_fix_release_pkg --force "$TO") || fatal
+            __switch_repo_to "$TO"
             __check_system "$TO"
             docmd epm update-kernel || fatal
             ;;
         "p8 Sisyphus"|"p9 Sisyphus"|"p10 Sisyphus"|"p11 Sisyphus"|"Sisyphus Sisyphus"|\
         "p8 Deferred"|"p9 Deferred"|"p10 Deferred"|"Deferred Deferred"|"Sisyphus Deferred"|"Deferred Sisyphus")
             confirm_info 'Upgrade $DISTRNAME from $FROM to $TO ...'
-            docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
-            docmd epm upgrade || fatal
-            # TODO: epm_reposwitch??
-            __replace_alt_version_in_repo "$FROM/branch/" "Sisyphus/"
+            if [ -z "$repo_already_switched" ] ; then
+                docmd epm install rpm apt $(get_fix_release_pkg "$FROM") || fatal
+                docmd epm upgrade || fatal
+                # TODO: epm_reposwitch??
+                __replace_alt_version_in_repo "$FROM/branch/" "Sisyphus/"
+            fi
             __switch_repo_to $TO
             [ -s /etc/rpm/macros.d/p10 ] && rm -fv /etc/rpm/macros.d/p10
             [ -s /etc/rpm/macros.d/p11 ] && rm -fv /etc/rpm/macros.d/p11
             __epm_ru_update || fatal
             docmd epm fix || fatal
             docmd epm install $(get_fix_release_pkg --force "$TO") || fatal "Check the errors and run '# epm release-upgrade' again"
+            [ "$TO" != "Deferred" ] || __switch_repo_to "$TO"
             #local ADDPKG
             #ADDPKG=$(epm -q --short make-initrd sssd-ad 2>/dev/null)
             #docmd epm install librpm7 librpm rpm apt $ADDPKG $(get_fix_release_pkg --force "$TO") ConsoleKit2- || fatal "Check an error and run again"
             end_change_alt_repo
             docmd epm $force_yes $non_interactive upgrade || fatal "Check the error and run '# epm release-upgrade' again or just '# epm upgrade'"
+            [ "$TO" != "Deferred" ] || __switch_repo_to "$TO"
             docmd epm $force_yes $non_interactive downgrade || fatal "Check the error and run '# epm downgrade'"
             __check_system "$TO"
             docmd epm update-kernel || fatal
@@ -12853,6 +12668,11 @@ epm_release_upgrade()
         elif [ -n "$1" ] ; then
             TARGET="$1"
         fi
+
+        case "$TARGET" in
+            deferred) TARGET="Deferred" ;;
+            sisyphus) TARGET="Sisyphus" ;;
+        esac
 
         [ "$TARGET" = "Sisyphus" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
         [ "$TARGET" = "Deferred" ] && info "Check also https://www.altlinux.org/Update/Sisyphus"
@@ -13537,9 +13357,9 @@ __epm_grep_repo_list()
         epm --quiet repo list
         return
     fi
-    # use --regex for raw regex patterns
+    # use --regexp for raw regex patterns
     while [ -n "$1" ] ; do
-        epm --quiet repo list --regex "$1"
+        epm --quiet --regexp repo list "$1"
         shift
     done
 }
@@ -13938,7 +13758,7 @@ __prepare_source_package()
         return
     fi
 
-    # convert tarballs/AppImage/snap to tar
+    # convert tarballs/AppImage/snap/flatpak to tar
 
     # they will fill $returntarname
 
@@ -13951,6 +13771,9 @@ __prepare_source_package()
     elif rhas "$alpkg" "\.snap$" ; then
         __epm_pack_run_handler generic-snap "$pkg" "$pkgversion"
         SUBGENERIC='snap'
+    elif rhas "$alpkg" "\.flatpak$" ; then
+        __epm_pack_run_handler generic-flatpak "$pkg" "$pkgversion" "$pkg_urls_downloaded"
+        SUBGENERIC='flatpak'
     else
         __epm_pack_run_handler generic-tar "$pkg" "$pkgversion"
         SUBGENERIC='tar'
@@ -14337,7 +14160,9 @@ __epm_check_repacked_package_req()
     local tmpalf=$(__convert_pkgallowscripts_to_regexp "$alf")
     remove_on_exit $tmpalf
     [ -n "$verbose" ] && echo "reqstop rules: $(cat $tmpalf)"
-    ! echo "$name" | grep $grep_flag -f $tmpalf
+    # feed requires one per line: patterns are anchored (^...$), so a forbidden
+    # require must be matched as a whole token, not as part of a space-joined line
+    ! echo "$name" | tr ' ' '\n' | grep $grep_flag -f $tmpalf
     local res=$?
     rm $tmpalf
     return $res
@@ -14985,12 +14810,18 @@ epm_repochange()
 __epm_repodisable_alt()
 {
     assure_root
+    case "$1" in
+        --regex|--regexp)
+            regexp="--regexp"
+            shift
+            ;;
+    esac
     local rl
     # ^rpm means full string
     if rhas "$1" "\^rpm" ; then
         rl="$(echo "$1" | sed -e 's|\^||')"
     else
-        rl="$(epm --quiet repo list "$@")"
+        rl="$(epm --quiet $regexp repo list "$@")"
         [ -z "$rl" ] && warning 'Can'\''t find $* entries in the repos (see epm repolist output)' && return 1
     fi
     local apt_lists
@@ -15206,18 +15037,6 @@ epm_reposwitch()
     [ "$TO" = "sisyphus" ] && TO="Sisyphus"
     [ "$TO" = "deferred" ] && TO="Deferred"
 
-    # Deferred is based on Sisyphus, replaces Sisyphus URLs with Deferred
-    if [ "$TO" = "Deferred" ] ; then
-        # first normalize branch repos to Sisyphus
-        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "Sisyphus/"
-        # replace Sisyphus with Deferred path
-        __replace_text_in_alt_repo "/^ *#/! s!ALTLinux/Sisyphus/!Etersoft/Sisyphus/Deferred/!g"
-        __alt_repofix "Sisyphus"
-        rm -fv /etc/rpm/macros.d/{p10,p11}
-        echo "%_priority_distbranch sisyphus" >/etc/rpm/macros.d/priority_distbranch
-        return
-    fi
-
     case "$TO" in
         --help)
             message "Run with --list to get all possible targets"
@@ -15234,6 +15053,20 @@ epm_reposwitch()
     esac
 
     assure_root
+
+    # Deferred is based on Sisyphus, replaces Sisyphus URLs with Deferred
+    if [ "$TO" = "Deferred" ] ; then
+        # Deferred is available on Etersoft mirrors, not on arbitrary ALT mirrors.
+        epm --quiet repo change etersoft || fatal "Can't switch to the Etersoft mirror"
+        # first normalize branch repos to Sisyphus
+        __replace_alt_version_in_repo "$__alt_branch_reg/branch/" "Sisyphus/"
+        # replace Sisyphus with Deferred path
+        __replace_text_in_alt_repo "/^ *#/! s![/ ]ALTLinux[/ ]Sisyphus/! Etersoft/Sisyphus/Deferred/!g"
+        __alt_repofix "Sisyphus"
+        rm -fv /etc/rpm/macros.d/{p10,p11}
+        echo "%_priority_distbranch sisyphus" >/etc/rpm/macros.d/priority_distbranch
+        return
+    fi
 
     # restore Deferred URLs back to Sisyphus before switching
     __replace_text_in_alt_repo "/^ *#/! s!Etersoft/Sisyphus/Deferred/!ALTLinux/Sisyphus/!g"
@@ -16725,6 +16558,18 @@ __epm_restore_glue_version()
     fi
 }
 
+__epm_restore_emit()
+{
+    local macro="$1" name="$2" vspec="$3"
+    if [ -n "$dryrun" ] ; then
+        echo "$macro $name${vspec:+ $vspec}"
+    elif [ -n "$vspec" ] && __epm_pmtype_enforces_install_version ; then
+        echo "$name$(printf '%s' "$vspec" | tr -d ' ')"
+    else
+        echo "$name"
+    fi
+}
+
 __epm_pi_sign_to_rpm()
 {
     local t="$1"
@@ -16961,42 +16806,21 @@ __epm_print_npm_list()
 {
     local reqmacro="$1"
     local req_file="$2"
-    local l
+    local l name ver vspec cleanver
     while read l ; do
         # "tap": "^14.10.7"
         echo "$l" | grep -q '"\(.*\)": "\(.*\)"' || continue
-        local name="$(echo "$l" | sed -e 's|.*"\(.*\)": ".*|\1|')"
+        name="$(echo "$l" | sed -e 's|.*"\(.*\)": ".*|\1|')"
         [ -z "$name" ] && continue
-        local ver="$(echo "$l" | sed -e 's|.*"\(.*\)": "\(.*\)".*|\2|')" #'
-        [ -z "$name" ] && continue
-
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign
-            if echo "$ver" | grep -q "^\^" ; then
-                sign=">="
-            else
-                sign="="
-            fi
-            ll=$(echo "$ver" | sed -e 's|^[^~]||')
-            pi="$pi$reqmacro node-$name $sign $ll"
-            echo "$pi"
-            continue
-        else
-            local pi="node-$name"
-            # npm versions: ^X.Y.Z (caret), ~X.Y.Z (tilde), X.Y.Z → use >=X.Y.Z (strip ^/~).
-            # Skip on PMTYPEs that don't enforce range constraints (dnf/yum).
-            if __epm_pmtype_enforces_install_version && echo "$ver" | grep -qE "^[\^~]?[0-9]" ; then
-                local cleanver="$(echo "$ver" | sed -e 's|^[\^~]||')"
-                pi="$pi>=$cleanver"
-            fi
-            #echo "    $l -> $name -> $pi"
+        ver="$(echo "$l" | sed -e 's|.*"\(.*\)": "\(.*\)".*|\2|')" #'
+        # npm versions: ^X.Y.Z (caret), ~X.Y.Z (tilde), bare X.Y.Z → lower bound ">= X.Y.Z".
+        vspec=''
+        if echo "$ver" | grep -qE "^[\^~]?[0-9]" ; then
+            cleanver="$(echo "$ver" | sed -e 's|^[\^~]||')"
+            vspec=">= $cleanver"
         fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
+        __epm_restore_emit "$reqmacro" "node-$name" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 
@@ -17004,85 +16828,29 @@ __epm_print_perl_list()
 {
     local reqmacro="$1"
     local req_file="$2"
-    local l
+    local l name ver vspec
     for l in $(cat) ; do
         # perl(Class::ErrorHandler)>=0
         echo "$l" | grep -q '^perl(' || continue
-        local name="$(echo "$l" | sed -e 's|>=.*||' -e 's|::|/|g' -e 's|)|.pm)|')"
+        name="$(echo "$l" | sed -e 's|>=.*||' -e 's|::|/|g' -e 's|)|.pm)|')"
+        [ -z "$name" ] && continue
         [ "$name" = "perl(perl.pm)" ] && continue
-        [ -z "$name" ] && continue
-        local ver="$(echo "$l" | sed -e 's|.*>=||')"
-        [ -z "$name" ] && continue
-
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign=''
-            [ "$ver" = "0" ] || sign=" >= $ver"
-            pi="$pi$reqmacro $name$sign"
-            echo "$pi"
-            continue
-        else
-            local pi="$name"
-            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$pi>=$ver"
-            fi
-            #echo "    $l -> $name -> $pi"
-        fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
+        ver="$(echo "$l" | sed -e 's|.*>=||')"
+        vspec=''
+        [ "$ver" = "0" ] || vspec=">= $ver"
+        __epm_restore_emit "$reqmacro" "$name" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
-}
-
-__epm_print_perl_list_shyaml()
-{
-    local reqmacro="$1"
-    local req_file="$2"
-    local l
-    while read l ; do
-        # Convert::ASN1: 0.10
-        echo "$l" | grep -q '^ *\(.*\): \(.*\)' || continue
-        local name="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\1|' -e 's|::|/|g')".pm
-        [ "$name" = "perl.pm" ] && continue
-        [ -z "$name" ] && continue
-        local ver="$(echo "$l" | sed -e 's| *\(.*\): \(.*\)|\2|')"
-        [ -z "$name" ] && continue
-
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            local sign=''
-            [ "$ver" = "0" ] || sign=" >= $ver"
-            pi="$pi$reqmacro perl($name)$sign"
-            echo "$pi"
-            continue
-        else
-            local pi="perl($name)"
-            if [ "$ver" != "0" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$pi>=$ver"
-            fi
-            #echo "    $l -> $name -> $pi"
-        fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
-    done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 
 __epm_print_nupkg_list()
 {
-    a= dotnet list $1 package | grep "^   > " | while read n name req other; do
-        if [ -n "$dryrun" ] ; then
-            echo "BuildRequires: nupkg($name) >= $req"
-        else
-            if [ -n "$req" ] && __epm_pmtype_enforces_install_version ; then
-                echo "nupkg($name)>=$req"
-            else
-                echo "nupkg($name)"
-            fi
-        fi
+    local req_file="$1"
+    local n name req other vspec
+    a= dotnet list "$req_file" package | grep "^   > " | while read n name req other ; do
+        vspec=''
+        [ -n "$req" ] && vspec=">= $req"
+        __epm_restore_emit "BuildRequires:" "nupkg($name)" "$vspec"
     done
 }
 
@@ -17105,28 +16873,15 @@ __epm_print_meson_list()
 {
     local reqmacro="$1"
     local req_file="$2"
-    local l
+    local name sign ver other vspec
     while read name sign ver other ; do
         # gtk4-wayland
         # gtk4 >= 4.6
         [ -n "$other" ] && continue
-        if [ -n "$dryrun" ] ; then
-            local pi=''
-            pi="$reqmacro pkgconfig($name)"
-            [ -n "$sign" ] && pi="$pi $sign $ver"
-            echo "$pi"
-            continue
-        else
-            local pi="pkgconfig($name)"
-            if [ -n "$sign" ] && [ -n "$ver" ] && __epm_pmtype_enforces_install_version ; then
-                pi="$pi$sign$ver"
-            fi
-        fi
-        [ -n "$name" ] || continue
-        ilist="$ilist $pi"
+        vspec=''
+        [ -n "$sign" ] && [ -n "$ver" ] && vspec="$sign $ver"
+        __epm_restore_emit "$reqmacro" "pkgconfig($name)" "$vspec"
     done < $req_file
-
-    [ -n "$dryrun" ] || echo "$ilist"
 }
 
 __epm_restore_meson()
@@ -17219,39 +16974,93 @@ __epm_restore_perl()
     docmd epm install $ilist
 }
 
-__epm_restore_perl_shyaml()
+__epm_print_cpanfile_specs()
+{
+    # $1 = cpanfile
+    a= /usr/bin/perl -MModule::CPANfile -e '
+        my $f = shift;
+        my $prereqs = Module::CPANfile->load($f)->prereqs;
+        for my $phase (qw(runtime build configure test develop)) {
+            my $req = eval { $prereqs->requirements_for($phase, "requires") };
+            next unless $req;
+            my $h = $req->as_string_hash;          # { Mod => ">= 1.85" | "4.00" | "0" }
+            for my $mod (sort keys %$h) {
+                next if $mod eq "perl";
+                print "$phase\t$mod\t$h->{$mod}\n";
+            }
+        }
+    ' "$1"
+}
+
+__epm_cpanfile_spec_to_rpm()
+{
+    local spec="$1"
+    [ -n "$spec" ] || return
+    [ "$spec" = "0" ] && return
+
+    local part saved ver
+    local OLDIFS="$IFS"
+    IFS=','
+    for part in $spec ; do
+        IFS="$OLDIFS"
+        part="${part# }"; part="${part% }"
+        [ -n "$part" ] || continue
+        case "$part" in "!="*) continue ;; esac
+        [ -n "$saved" ] && continue
+        case "$part" in
+            ">="*|">"*|"<="*|"<"*) saved="$part" ;;
+            "=="*) ver="${part#??}"; ver="${ver# }"; saved=">= $ver" ;;
+            "="*)  ver="${part#?}";  ver="${ver# }"; saved=">= $ver" ;;
+            *)     saved=">= $part" ;;
+        esac
+    done
+    IFS="$OLDIFS"
+    [ -n "$saved" ] || return
+    echo "$saved"
+}
+
+__epm_print_cpanfile_list()
+{
+    local req_file="$1"
+    local phase mod spec name vspec macro
+    while IFS="$(printf '\t')" read phase mod spec ; do
+        case "$phase" in
+            runtime) macro="Requires:" ;;
+            *)       macro="BuildRequires:" ;;
+        esac
+        name="perl($(printf '%s' "$mod" | sed -e 's|::|/|g').pm)"
+        vspec="$(__epm_cpanfile_spec_to_rpm "$spec")"
+        __epm_restore_emit "$macro" "$name" "$vspec"
+    done < $req_file
+}
+
+__epm_restore_cpanfile()
 {
     local req_file="$1"
 
-    assure_exists shyaml
+    # Module::CPANfile (ALT package perl-Module-CPANfile) is the canonical cpanfile parser
+    if ! a= /usr/bin/perl -MModule::CPANfile -e 'exit 0' 2>/dev/null ; then
+        info "Installing perl-Module-CPANfile to parse cpanfile ..."
+        docmd epm install perl-Module-CPANfile || fatal "Can't install perl-Module-CPANfile"
+    fi
+
+    local lt
+    lt=$(mktemp) || fatal
+    remove_on_exit $lt
+    __epm_print_cpanfile_specs "$req_file" >$lt
 
     if [ -n "$dryrun" ] ; then
-        local lt
-        lt=$(mktemp) || fatal
-        remove_on_exit $lt
-        a= shyaml get-value requires <$req_file >$lt
-        # all requirements will autodetected during packing, put it to the buildreq
         echo
         __epm_restore_print_comment "$req_file"
-        __epm_print_perl_list "BuildRequires:" $lt
-
-        echo
-        __epm_restore_print_comment "$req_file" " build_requires"
-        a= shyaml get-value build_requires <$req_file >$lt
-        __epm_print_perl_list "BuildRequires:" $lt
+        __epm_print_cpanfile_list $lt
         rm -f $lt
         return
     fi
 
     info "Install requirements from $req_file ..."
-    local lt
-    lt=$(mktemp) || fatal
-    remove_on_exit $lt
-    a= shyaml get-value requires <$req_file >$lt
-    ilist="$(__epm_print_perl_list "" $lt)"
-    a= shyaml get-value build_requires <$req_file >$lt
-    ilist="$ilist $(__epm_print_perl_list "" $lt)"
+    ilist="$(__epm_print_cpanfile_list $lt)"
     rm -f $lt
+    ilist="$(estrlist list $ilist)"
     docmd epm install $ilist
 }
 
@@ -17296,7 +17105,14 @@ __epm_restore_by()
             [ -s "$req_file" ] && __epm_restore_meson "$req_file"
             ;;
         Makefile.PL)
+            # cpanfile is the canonical modern source (Makefile.PL is often generated
+            # from it); if both are present, prefer cpanfile to avoid a second, less
+            # precise dependency block.
+            [ -s "$(dirname "$req_file")/cpanfile" ] && return
             [ -s "$req_file" ] && __epm_restore_perl "$req_file"
+            ;;
+        cpanfile)
+            [ -s "$req_file" ] && __epm_restore_cpanfile "$req_file"
             ;;
         *.sln|*.csproj)
             local PROJ="$(echo $req_file)"
@@ -17310,30 +17126,40 @@ __epm_restore_by()
 
 epm_restore()
 {
-    req_file="$pkg_filenames"
-    if [ -n "$pkg_urls" ] && echo "$pkg_urls" | grep -qE "^https?://" ; then
-        req_file="$(basename "$pkg_urls")"
-        #assure eget
-        [ -r "$req_file" ] && fatal "File $req_file is already exists in $(pwd)"
-        info "Downloading '$req_file' from '$pkg_urls' ..."
-        eget "$pkg_urls"
-        [ -s "$req_file" ] || fatal "Can't download $req_file from '$pkg_urls'"
-    fi
-
-    if [ -n "$req_file" ] ; then
-        __epm_restore_by $req_file
+    # Requirement files or URLs given explicitly on the command line.
+    if [ $# -gt 0 ] ; then
+        local arg fn
+        for arg in "$@" ; do
+            if is_url "$arg" ; then
+                fn="$(basename "$arg")"
+                #assure eget
+                [ -r "$fn" ] && fatal "File $fn is already exists in $(pwd)"
+                info "Downloading '$fn' from '$arg' ..."
+                eget "$arg"
+                [ -s "$fn" ] || fatal "Can't download $fn from '$arg'"
+                __epm_restore_by "$fn"
+            elif [ -s "$arg" ] ; then
+                __epm_restore_by "$arg"
+            else
+                fatal "Can't read requirements file '$arg'"
+            fi
+        done
         return
     fi
 
 
-    # if run with empty args
+    # if run with empty args — auto-search known requirement files
+    local i
     for i in requirements.txt requirements/default.txt requirements_dev.txt requirements-dev.txt requirements/dev.txt dev-requirements.txt \
              requirements-test.txt requirements_test.txt requirements/test.txt test-requirements.txt requirements/coverage.txt \
-             Gemfile requires.txt package.json setup.py python_dependencies.py Makefile.PL meson.build pyproject.toml \
+             Gemfile requires.txt package.json setup.py python_dependencies.py cpanfile Makefile.PL meson.build pyproject.toml \
              *.sln *.csproj ; do
         __epm_restore_by $i
     done
 
+    # auto-search is best-effort; ignore the status of the last glob probe
+    # (otherwise 'epm restore --dry-run' with no matching *.sln/*.csproj exits 1)
+    return 0
 }
 
 # File bin/epm-search:
@@ -18028,43 +17854,6 @@ update_alt_contents_index()
 }
 
 
-# File bin/epm-sh-available:
-
-
-__epm_available_cache_file()
-{
-    echo "$epm_vardir/available-packages"
-}
-
-__epm_available_cache_exists()
-{
-    [ -s "$epm_vardir/available-packages" ]
-}
-
-__epm_available_read_cache()
-{
-    __epm_available_cache_exists || return 1
-    cat "$epm_vardir/available-packages"
-}
-
-__epm_available_save_cache()
-{
-    [ -d "$epm_vardir" ] || return 0
-
-    # TODO: ignore in docker
-    # update list only if the system supports bash completion
-    [ -d /etc/bash_completion.d ] || return 0
-
-    # HACK: too much time (5 minutes) on deb systems in a docker
-    # [ $PMTYPE = "apt-dpkg" ] && return 0
-
-    info "Retrieving list of all available packages (for autocompletion) ..."
-    # can ask sudo later
-    set_sudo
-    # get TSV format, sort and save
-    __epm_list_available_tsv | sort | sudorun tee "$epm_vardir/available-packages" >/dev/null
-}
-
 # File bin/epm-sh-backend:
 
 VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm-rpm packagekit pkgsrc pkgng redox-pkg emerge pacman yay aura yum-rpm dnf-rpm dnf5-rpm snappy zypper-rpm mpkg eopkg conary npackd slackpkg homebrew opkg nix apk tce guix termux-pkg aptcyg xbps appget winget"
@@ -18162,6 +17951,33 @@ __process_backend_arguments() {
     done
 }
 
+__get_alt_mirror_hosts()
+{
+    local f="$CONFIGDIR/mirrors-alt.list"
+    [ -r "$f" ] || return 1
+    # second field is the URL; strip the scheme and path, keep the host
+    awk '{print $2}' "$f" | sed -nE 's|^[a-z]+://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]"
+}
+
+__get_alt_mirror_baseurl()
+{
+    local repolo src alt_lines baseurl host
+    repolo="$(echo "${1:-}" | tr "[:upper:]" "[:lower:]")"
+    src="$(__get_system_sourceslist)"
+    # enabled ALT repo lines, preferring the ones for the requested branch
+    if [ -n "$repolo" ] ; then
+        alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.* ALTLinux/' | grep -iE "ALTLinux/$repolo/")"
+    fi
+    [ -n "$alt_lines" ] || alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.* ALTLinux/')"
+    # the mirror base URL is the http(s) field right before ALTLinux/
+    baseurl="$(echo "$alt_lines" | sed -nE 's|.*[[:space:]](https?://[^[:space:]]*)[[:space:]]+ALTLinux/.*|\1|p' | head -1)"
+    [ -n "$baseurl" ] || return 1
+    # reuse the mirror only if its host is one of the known ALT mirrors
+    host="$(echo "$baseurl" | sed -nE 's|^https?://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]")"
+    [ -n "$host" ] && __get_alt_mirror_hosts 2>/dev/null | grep -Fxq "$host" || return 1
+    echo "$baseurl"
+}
+
 __generate_alt_sourceslist()
 {
     local baseurl
@@ -18177,7 +17993,8 @@ __generate_alt_sourceslist()
     else
         local repo="$1"
         repolo="$(echo "$repo" | tr "[:upper:]" "[:lower:]")"
-        baseurl="http://ftp.basealt.ru/pub/distributions"
+        baseurl="$(__get_alt_mirror_baseurl "$repo" 2>/dev/null)"
+        [ -n "$baseurl" ] || baseurl="http://ftp.basealt.ru/pub/distributions"
         [ "$repolo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
         repopart="ALTLinux/$repopart"
     fi
@@ -18402,9 +18219,9 @@ __generate_spec_by_yaml()
 
     local name version release summary license group
     local description url upstream_file upstream_url
-    local requires provides buildarch
+    local requires provides conflicts obsoletes buildarch
 
-    yaml_load_vars "$yaml_file" name version release summary description upstream_file upstream_url url group license requires provides buildarch
+    yaml_load_vars "$yaml_file" name version release summary description upstream_file upstream_url url group license requires provides conflicts obsoletes buildarch
 
     [ -n "$summary" ] || summary="$name"
 
@@ -18441,6 +18258,12 @@ EOF
     done
     for r in $provides ; do
         echo "Provides: $r" >> "$specfile"
+    done
+    for r in $conflicts ; do
+        echo "Conflicts: $r" >> "$specfile"
+    done
+    for r in $obsoletes ; do
+        echo "Obsoletes: $r" >> "$specfile"
     done
     cat >> "$specfile" <<EOF
 
@@ -18486,130 +18309,6 @@ __unpack_files_from_tarball()
             echo "\"$f\""
         fi
     done ) >> "$specfile"
-}
-
-# File bin/epm-sh-filter:
-
-
-__filter_pkglist_installed_rpm()
-{
-    local input
-    input="$(cat)"
-    [ -z "$input" ] && return
-    # Get installed package names in one call, then intersect with input
-    echo "$input" | xargs rpmquery --qf='%{NAME}\n' 2>/dev/null | grep -vxF 'package (none) is not installed' | LC_ALL=C sort -u
-}
-
-__filter_pkglist_not_installed_rpm()
-{
-    LC_ALL=C xargs -n1 rpm -q 2>&1 | grep 'is not installed' |
-        sed -e 's|^.*package \(.*\) is not installed.*|\1|g' |
-        LC_ALL=C xargs -n1 rpm -q --whatprovides 2>&1 | grep 'no package provides' |
-        sed -e 's|^.*no package provides \(.*\)|\1|g'
-}
-
-__filter_pkglist_installed_dpkg()
-{
-    local input
-    input="$(cat)"
-    [ -z "$input" ] && return
-    # dpkg-query returns only installed packages, output format: package
-    # shellcheck disable=SC2016
-    echo "$input" | xargs dpkg-query -W -f='${Package}\n' 2>/dev/null | LC_ALL=C sort -u
-}
-
-__filter_pkglist_not_installed_dpkg()
-{
-    local input
-    input="$(cat)"
-    [ -z "$input" ] && return
-    local installed
-    # shellcheck disable=SC2016
-    installed="$(echo "$input" | xargs dpkg-query -W -f='${Package}\n' 2>/dev/null | LC_ALL=C sort -u)"
-    # Return packages that are NOT in the installed list
-    if [ -z "$installed" ] ; then
-        echo "$input" | xargs -n1
-    else
-        echo "$input" | xargs -n1 | grep -vxF "$installed"
-    fi
-}
-
-__filter_pkglist_installed_pacman()
-{
-    local input
-    input="$(cat)"
-    [ -z "$input" ] && return
-    # pacman -Q outputs "pkgname version", we need only pkgname
-    echo "$input" | xargs pacman -Q 2>/dev/null | cut -d' ' -f1 | LC_ALL=C sort -u
-}
-
-__filter_pkglist_not_installed_pacman()
-{
-    local input
-    input="$(cat)"
-    [ -z "$input" ] && return
-    local installed
-    installed="$(echo "$input" | xargs pacman -Q 2>/dev/null | cut -d' ' -f1 | LC_ALL=C sort -u)"
-    # Return packages that are NOT in the installed list
-    if [ -z "$installed" ] ; then
-        echo "$input" | xargs -n1
-    else
-        echo "$input" | xargs -n1 | grep -vxF "$installed"
-    fi
-}
-
-__filter_pkglist_installed_fallback()
-{
-    local pkg
-    while read -r pkg ; do
-        [ -n "$pkg" ] || continue
-        is_installed "$pkg" && echo "$pkg"
-    done
-}
-
-__filter_pkglist_not_installed_fallback()
-{
-    local pkg
-    while read -r pkg ; do
-        [ -n "$pkg" ] || continue
-        is_installed "$pkg" || echo "$pkg"
-    done
-}
-
-__filter_pkglist_installed()
-{
-    case $PMTYPE in
-        *-rpm)
-            __filter_pkglist_installed_rpm
-            ;;
-        *-dpkg)
-            __filter_pkglist_installed_dpkg
-            ;;
-        pacman)
-            __filter_pkglist_installed_pacman
-            ;;
-        *)
-            __filter_pkglist_installed_fallback
-            ;;
-    esac
-}
-
-__filter_pkglist_not_installed()
-{
-    case $PMTYPE in
-        *-rpm)
-            __filter_pkglist_not_installed_rpm
-            ;;
-        *-dpkg)
-            __filter_pkglist_not_installed_dpkg
-            ;;
-        pacman)
-            __filter_pkglist_not_installed_pacman
-            ;;
-        *)
-            __filter_pkglist_not_installed_fallback
-            ;;
-    esac
 }
 
 # File bin/epm-sh-install:
@@ -18777,156 +18476,6 @@ __epm_repack_if_needed()
     return 1
 }
 
-
-# File bin/epm-sh-interactive:
-
-__epm_check_fzf()
-{
-    if ! is_command fzf ; then
-        info 'Install fzf package for interactive selection and suggestions.'
-        return 1
-    fi
-}
-
-__epm_interactive_select_packages()
-{
-    local action="$1"
-    [ -n "$action" ] || action="install"
-
-    local packages
-    packages="$(cat)"
-    local count
-    count="$(echo "$packages" | wc -l)"
-
-    [ -z "$packages" ] && return 1
-
-    # --suggest-interactive: auto-select single package
-    # --interactive: always show menu
-    [ "$count" -eq 1 ] && [ -z "$interactive" ] && echo "$packages" && return 0
-
-    info "Found $count package(s) matching pattern. Select package(s) to $action:"
-
-    if is_command fzf && [ -c /dev/tty ] ; then
-        # Use fzf for interactive selection
-        # fzf reads list from stdin (pipe) and uses /dev/tty for interactive input automatically
-        local selected
-        selected=$(echo "$packages" | \
-            fzf --multi \
-                --prompt="$(eval_gettext "Select package(s) (Tab=select, Enter=confirm)"): " \
-                --header="$(eval_gettext "Ctrl-A=all, Esc=cancel")" \
-                --bind='ctrl-a:select-all' \
-                --height=15 \
-                --reverse)
-        if [ -n "$selected" ] ; then
-            echo "$selected"
-            return 0
-        fi
-        return 1
-    fi
-
-    __epm_check_fzf
-
-    # Fallback: numbered menu
-    echo "$packages" | nl -w3 -s') ' >&2
-    echo "" >&2
-    printf "%s" "$(eval_gettext "Enter number(s) separated by space, 'a' for all, 'q' to quit"): " >&2
-    local choice
-    read_tty choice || return 1
-
-    case "$choice" in
-        q|Q|"")
-            return 1
-            ;;
-        a|A)
-            echo "$packages"
-            return 0
-            ;;
-        *)
-            local selected=""
-            for num in $choice ; do
-                local pkg
-                pkg=$(echo "$packages" | sed -n "${num}p")
-                [ -n "$pkg" ] && selected="$selected$pkg
-"
-            done
-            if [ -n "$selected" ] ; then
-                echo "$selected" | head -n -1
-            fi
-            return 0
-            ;;
-    esac
-}
-
-__epm_suggest_similar()
-{
-    local list_option="$1"
-    local header="$2"
-    local pkg="$3"
-    local count="${suggest_count:-7}"
-
-    # need fzf for fuzzy search
-    __epm_check_fzf || return 1
-
-    local similar
-    similar="$(epm list $list_option | fzf -f "$pkg" 2>/dev/null | grep -v "^${pkg}$" | head -$count)"
-    [ -z "$similar" ] && return 1
-
-    # Interactive selection if enabled (via config or --interactive flag)
-    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
-        local selected
-        selected="$(echo "$similar" | fzf \
-            --prompt="$(eval_gettext "Select package (Enter=confirm, Esc=cancel)"): " \
-            --header="$header" \
-            --height=10 --reverse)"
-        if [ -n "$selected" ] ; then
-            # extract package name (before = or space)
-            echo "$selected" | sed -e 's/[= ].*//'
-            return 0
-        fi
-        return 1
-    fi
-
-    # Non-interactive: just show suggestions (to stderr)
-    echo "" >&2
-    echog "Perhaps you meant:" >&2
-    echo "$similar" | sed 's/^/  /' >&2
-    return 1
-}
-
-__epm_suggest_similar_by_list()
-{
-    local list_option="$1"
-    local header="$2"
-    shift 2
-    local pkg
-    local selected_all=""
-    for pkg in "$@" ; do
-        local selected
-        selected="$(__epm_suggest_similar "$list_option" "$header" "$pkg")"
-        [ -n "$selected" ] && selected_all="$selected_all $selected"
-    done
-    echo $selected_all
-}
-
-__epm_suggest_similar_packages()
-{
-    __epm_suggest_similar --available "$(eval_gettext "Similar packages:")" "$1"
-}
-
-__epm_suggest_similar_packages_by_list()
-{
-    __epm_suggest_similar_by_list --available "$(eval_gettext "Similar packages:")" "$@"
-}
-
-__epm_suggest_similar_installed_packages()
-{
-    __epm_suggest_similar --installed "$(eval_gettext "Similar installed packages:")" "$1"
-}
-
-__epm_suggest_similar_installed_packages_by_list()
-{
-    __epm_suggest_similar_by_list --installed "$(eval_gettext "Similar installed packages:")" "$@"
-}
 
 # File bin/epm-sh-repo:
 
@@ -19280,7 +18829,7 @@ _epm_do_simulate()
 
     case $PMTYPE in
         apt-rpm|apt-dpkg)
-            CMD="apt-get --simulate install"
+            CMD="apt-get $__EPM_APT_REPO_OPTIONS --simulate install"
             ;;
         aptitude-dpkg)
             CMD="aptitude -s install"
@@ -19387,7 +18936,6 @@ epm_simulate()
     fi
     return $RES
 }
-
 
 # File bin/epm-site:
 
@@ -19934,7 +19482,7 @@ epm_status()
             epm_status_repacked "$@"
             return
             ;;
-        --validate)           # HELPOPT: check if package is accessible (we can get fields from it)
+        --valid)              # HELPOPT: check if package is accessible (we can get fields from it)
             epm_status_validate "$@"
             return
             ;;
@@ -20437,6 +19985,36 @@ epm_upgrade()
     return $_ret
 }
 
+__epm_upgrade_download_only()
+{
+    # named packages/files/urls: download to the current dir (as install --download-only does)
+    if [ -n "$pkg_names$pkg_files$pkg_urls" ] ; then
+        (pkg_names="$pkg_names" pkg_files="$pkg_files" pkg_urls="$pkg_urls" epm_install)
+        return $?
+    fi
+
+    # bare: download all upgradable packages via the native backend flag (into the package cache)
+    info "Downloading packages for upgrade ..."
+    case $PMTYPE in
+        apt-rpm|apt-dpkg)
+            sudocmd apt-get $__EPM_APT_REPO_OPTIONS $(subst_option non_interactive -y) -d dist-upgrade
+            ;;
+        dnf-rpm|dnf5-rpm)
+            sudocmd $DNFCMD $(subst_option non_interactive -y) upgrade --downloadonly
+            ;;
+        yum-rpm)
+            sudocmd yum $(subst_option non_interactive -y) upgrade --downloadonly
+            ;;
+        pacman)
+            sudocmd pacman -Suw $(subst_option non_interactive --noconfirm) $force
+            ;;
+        *)
+            warning 'Download only for "upgrade all" is not implemented for $PMTYPE, specify package names'
+            return 1
+            ;;
+    esac
+}
+
 __epm_upgrade_do()
 {
     local CMD
@@ -20452,7 +20030,7 @@ __epm_upgrade_do()
             return
         fi
 
-        if [ -z "$*" ] ; then
+        if [ -z "$*" ] && [ -z "$download_only" ] ; then
             __epm_check_container_issue_43533
 
             __check_upgrade_conditions || fatal "upgrade conditions is not satisfied."
@@ -20470,6 +20048,11 @@ __epm_upgrade_do()
     if [ -n "$pkg_urls" ] ; then
         info "Downloading packages assigned to upgrade ..."
         __handle_pkg_urls_to_install
+    fi
+
+    if [ -n "$download_only" ] ; then
+        __epm_upgrade_download_only "$@"
+        return
     fi
 
     info "Running command for upgrade packages"
@@ -21353,23 +20936,29 @@ case "$DISTRIB_ID" in
             DISTRIB_RELEASE="$(echo "$VERSION" | sed 's| branch||')"
         fi
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
-        # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
-        if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
-            DISTRIB_RELEASE="Sisyphus"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # Ximper Linux is based on ALT Sisyphus regardless of its product
         # version (for example, VERSION_ID=1.0 must not become p1).
-        elif [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+        if [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # ALT_BRANCH_ID identifies the package repository branch and is more
+        # precise than deriving it from the product version (10.2.1 -> p10).
+        elif [ -n "$ALT_BRANCH_ID" ] ; then
+            if [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
+                DISTRIB_RELEASE="Sisyphus"
+                DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
+            else
+                DISTRIB_RELEASE="$ALT_BRANCH_ID"
+            fi
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # FIXME: fast hack for fallback: 10.1 -> p10 for old /etc/os-release
+        elif echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
             DISTRIB_RELEASE="Sisyphus"
             DISTRIB_CODENAME="$DISTRIB_RELEASE"
         elif echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"
-        elif [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
-            DISTRIB_RELEASE="Sisyphus"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
-            DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
         fi
         ;;
     "ALTServer")
@@ -21799,9 +21388,54 @@ get_core_count()
     echo $detected
 }
 
+get_proc_core_mhz()
+{
+    LC_ALL=C awk -F: '/^cpu MHz[[:space:]]*:/ && $2 + 0 > 0 { printf "%d\n", $2; exit }' "$ROOTDIR/proc/cpuinfo" 2>/dev/null
+}
+
+# CPUFreq attributes are in kHz. Missing/zero values do not mean 0 MHz.
+get_cpufreq_mhz()
+{
+    LC_ALL=C awk 'NF == 1 && $1 ~ /^[0-9]+$/ && $1 + 0 > 0 { printf "%.3f\n", $1 / 1000; exit }' "$1" 2>/dev/null | sed 's/0*$//; s/\.$//'
+}
+
+get_cpufreq_info()
+{
+    local policy cpus current maximum separator="" found=""
+    for policy in "$ROOTDIR"/sys/devices/system/cpu/cpufreq/policy* ; do
+        [ -d "$policy" ] || continue
+        current="$(get_cpufreq_mhz "$policy/scaling_cur_freq")"
+        maximum="$(get_cpufreq_mhz "$policy/cpuinfo_max_freq")"
+        [ -n "$current$maximum" ] || continue
+        cpus="$(cat "$policy/related_cpus" 2>/dev/null | awk '{$1=$1; print}')"
+        [ -z "$cpus" ] || cpus=" (CPUs $cpus)"
+        current="${current:+$current MHz}"
+        maximum="${maximum:+$maximum MHz}"
+        printf '%s%s%s: current %s, max %s' "$separator" "${policy##*/}" "$cpus" "${current:-unknown}" "${maximum:-unknown}"
+        separator="; "
+        found=1
+    done
+    [ -n "$found" ]
+}
+
 get_core_mhz()
 {
-    cat /proc/cpuinfo | grep "cpu MHz" | head -n1 | cut -d':' -f2 | cut -d' ' -f2 | cut -d'.' -f1
+    local detected="$(get_proc_core_mhz)"
+    # Keep the historical numeric output where /proc/cpuinfo supplies MHz.
+    [ -z "$detected" ] || { echo "$detected"; return; }
+    get_cpufreq_info || printf 'unknown'
+    echo
+}
+
+get_cpu_frequency_info()
+{
+    local detected="$(get_proc_core_mhz)"
+    if [ -n "$detected" ] ; then
+        echo "$detected MHz"
+    else
+        get_cpufreq_info || printf 'unknown'
+        echo
+    fi
 }
 
 
@@ -21902,7 +21536,7 @@ distro_info v$PROGVERSION $EV: Copyright © 2007-2026 Etersoft
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
                  CPU norm register size  (-b): $(get_bit_size) bit
                           Virtualization (-i): $(get_virt)
-                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_cpu_frequency_info)
                       System memory size (-m): $(get_memory_size) MiB
                  Running service manager (-y): $(get_service_manager)
             Bug report URL (--bug-report-url): $(print_bug_report_url)
@@ -21923,7 +21557,7 @@ print_help()
     echo " -i                     - print virtualization type"
     echo " -m                     - print system memory size (in MB)"
     echo " -y|--service-manager   - print running service manager"
-    echo " -z                     - print current CPU MHz"
+    echo " -z                     - print current CPU MHz (CPUFreq domains if unavailable in /proc/cpuinfo)"
     echo " --glibc-version        - print system glibc version"
     echo
     echo " -d|--base-distro-name  - print distro id (short distro name)"
@@ -27022,6 +26656,10 @@ check_command()
         ;;
     moo)
         epm_cmd=moo
+        direct_args=1
+        ;;
+    hedgehog)
+        epm_cmd=hedgehog
         direct_args=1
         ;;
     prescription|recipe)      # HELPCMD: run prescription (a script to achieving the goal), run without args to get list

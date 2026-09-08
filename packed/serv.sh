@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.66"
+EPMVERSION="3.64.67"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1086,7 +1086,8 @@ is_package_file()
 get_package_type()
 {
     local i
-    case $1 in
+    local _bn="$(basename "$1")"
+    case $_bn in
         *.deb)
             echo "deb"
             return
@@ -1116,7 +1117,7 @@ get_package_type()
             return
             ;;
         *.pkg.tar.*)
-            echo "pkg.tar.$(echo "$1" | sed -e 's|.*\.pkg\.tar\.||')"
+            echo "pkg.tar.$(echo "$_bn" | sed -e 's|.*\.pkg\.tar\.||')"
             return
             ;;
         *)
@@ -1125,7 +1126,7 @@ get_package_type()
                 return
             fi
             # print extension by default
-            basename "$1" | sed -e 's|.*\.||'
+            echo "$_bn" | sed -e 's|.*\.||'
             return 1
             ;;
     esac
@@ -1585,7 +1586,36 @@ serv_edit()
 
     case $SERVICETYPE in
         systemd)
-            run_systemctl edit "$@" "$SERVICE"
+            # editing only a drop-in is pointless for a unit that already lives in
+            # /etc/systemd/system, so edit the full file there (unless args given)
+            if [ -z "$*" ] ; then
+                case "$($SYSTEMCTL show -p FragmentPath "$SERVICE" 2>/dev/null | sed -e 's|.*=||')" in
+                    /etc/systemd/system/*)
+                        set -- --full
+                        ;;
+                esac
+            fi
+
+            # remember if the service is running, to apply the change afterwards
+            local wasactive=''
+            $SYSTEMCTL is-active --quiet "$SERVICE" 2>/dev/null && wasactive=1
+
+            # systemctl edit is interactive and uses $SYSTEMD_EDITOR/$EDITOR/$VISUAL;
+            # sudo resets the environment, so preserve those across it
+            local sudoenv=''
+            [ "$SYSTEMCTL_RUNNER" = "docmd" ] || set_sudo
+            case "$SUDO" in
+                sudo*) sudoenv='--preserve-env=SYSTEMD_EDITOR,EDITOR,VISUAL' ;;
+            esac
+
+            # systemctl edit reloads the systemd manager (daemon-reload) by itself
+            docmd $SUDO $sudoenv $SYSTEMCTL edit "$@" "$SERVICE" || return
+
+            # the new unit settings take effect only after a restart
+            if [ -n "$wasactive" ] ; then
+                info "Restarting $SERVICE to apply the changes ..."
+                run_systemctl restart "$SERVICE"
+            fi
             ;;
         *)
             fatal "Have no suitable for $DISTRNAME command for $SERVICETYPE"
@@ -2704,23 +2734,29 @@ case "$DISTRIB_ID" in
             DISTRIB_RELEASE="$(echo "$VERSION" | sed 's| branch||')"
         fi
         DISTRIB_CODENAME="$DISTRIB_RELEASE"
-        # FIXME: fast hack for fallback: 10.1 -> p10 for /etc/os-release
-        if echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
-            DISTRIB_RELEASE="Sisyphus"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
         # Ximper Linux is based on ALT Sisyphus regardless of its product
         # version (for example, VERSION_ID=1.0 must not become p1).
-        elif [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+        if [ "$DISTRO_NAME" = "Etersoft Ximper" ] ; then
+            DISTRIB_RELEASE="Sisyphus"
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # ALT_BRANCH_ID identifies the package repository branch and is more
+        # precise than deriving it from the product version (10.2.1 -> p10).
+        elif [ -n "$ALT_BRANCH_ID" ] ; then
+            if [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
+                DISTRIB_RELEASE="Sisyphus"
+                DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
+            else
+                DISTRIB_RELEASE="$ALT_BRANCH_ID"
+            fi
+            DISTRIB_CODENAME="$DISTRIB_RELEASE"
+        # FIXME: fast hack for fallback: 10.1 -> p10 for old /etc/os-release
+        elif echo "$DISTRIB_RELEASE" | grep -q "^0" ; then
             DISTRIB_RELEASE="Sisyphus"
             DISTRIB_CODENAME="$DISTRIB_RELEASE"
         elif echo "$DISTRIB_RELEASE" | grep -q "^[0-9]" && echo "$DISTRIB_RELEASE" | grep -q -v "[0-9][0-9][0-9]"  ; then
             DISTRIB_CODENAME="$(echo p$DISTRIB_RELEASE | sed -e 's|\..*||')"
             # TODO: change p10 to 10
             DISTRIB_RELEASE="$DISTRIB_CODENAME"
-        elif [ "$ALT_BRANCH_ID" = "sisyphus" ] ; then
-            DISTRIB_RELEASE="Sisyphus"
-            DISTRIB_CODENAME="$DISTRIB_RELEASE"
-            DISTRIB_FULL_RELEASE="$DISTRIB_RELEASE"
         fi
         ;;
     "ALTServer")
@@ -3150,9 +3186,54 @@ get_core_count()
     echo $detected
 }
 
+get_proc_core_mhz()
+{
+    LC_ALL=C awk -F: '/^cpu MHz[[:space:]]*:/ && $2 + 0 > 0 { printf "%d\n", $2; exit }' "$ROOTDIR/proc/cpuinfo" 2>/dev/null
+}
+
+# CPUFreq attributes are in kHz. Missing/zero values do not mean 0 MHz.
+get_cpufreq_mhz()
+{
+    LC_ALL=C awk 'NF == 1 && $1 ~ /^[0-9]+$/ && $1 + 0 > 0 { printf "%.3f\n", $1 / 1000; exit }' "$1" 2>/dev/null | sed 's/0*$//; s/\.$//'
+}
+
+get_cpufreq_info()
+{
+    local policy cpus current maximum separator="" found=""
+    for policy in "$ROOTDIR"/sys/devices/system/cpu/cpufreq/policy* ; do
+        [ -d "$policy" ] || continue
+        current="$(get_cpufreq_mhz "$policy/scaling_cur_freq")"
+        maximum="$(get_cpufreq_mhz "$policy/cpuinfo_max_freq")"
+        [ -n "$current$maximum" ] || continue
+        cpus="$(cat "$policy/related_cpus" 2>/dev/null | awk '{$1=$1; print}')"
+        [ -z "$cpus" ] || cpus=" (CPUs $cpus)"
+        current="${current:+$current MHz}"
+        maximum="${maximum:+$maximum MHz}"
+        printf '%s%s%s: current %s, max %s' "$separator" "${policy##*/}" "$cpus" "${current:-unknown}" "${maximum:-unknown}"
+        separator="; "
+        found=1
+    done
+    [ -n "$found" ]
+}
+
 get_core_mhz()
 {
-    cat /proc/cpuinfo | grep "cpu MHz" | head -n1 | cut -d':' -f2 | cut -d' ' -f2 | cut -d'.' -f1
+    local detected="$(get_proc_core_mhz)"
+    # Keep the historical numeric output where /proc/cpuinfo supplies MHz.
+    [ -z "$detected" ] || { echo "$detected"; return; }
+    get_cpufreq_info || printf 'unknown'
+    echo
+}
+
+get_cpu_frequency_info()
+{
+    local detected="$(get_proc_core_mhz)"
+    if [ -n "$detected" ] ; then
+        echo "$detected MHz"
+    else
+        get_cpufreq_info || printf 'unknown'
+        echo
+    fi
 }
 
 
@@ -3253,7 +3334,7 @@ distro_info v$PROGVERSION $EV: Copyright © 2007-2026 Etersoft
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
                  CPU norm register size  (-b): $(get_bit_size) bit
                           Virtualization (-i): $(get_virt)
-                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_cpu_frequency_info)
                       System memory size (-m): $(get_memory_size) MiB
                  Running service manager (-y): $(get_service_manager)
             Bug report URL (--bug-report-url): $(print_bug_report_url)
@@ -3274,7 +3355,7 @@ print_help()
     echo " -i                     - print virtualization type"
     echo " -m                     - print system memory size (in MB)"
     echo " -y|--service-manager   - print running service manager"
-    echo " -z                     - print current CPU MHz"
+    echo " -z                     - print current CPU MHz (CPUFreq domains if unavailable in /proc/cpuinfo)"
     echo " --glibc-version        - print system glibc version"
     echo
     echo " -d|--base-distro-name  - print distro id (short distro name)"
@@ -3691,6 +3772,31 @@ check_daemon_reload()
         fi
 }
 
+systemctl_needs_sudo()
+{
+        local cmd=
+        local arg
+
+        for arg in "$@" ; do
+                case "$arg" in
+                        -*)
+                                ;;
+                        *)
+                                cmd="$arg"
+                                break
+                                ;;
+                esac
+        done
+
+        case "$cmd" in
+                ""|cat|get-default|help|is-active|is-enabled|is-failed|is-system-running|list-*|show|status)
+                        return 1
+                        ;;
+        esac
+
+        return 0
+}
+
 run_systemctl()
 {
         local cmd="$1"
@@ -3701,7 +3807,11 @@ run_systemctl()
                         check_daemon_reload "$service"
                         ;;
         esac
-        $SYSTEMCTL_RUNNER $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+        if systemctl_needs_sudo "$@" ; then
+                $SYSTEMCTL_RUNNER $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+        else
+                docmd $SYSTEMCTL $SYSTEMCTL_ARGS "$@"
+        fi
 }
 
 
@@ -3738,8 +3848,6 @@ if [ -z "$serv_cmd" ] ; then
 fi
 
 PATH=$PATH:/sbin:/usr/sbin
-
-set_sudo
 
 # Run helper for command
 serv_$serv_cmd $service_name $params
