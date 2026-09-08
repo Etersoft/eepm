@@ -17,10 +17,8 @@ case $(epm print info -p) in
         ;;
 esac
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/AKotov-dev/adbmanager" "$mask")
-else
-    PKGURL="https://github.com/AKotov-dev/adbmanager/releases/download/v${VERSION}/$mask"
-fi
+# GitHub asset URLs require the exact file name; resolve the wildcard for both
+# catalog-provided versions and the latest-version lookup.
+PKGURL=$(get_github_url "https://github.com/AKotov-dev/adbmanager" "$mask")
 
 install_pkgurl
