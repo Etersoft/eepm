@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.66
+Version: 3.64.67
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -183,6 +183,137 @@ EOF
 # metapackage, no files
 
 %changelog
+* Tue Sep 08 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.67-alt1
+- commit packed 3.64.66
+- epm play freeoffice: fix scraping URL, remove hardcoded YEAR
+- epm play freeoffice: restore YEAR variable
+- play.d/common.sh: fix PKGNAME lowercasing breaking pack.d lookup on deb systems
+- epm status: change --validate to --valid
+- epm play: use disabled repos with repo/package install syntax
+- serv edit: use --full for /etc/systemd/system units, preserve EDITOR over sudo, restart if running
+- epm repack.d/generic.sh: strip leading BOM before inserting python3 shebang
+- epm repack pgadmin4-server: require 64-bit libpq/libkrb5 via add_unirequires
+- epm repack pgadmin4-server: disable system-site-packages in bundled venv
+- epm play sunshine: match any fc* build (fc41 no longer built)
+- epm play: add libicu78 (ICU 78.3 runtime libs for Fedora 45 apps)
+- epm play sunshine: install libicu78 for libicuuc.so.78 dependency
+- epm play: add aeroadmin (remote desktop over Wine)
+- epm play: add veeam-agent (Veeam Agent for Linux with ALT repack)
+- epm play: add brave-origin (streamlined Brave browser, free on Linux)
+- epm play: added NVIDIA GeForce NOW from oficial flatpak repo (eterbug #19180)
+- epm play: add libicu77 (ICU 77.1 runtime libraries from Fedora 43)
+- epm play: add orion (Orion Browser by Kagi from Flatpak bundle)
+- epm play geforce-now: move flatpak extraction to pack.d, hide ostree from shell AutoReq
+- epm play: add brother-dcp-t420w (DCP-T420W printer driver, 64-bit)
+- epm repack claude-code: create ~/.local/bin/claude symlink if absent
+- epm play: add brother-dcp-t510w (DCP-T510W printer driver)
+- epm play: add brother-dcp-t720dw (DCP-T720DW printer driver)
+- epm desktop: add display manager management and auto-install preferred_dm
+- epm repack.d/claude-code.sh: include only readable env.conf files
+- epm repack.d/common.sh: skip *.musl.node files in dependency scan
+- epm repack: forbid bare libc.so require and fix reqstoplist matching
+- epm play assistant: resolve build id dynamically from vendor catalog
+- epm play: add lemonade-server (AMD local AI server)
+- epm play: add cc-switch (Claude Code/Codex/Gemini CLI assistant)
+- epm pack.d: add generic-flatpak for self-contained flatpak bundles
+- epm-sh-create-rpm: support conflicts and obsoletes in yaml
+- epm pack.d pi: conflict with pi-coding-agent
+- epm play pi: switch to earendil-works/pi repo
+- epm play: add zcode-desktop (z.ai GLM-5.2 desktop harness)
+- epm repack.d: hide duplicate yandex browser desktop launcher
+- epm play: add coddy (Coddy Agent - coding agent harness)
+- epm-sh-functions: fix get_package_type to use basename for extension detection
+- epm repack ayugram-desktop: add forced requires for dynamically linked libraries
+- epm play ayugram: use exact RELEASE in download URL pattern
+- epm play codex: switch to codex-package tarball, install to /opt/codex
+- epm pack.d coddy: fix license to MIT
+- epm play.d/common.sh: reinstall if any package from multi-name PKGNAME is missing (eterbug #19203)
+- epm-check_updated_repo: skip pkglist entries that cannot be stat'ed
+- epm-sh-backend: __generate_alt_sourceslist: reuse configured mirror only if it is a known ALT mirror
+- epm reinstall: support repo/package and backend:package syntax
+- epm restore: add cpanfile support via Module::CPANfile
+- epm restore: extract __epm_restore_emit, drop dead perl_shyaml code
+- epm restore: respect explicit file/URL args, fix --dry-run exit code
+- epm play.d/common.sh: check_for_product_update: honor get_target_version hook
+- epm play virtualbox-extpack: skip redundant reinstall when extpack matches virtualbox
+- epm hedgehog: add a hedgehog easter egg by analogy with epm moo
+- epm play claude-desktop: switch to official Anthropic apt repository
+- epm repack claude-desktop: fix /usr/bin launcher symlink after move_to_opt
+- epm upgrade: add --download-only support
+- epm downgrade: add --download-only support
+- epm play: drop closed app (telega)
+- epm play: add pinokio (eterbug #19233)
+- epm play torrserver: use gstreamer builds (eterbug #19241)
+- epm play: add bruno (eterbug #19232)
+- epm play: added grok (eterbug #19210)
+- epm play: added Lolka (eterbug #19228)
+- epm play: add appflowy (eterbug #19229)
+- epm play: add osu-lazer (eterbug #19231)
+- epm play: added b4 (eterbug #19208)
+- serv: avoid sudo for read-only systemctl commands (eterbug #19199)
+- serv completion: handle user services (eterbug #19199)
+- ci: fix debian build wrong exit status detection (#eterbug 18828)
+- epm play: added muse-code (eterbug #19295)
+- epm play ocenaudio: fix Qt6 requires (eterbug #17865)
+- epm play: added FlClash (eterbug #19292)
+- epm play blender: fix repack for 5.2 (eterbug #17865)
+- epm install: preserve temporary APT config during simulation
+- epm removerepo: parse regexp option globally
+- epm repo disable: propagate regexp option
+- epm play: add Legcord
+- distr_info: detect Ximper as Sisyphus
+- distr_info: prefer ALT_BRANCH_ID for ALT branch detection
+- epm repo switch: fix mirror and URL handling for Deferred
+- epm release-upgrade: preserve Deferred repositories across package updates
+- epm release-upgrade: skip source preparation when repositories already match target
+- epm release-upgrade: avoid apt-conf-branch for rolling targets
+- distr_info: detect ARM CPU frequencies per CPUFreq domain (eterbug #19452)
+- epm install: preserve explicit task devel packages
+- fix: suppress suggestions for broken dependencies
+- epm prescription: fix switching to nouveau
+- epm play: add yaak (eterbug #19413)
+- epm play: add crosspaste (eterbug #19412)
+- epm play shikiwatch: fix AppImage repack
+- epm play kodik: use clean download endpoint (eterbug #17865)
+- epm play rstudio: fix repack requires
+- epm repack fluffychat: fix requires (eterbug #17865) epm pack fluffychat: fix icon
+- epm play librewolf: use Codeberg releases (eterbug #17865)
+- epm play: add cherry-studio (eterbug #19247)
+- epm play: add kopia (eterbug #19249)
+- epm play: add beekeeper-studio (eterbug #19250)
+- epm play ayugram: move to flatpak (eterbug #17865)
+- epm play rats-search: fix upstream url (eterbug #17865)
+- ci: ignore shlibdeps errors in successful debian repacks (#eterbug 18828)
+- epm play flclashx: fix repack package name (eterbug #17865)
+- epm play git-butler: use upstream download urls (eterbug #17865)
+- epm play nomachine: fix upstream package install (eterbug #17865)
+- epm play onescript-engine: fix latest package lookup (eterbug #17865)
+- epm play openide: fix stable repack and eap download url (eterbug #17865)
+- epm play weasis: fix install (eterbug #17865)
+- epm play kulibin: fix upstream url (eterbug #17865)
+- epm play: add yandex-smart-home-control (eterbug #19325)
+- epm play cnrdrvcups-ufr2: fix Canon archive install (eterbug #17865)
+- epm repack tsukimi: fix icon url (eterbug #17865)
+- epm play lycheeslicer: fix latest install (eterbug #17865)
+- epm play jetbrains: fix official download urls (eterbug #17865)
+- epm play remotedesktopmanager: fix latest version detection (eterbug #17865)
+- epm play pi: fix packed binary permissions (eterbug #17865)
+- epm play localsend: fix install on p11 (eterbug #17865)
+- epm play portmaster: fix launcher wrapper (eterbug #17865)
+- epm play realvnc-viewer: fix upstream url (eterbug #17865)
+- epm play deltachat: move downloads to GitHub (eterbug #17865)
+- epm play cursor-agent: fix latest version detection (eterbug #17865)
+- epm play devin-desktop: use update API for download URL (eterbug #17865)
+- epm play aimp: fix install on deb systems (eterbug #17865)
+- epm play mssql-tools: add Fedora, ROSA and RedOS support (eterbug #17865)
+- epm play xod-ide: fix download url (eterbug #17865)
+- ci: test app editions in separate jobs
+- epm play samsung-printer: fix installation (eterbug #17865)
+- epm play: added plezy (eterbug #19245)
+- epm play: added reach (eterbug #19244)
+- epm play codex-app: replace it with oficial chatgpt (eterbug #19322)
+- epm play sunshine: bundle fedora libs (eterbug #19183)
+
 * Wed Jul 01 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.66-alt1
 - epm repack.d: warn about UPX-packed binaries that hide their library deps
 - epm play: add voicekey (voice typing by hotkey)
