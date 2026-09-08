@@ -971,9 +971,54 @@ get_core_count()
     echo $detected
 }
 
+get_proc_core_mhz()
+{
+    LC_ALL=C awk -F: '/^cpu MHz[[:space:]]*:/ && $2 + 0 > 0 { printf "%d\n", $2; exit }' "$ROOTDIR/proc/cpuinfo" 2>/dev/null
+}
+
+# CPUFreq attributes are in kHz. Missing/zero values do not mean 0 MHz.
+get_cpufreq_mhz()
+{
+    LC_ALL=C awk 'NF == 1 && $1 ~ /^[0-9]+$/ && $1 + 0 > 0 { printf "%.3f\n", $1 / 1000; exit }' "$1" 2>/dev/null | sed 's/0*$//; s/\.$//'
+}
+
+get_cpufreq_info()
+{
+    local policy cpus current maximum separator="" found=""
+    for policy in "$ROOTDIR"/sys/devices/system/cpu/cpufreq/policy* ; do
+        [ -d "$policy" ] || continue
+        current="$(get_cpufreq_mhz "$policy/scaling_cur_freq")"
+        maximum="$(get_cpufreq_mhz "$policy/cpuinfo_max_freq")"
+        [ -n "$current$maximum" ] || continue
+        cpus="$(cat "$policy/related_cpus" 2>/dev/null | awk '{$1=$1; print}')"
+        [ -z "$cpus" ] || cpus=" (CPUs $cpus)"
+        current="${current:+$current MHz}"
+        maximum="${maximum:+$maximum MHz}"
+        printf '%s%s%s: current %s, max %s' "$separator" "${policy##*/}" "$cpus" "${current:-unknown}" "${maximum:-unknown}"
+        separator="; "
+        found=1
+    done
+    [ -n "$found" ]
+}
+
 get_core_mhz()
 {
-    cat /proc/cpuinfo | grep "cpu MHz" | head -n1 | cut -d':' -f2 | cut -d' ' -f2 | cut -d'.' -f1
+    local detected="$(get_proc_core_mhz)"
+    # Keep the historical numeric output where /proc/cpuinfo supplies MHz.
+    [ -z "$detected" ] || { echo "$detected"; return; }
+    get_cpufreq_info || printf 'unknown'
+    echo
+}
+
+get_cpu_frequency_info()
+{
+    local detected="$(get_proc_core_mhz)"
+    if [ -n "$detected" ] ; then
+        echo "$detected MHz"
+    else
+        get_cpufreq_info || printf 'unknown'
+        echo
+    fi
 }
 
 
@@ -1074,7 +1119,7 @@ distro_info v$PROGVERSION $EV: Copyright © 2007-2026 Etersoft
             Base OS name (-o) / CPU arch (-a): $(get_base_os_name) $(get_arch)
                  CPU norm register size  (-b): $(get_bit_size) bit
                           Virtualization (-i): $(get_virt)
-                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_core_mhz) MHz
+                        CPU Cores/MHz (-c/-z): $(get_core_count) / $(get_cpu_frequency_info)
                       System memory size (-m): $(get_memory_size) MiB
                  Running service manager (-y): $(get_service_manager)
             Bug report URL (--bug-report-url): $(print_bug_report_url)
@@ -1095,7 +1140,7 @@ print_help()
     echo " -i                     - print virtualization type"
     echo " -m                     - print system memory size (in MB)"
     echo " -y|--service-manager   - print running service manager"
-    echo " -z                     - print current CPU MHz"
+    echo " -z                     - print current CPU MHz (CPUFreq domains if unavailable in /proc/cpuinfo)"
     echo " --glibc-version        - print system glibc version"
     echo
     echo " -d|--base-distro-name  - print distro id (short distro name)"
