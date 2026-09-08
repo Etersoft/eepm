@@ -10,10 +10,18 @@ URL="https://github.com/Happ-proxy/happ-desktop"
 
 is_openssl_enough 3 || fatal "OpenSSL 3 is required"
 
-if [ "$VERSION" = "*" ] ; then
+if [ "$VERSION" = "*" ]; then
     PKGURL=$(get_github_url "$URL" "Happ.linux.x64.rpm")
 else
     PKGURL="$URL/releases/download/$VERSION/Happ.linux.x64.rpm"
 fi
 
-install_pkgurl
+install_pkgurl || exit
+
+cat <<EOF
+
+Note: run
+# serv on happd.service
+to enable needed happ system service (daemon)
+
+EOF
