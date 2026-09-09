@@ -11,7 +11,15 @@ erc --here $TAR || fatal
 
 # use version from tarball
 # (TODO: get basename via erc
-PKGNAME="$(basename $TAR .tar.xz | sed -e "s|^tsetup|$PRODUCT|" -e "s|\.\([0-9]\)|-\1|")"
+tarname="$(basename $TAR .tar.xz)"
+case "$tarname" in
+    tsetup.*)
+        PKGNAME="$(echo "$tarname" | sed -e "s|^tsetup|$PRODUCT|" -e "s|\.\([0-9]\)|-\1|")"
+        ;;
+    td-setup-linux-x64-*)
+        PKGNAME="$(echo "$tarname" | sed "s|^td-setup-linux-x64-|$PRODUCT-|")"
+        ;;
+esac
 #PKGNAME="$(basename $PKGNAME .zip | )"
 
 f=$FPRODUCT
