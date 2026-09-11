@@ -13,8 +13,14 @@ epm assure ostree || fatal
 
 # Orion's bundled WebKit was built against the GNOME 49 runtime and links
 # libicu*.so.77, which ALT (ICU <= 76) does not ship. Provide it first.
-if ! ls /usr/lib64/libicudata.so.77 /usr/lib/libicudata.so.77 >/dev/null 2>&1 ; then
+if [ ! -e /usr/lib64/libicudata.so.77 ] && [ ! -e /usr/lib/libicudata.so.77 ] ; then
     epm play libicu77 || fatal "Can't install libicu77 (needed for libicu*.so.77)"
+fi
+
+# libxml2.so.16 is also part of the Flatpak runtime, not the app bundle.
+# Keep the system libxml2.so.2 and install the new ABI alongside it.
+if [ ! -e /usr/lib64/libxml2.so.16 ] && [ ! -e /usr/lib/libxml2.so.16 ] ; then
+    epm play libxml2_16 || fatal "Can't install libxml2_16 (needed for libxml2.so.16)"
 fi
 
 # the vendor publishes only the current version
