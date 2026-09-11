@@ -139,6 +139,29 @@ return_tar()
     exit 0
 }
 
+# Prepare a temporary Flathub repository for selective runtime downloads.
+# The caller owns the directory and its cleanup. Keep one signed commit for
+# all files, even when the runtime is updated during packing.
+# Usage: prepare_flatpak_runtime repo descriptor runtime/org.gnome.Platform/arch/49
+# Sets FLATPAK_RUNTIME_COMMIT.
+prepare_flatpak_runtime()
+{
+    local repo="$1"
+    local descriptor="$2"
+    local runtime="$3"
+
+    epm assure ostree || fatal
+    sed -n 's/^GPGKey=//p' "$descriptor" | base64 -d > "$repo/flathub.trustedkeys.gpg" || fatal "Invalid Flathub signing key"
+    [ -s "$repo/flathub.trustedkeys.gpg" ] || fatal "Missing Flathub signing key"
+    ostree init --repo="$repo" --mode=archive || fatal
+    ostree remote add --repo="$repo" flathub https://dl.flathub.org/repo/ || fatal
+
+    # The legacy OSTree summary does not list every architecture.
+    eget -O "$repo/runtime.commit" "https://dl.flathub.org/repo/refs/heads/$runtime" || fatal
+    FLATPAK_RUNTIME_COMMIT="$(cat "$repo/runtime.commit")"
+    echo "$FLATPAK_RUNTIME_COMMIT" | grep -qE '^[0-9a-f]{64}$' || fatal "Invalid Flatpak runtime commit"
+}
+
 # really like install -D src dst
 install_file()
 {
