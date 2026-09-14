@@ -19,6 +19,10 @@ add_bin_link_command $PRODUCT $PRODUCTDIR/sbk
 
 add_electron_deps
 
+# The RED OS build links an obsolete lttng-ust ABI unavailable on Fedora.
+# Electron still starts without it, so do not make it an install-time dependency.
+[ "$(epm print info -s)" = "fedora" ] && ignore_lib_requires liblttng-ust.so.0
+
 # Remove incorrect desktop file
 remove_file /usr/share/applications/sbk.desktop
 
@@ -41,4 +45,3 @@ add_unirequires libgdiplus.so.0
 # Create symbolic link for libgdiplus.so.0 in product directory
 ln -sf /usr/lib64/libgdiplus.so.0 ./$PRODUCTDIR/resources/bin/libgdiplus.so
 pack_file $PRODUCTDIR/resources/bin/libgdiplus.so
-

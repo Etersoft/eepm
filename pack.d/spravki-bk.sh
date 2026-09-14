@@ -8,11 +8,8 @@ RETURNTARNAME="$2"
 # Extract the archive
 erc --here "$TAR" || fatal
 
-# Find the deb file in extracted content
-PKG=$(find . -name "*.deb" -type f | head -1)
-
-if [ -z "$PKG" ]; then
-    fatal "DEB file is not found in archive"
-fi
+# play.d selects a vendor archive containing one native package.
+PKG=$(find . -type f \( -name "*.rpm" -o -name "*.deb" \) | head -1)
+[ -n "$PKG" ] || fatal "Package file is not found in archive"
 
 return_tar "$PKG"
