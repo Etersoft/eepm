@@ -493,7 +493,9 @@ __list_available_updates()
     # installed_file: pkg app installed_version
     # latest_file: pkg latest_version [release]
     # result: pkg app installed_version latest_version [release]
-    LC_ALL=C join -11 -21 "$installed_file" "$latest_file" >"$joined_file"
+    # Keep apps absent from the catalog: their target may come from an
+    # installed driver (hplip-plugin, virtualbox-extpack).
+    LC_ALL=C join -a1 -11 -21 "$installed_file" "$latest_file" >"$joined_file"
 
     # Step 4: compare versions and output updates
     local updates_found=0
@@ -503,12 +505,19 @@ __list_available_updates()
     while read -r pkg app installed latest _ ; do
         [ -n "$pkg" ] || continue
         [ -n "$installed" ] || continue
-        [ -n "$latest" ] || continue
-
-        local cmp
-        cmp="$(__compare_versions "$latest" "$installed")"
-
-        [ "$cmp" = "1" ] || continue
+        if grep -q '^get_target_version()' "$psdir/$app.sh" 2>/dev/null ; then
+            latest="$(__run_script "$app" --available-version 2>/dev/null)" || continue
+            [ -n "$latest" ] || continue
+            # Ignore packaging epoch/release; the plugin must match its driver
+            # after both upgrades and downgrades.
+            local installed_target
+            installed_target="$(epm print version for package "$pkg" 2>/dev/null | head -n1)"
+            [ -n "$installed_target" ] || continue
+            [ "$installed_target" != "$latest" ] || continue
+        else
+            [ -n "$latest" ] || continue
+            [ "$(__compare_versions "$latest" "$installed")" = "1" ] || continue
+        fi
 
         updates_found=1
 

@@ -932,6 +932,10 @@ case "$1" in
         exit
         ;;
     "--available-version")
+        if type get_target_version >/dev/null 2>&1 ; then
+            get_target_version
+            exit $?
+        fi
         load_latest_version $PKGNAME
         build_full_version "$VERSION" "$RELEASE"
         exit
