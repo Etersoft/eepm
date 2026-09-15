@@ -6,14 +6,17 @@ VERSION="$2"
 DESCRIPTION='Binary plugin for HPs hplip printer driver library'
 URL="https://developers.hp.com/hp-linux-imaging-and-printing/binary_plugin.html"
 
+# The plugin must match the installed HPLIP, including during update checks.
+get_target_version()
+{
+    epm status --installed hplip 2>/dev/null || return 1
+    epm print version for package hplip 2>/dev/null | head -n1
+}
+
 . $(dirname $0)/common.sh
 
-epm installed hplip || fatal "hplip package is not installed"
-
-# for current hplip package
-if [ "$VERSION" = "*" ] ; then
-    VERSION="$(epm print version for package hplip)"
-fi
+VERSION="$(get_target_version)" || fatal "hplip package is not installed"
+[ -n "$VERSION" ] || fatal "Can't determine the installed hplip version"
 
 export EGET_OPTIONS="--user-agent"
 
