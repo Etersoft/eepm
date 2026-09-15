@@ -40,6 +40,8 @@ remove_file "$PRODUCTDIR/office6/libjpeg.so*"
 # Fix theme system on WPS Office 11
 is_stdcpp_enough "12.1" && remove_file "$PRODUCTDIR/office6/libstdc++.so*"
 
+add_unirequires libQt5Core.so.5 libQt5Gui.so.5 libQt5Network.so.5 libQt5Widgets.so.5 libQt5Xml.so.5
+
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
 
