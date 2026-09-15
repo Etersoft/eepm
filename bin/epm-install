@@ -77,6 +77,50 @@ __separate_sudocmd()
     return 0
 }
 
+# Shared APT command for installation and simulation.
+__epm_apt_install()
+{
+    local APTOPTIONS="$APTOPTIONS"
+    local noremove="$noremove"
+    local VIRTAPTOPTIONS=''
+    local simulate=''
+
+    [ -n "$dryrun" ] && simulate="--simulate"
+    [ -n "$norecommends" ] && APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+    if [ "$PMTYPE" = "apt-dpkg" ] && [ -n "$force_overwrite" ] ; then
+        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
+    fi
+
+    if [ "$PMTYPE" = "apt-rpm" ] ; then
+        # https://bugzilla.altlinux.org/44670
+        VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
+        # not for kernel packages
+        echo "$*" | grep -q "^kernel-" && VIRTAPTOPTIONS=''
+    fi
+
+    if [ -n "$non_interactive" ] ; then
+        [ -z "$noremove" ] && [ -z "$force" ] && [ -z "$allow_remove" ] && noremove="--no-remove"
+        case $PMTYPE in
+            apt-rpm)
+                sudocmd apt-get $__EPM_APT_REPO_OPTIONS $simulate -y $noremove --force-yes $VIRTAPTOPTIONS $APTOPTIONS install "$@"
+                ;;
+            apt-dpkg)
+                sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get $__EPM_APT_REPO_OPTIONS $simulate -y $noremove --allow-unauthenticated --allow-downgrades --allow-change-held-packages -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install "$@"
+                ;;
+        esac
+        return $?
+    fi
+
+    APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+    if [ -n "$parallel" ] && [ -z "$simulate" ] ; then
+        load_helper epm-download
+        info "Downloading packages to the cache... "
+        __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install "$@"
+    fi
+
+    sudocmd apt-get $__EPM_APT_REPO_OPTIONS $simulate $VIRTAPTOPTIONS $APTOPTIONS $noremove install "$@"
+}
+
 # copied from etersoft-build-utils/share/eterbuild/functions/rpmpkg
 epm_install_names()
 {
@@ -112,12 +156,7 @@ epm_install_names()
         return
     fi
 
-    if [ -n "$force_overwrite" ] ; then
-        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
-    fi
-
     if [ -n "$norecommends" ] ; then
-        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
         YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
         URPMOPTIONS="$URPMOPTIONS --no-suggests"
         ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
@@ -125,20 +164,7 @@ epm_install_names()
 
     case $PMTYPE in
         apt-rpm|apt-dpkg)
-            APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-
-            # https://bugzilla.altlinux.org/44670
-            VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
-            # not for kernel packages
-            echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
-
-            if [ -n "$parallel" ] ; then
-                load_helper epm-download
-                info "Downloading packages to the cache... "
-                __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
-            fi
-
-            sudocmd apt-get $__EPM_APT_REPO_OPTIONS $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
+            __epm_apt_install "$@"
             local res=$?
             if [ "$res" = 0 ] ; then
                 save_installed_packages $@
@@ -285,18 +311,14 @@ epm_ni_install_names()
     [ -z "$noremove" ] && [ -z "$force" ] && [ -z "$allow_remove" ] && noremove="--no-remove"
 
     if [ -n "$norecommends" ] ; then
-        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
         YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
         URPMOPTIONS="$URPMOPTIONS --no-suggests"
         ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
     fi
 
     case $PMTYPE in
-        apt-rpm)
-            sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true $APTOPTIONS install $@
-            return ;;
-        apt-dpkg)
-            sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --allow-unauthenticated --allow-downgrades --allow-change-held-packages -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+        apt-rpm|apt-dpkg)
+            __epm_apt_install "$@"
             return ;;
         apm-rpm)
             sudocmd apm system install $@
