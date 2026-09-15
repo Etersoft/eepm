@@ -40,13 +40,20 @@ remove_file "$PRODUCTDIR/office6/libjpeg.so*"
 # Fix theme system on WPS Office 11
 is_stdcpp_enough "12.1" && remove_file "$PRODUCTDIR/office6/libstdc++.so*"
 
+# Unneeded installer and Peony integration are the only users of system Qt5.
+remove_file "$PRODUCTDIR/office6/KPacketInstall"
+remove_file "$PRODUCTDIR/office6/libpeony-wpsprint-menu-plugin.so"
+
 # hack to fix bug somewhere in linking
 ignore_lib_requires "libc++.so"
 
-# avoid dependency to Qt 4
+# Avoid dependencies on system Qt 4/5; WPS uses the bundled *_wpsqt variants.
 remove_file $PRODUCTDIR/office6/librpcwpsapi.so
 remove_file $PRODUCTDIR/office6/librpcwppapi.so
 remove_file $PRODUCTDIR/office6/librpcetapi.so
+remove_file $PRODUCTDIR/office6/librpcwpsapi_sysqt5.so
+remove_file $PRODUCTDIR/office6/librpcwppapi_sysqt5.so
+remove_file $PRODUCTDIR/office6/librpcetapi_sysqt5.so
 
 # WPS Office provide libuof.so()(64bit) itself
 ignore_lib_requires "libuof.so"
@@ -61,9 +68,7 @@ case $(epm print info -d) in
 esac
 
 # libmysqlclient.so.18 - required by libFontWatermark.so for database connectivity in font watermarking features
-# libpeony.so.3 - required by libpeony-wpsprint-menu-plugin.so for Peony file manager print menu integration
 ignore_lib_requires "libmysqlclient.so.18"
-ignore_lib_requires "libpeony.so.3"
 
 # Fix wps deprecated python2 command
 # https://aur.archlinux.org/cgit/aur.git/tree/fix-wps-python-parse.patch?h=wps-office-cn
