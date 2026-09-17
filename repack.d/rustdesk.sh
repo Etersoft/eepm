@@ -44,7 +44,28 @@ subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" usr/share/ap
 
 add_bin_link_command
 
+# Replace /usr with /opt in Linux is_installed().
+RUSTDESK_LIB="$BUILDROOT$PRODUCTDIR/lib/librustdesk.so"
+case "$(epm print info -a)" in
+    x86_64)
+        # x86-64: cmp dword ptr [rax], "/usr"; je <installed>.
+        check_binary "$RUSTDESK_LIB" '\x81\x38/usr\x0f\x84' || fatal 'Unsupported RustDesk installation check'
+        patch_binary "$RUSTDESK_LIB" '\x81\x38/usr\x0f\x84' '\x81\x38/opt\x0f\x84' || fatal
+        ;;
+    aarch64)
+        # mov w9, #0x752f; movk w9, #0x7273, lsl #16; ldr w8, [x8]; cmp w8, w9.
+        check_binary "$RUSTDESK_LIB" '\xe9\xa5\x8e\x52\x69\x4e\xae\x72\x08\x01\x40\xb9\x1f\x01\x09\x6b' || fatal 'Unsupported RustDesk installation check'
+        patch_binary "$RUSTDESK_LIB" '\xe9\xa5\x8e\x52\x69\x4e\xae\x72\x08\x01\x40\xb9\x1f\x01\x09\x6b' '\xe9\xe5\x8d\x52\x09\x8e\xae\x72\x08\x01\x40\xb9\x1f\x01\x09\x6b' || fatal
+        ;;
+    *)
+        fatal 'Unsupported RustDesk architecture'
+        ;;
+esac
+
 add_unirequires curl
+
+# KDE tray integration (issue #699): loaded at runtime, missed by autodeps.
+add_unirequires libayatana-appindicator3.so.1
 
 # since 1.4.6 librustdesk.so dlopens libxdo (libxdo.so.4 / libxdo.so.3) instead of
 # linking it, so it is missed by autodeps, and input does not work without it
