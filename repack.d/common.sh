@@ -429,6 +429,14 @@ fix_desktop_file()
     chmod -v 0644 $BUILDROOT/usr/share/applications/*.desktop
 }
 
+fix_chrome_crashpad()
+{
+    local crashpad="$1"
+    [ -n "$crashpad" ] || crashpad="$PRODUCTDIR/chrome_crashpad_handler"
+    [ -f "$BUILDROOT$crashpad" ] || return 0
+    chmod -v 0755 "$BUILDROOT$crashpad"
+}
+
 fix_chrome_sandbox()
 {
     local sandbox="$1"

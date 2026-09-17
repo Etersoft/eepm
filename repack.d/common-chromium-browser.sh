@@ -67,6 +67,8 @@ add_chromium_deps()
 {
     fix_chrome_sandbox
 
+    fix_chrome_crashpad
+
     # Qt shim libraries (libqt5_shim.so, libqt6_shim.so) are optional for native file dialogs.
     # Browsers work fine with GTK dialogs when Qt is not available.
     # Only ignore Qt requires when shim libs are detected in the package.
@@ -104,4 +106,3 @@ add_bin_commands()
     # short command for run
     add_bin_link_command $PRODUCT $PRODUCTCUR
 }
-
