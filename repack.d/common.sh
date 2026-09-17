@@ -437,7 +437,10 @@ fix_chrome_sandbox()
     userns_path='/proc/sys/kernel/unprivileged_userns_clone'
     userns_val="$(cat $userns_path 2>/dev/null)"
     #[ "$userns_val" = '1' ] && return
-    [ -n "$sandbox" ] || sandbox="$PRODUCTDIR/chrome-sandbox"
+    if ! [ -n "$sandbox" ] ; then
+        sandbox="$PRODUCTDIR/chrome-sandbox"
+        [ -e "$BUILDROOT$sandbox" ] || sandbox="$PRODUCTDIR/chrome_sandbox"
+    fi
     [ -e "$BUILDROOT$sandbox" ] || return 0
     chmod -v 4711 "$BUILDROOT$sandbox"
 }
