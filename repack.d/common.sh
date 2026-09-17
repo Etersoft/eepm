@@ -175,6 +175,13 @@ has_wildcard()
     [ "${1/\*/}" != "$1" ]
 }
 
+# Check binary file for a pattern (including \xNN bytes).
+# Usage: check_binary <file> <pattern>
+check_binary()
+{
+    [ -f "$1" ] && LC_ALL=C grep -aqP "$2" "$1"
+}
+
 # Patch binary file: replace old_string with new_string (padded with nulls)
 # Usage: patch_binary <file> <old_string> <new_string>
 patch_binary()
