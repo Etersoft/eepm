@@ -99,8 +99,15 @@ get_url_to_etersoft_mirror()
     local REPOPATH
     local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
     local ALTREPO=$(get_alt_repo_path "$1")
-    echo "$ALTREPO" | grep -q "^ALTLinux" || echo "$ALTREPO" | grep -q "^altlinux" || return
-    echo "$ETERSOFT_MIRROR/$(echo "$ALTREPO" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
+    case "$ALTREPO" in
+        ALTLinux/*|altlinux/*)
+            echo "$ETERSOFT_MIRROR/$(echo "$ALTREPO" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
+            ;;
+        Etersoft/Sisyphus/Deferred/*|Etersoft/Sisyphus/Deferred_DEVEL/*|Etersoft/Sisyphus/Deferred_BETA/*)
+            # Deferred repositories already publish contents_index.gz in base/.
+            echo "$ETERSOFT_MIRROR/$ALTREPO"
+            ;;
+    esac
 }
 
 # "comment" "file"
@@ -244,4 +251,3 @@ update_alt_contents_index()
     done < "$URL_LIST_FILE"
     rm -f "$URL_LIST_FILE"
 }
-
