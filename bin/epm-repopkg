@@ -91,11 +91,36 @@ __epm_repo_pkgupdate_alt()
 {
     local dir="$1"
     shift
-    for i in "$@" ; do
-        pkg="$(epm print name for package $i)" || fatal
-        __epm_repo_pkgdel_alt "$dir" $pkg
+    # A task or a wildcard can contain several versions of the same package.
+    # Keep only the newest EVR for each name/architecture pair.
+    local selected_dir candidate candidate_name candidate_arch candidate_epoch candidate_evr
+    local selected_file selected_evr selected_package comparison
+    selected_dir="$(mktemp -d)" || fatal "Cannot create temp directory"
+
+    for candidate in "$@" ; do
+        candidate_name="$(epm print name for package "$candidate")" || fatal
+        candidate_arch="$(epm print arch for package "$candidate")" || fatal
+        candidate_epoch="$(epm print field epoch for package "$candidate")" || fatal
+        [ "$candidate_epoch" = "(none)" ] && candidate_epoch=0
+        candidate_evr="$candidate_epoch:$(epm print version-release for package "$candidate")" || fatal
+        selected_file="$selected_dir/$candidate_name.$candidate_arch"
+
+        if [ -s "$selected_file" ] ; then
+            selected_evr="$(sed -n '1p' "$selected_file")"
+            comparison="$(epm print compare version "$selected_evr" "$candidate_evr")" || fatal
+            [ "$comparison" -ge 0 ] && continue
+        fi
+        printf '%s\n%s\n' "$candidate_evr" "$candidate" > "$selected_file"
     done
-    __epm_repo_pkgadd_alt "$dir" "$@"
+
+    for selected_file in "$selected_dir"/* ; do
+        [ -s "$selected_file" ] || continue
+        selected_package="$(sed -n '2p' "$selected_file")"
+        candidate_name="$(epm print name for package "$selected_package")" || fatal
+        __epm_repo_pkgdel_alt "$dir" "$candidate_name"
+        __epm_repo_pkgadd_alt "$dir" "$selected_package"
+    done
+    rm -rf "$selected_dir"
 }
 
 
