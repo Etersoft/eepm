@@ -12,15 +12,13 @@ URL="$4"
 
 erc --here unpack "$TAR" || fatal
 
-# Install everything under /opt/codex
-mkdir -p opt/codex/bin opt/codex
+# Codex falls back to its regular shell backend; the bundled test zsh lacks
+# modules and is incompatible with ALT Linux's libtinfo.
+rm -r codex-resources/zsh || fatal
 
-mv bin/codex opt/codex/bin/codex || fatal
-mv bin/codex-code-mode-host opt/codex/bin/codex-code-mode-host || fatal
-chmod 755 opt/codex/bin/codex opt/codex/bin/codex-code-mode-host
-
-mv codex-path opt/codex/path || fatal
-mv codex-resources opt/codex/resources || fatal
+# Keep the upstream package layout so Codex can find its bundled tools.
+mkdir -p opt/codex
+mv bin codex-package.json codex-path codex-resources opt/codex/ || fatal
 
 # Symlinks for PATH
 mkdir -p usr/bin
