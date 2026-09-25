@@ -150,7 +150,7 @@ get_rpm_repo_latest_file()
     local mask="$2"
     local primary
     primary="$(fetch_url "$base/repodata/repomd.xml" \
-        | sed -n 's|.*href="\([^"]*primary\.xml\.gz\)".*|\1|p' | head -n1)"
+        | sed -nE 's#.*href="([^"]*primary\.xml\.(gz|zst))".*#\1#p' | head -n1)"
     [ -n "$primary" ] || return
     fetch_url "$base/$primary" | ercat - \
         | sed -n "s|.*<location href=\"\($mask\)\".*|\1|p" | sort -V | tail -n1
