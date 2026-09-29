@@ -16,4 +16,11 @@ filename="$(get_rpm_repo_latest_file "$REPOURL" "Packages/trivalent-$VERSION-[0-
 [ -n "$filename" ] || fatal "Can't find Trivalent $VERSION for $arch in $REPOURL"
 PKGURL="$REPOURL/$filename"
 
-install_pkgurl
+install_pkgurl || exit
+
+cat <<EOF
+
+Note: run
+# epm play trivalent-qt6-ui
+to install optional Qt 6 native file dialog integration
+EOF
