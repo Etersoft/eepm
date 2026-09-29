@@ -8,16 +8,6 @@ PRODUCTDIR=/opt/trivalent
 
 . $(dirname $0)/common-chromium-browser.sh
 
-# need for Qt theme
-RPM_SUFFIX=$(basename "$4" .rpm | sed "s/^$3-//")
-tmpdir=$(mktemp -d)
-trap 'rm -rf "$tmpdir"' EXIT
-if epm tool eget -O "$tmpdir/qt6-ui.rpm" "https://repo.secureblue.dev/Packages/trivalent-qt6-ui-$RPM_SUFFIX.rpm"; then
-    epm assure rpm2cpio cpio
-    (cd "$BUILDROOT" && rpm2cpio "$tmpdir/qt6-ui.rpm" | cpio -idmu --quiet ./usr/lib64/trivalent/libqt6_shim.so) || fatal "Can't extract Trivalent Qt6 shim"
-    pack_file /usr/lib64/trivalent/libqt6_shim.so
-fi
-
 move_to_opt /usr/lib64/trivalent
 
 remove_file $PRODUCTDIR/trivalent.sh
