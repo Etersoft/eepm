@@ -568,7 +568,7 @@ Supported backends (set like EGET_BACKEND=curl)
   wget, curl and partially aria2c, axel, rsync
 
 Environment variables:
-  EGET_BACKEND              - force specific backend (wget, curl, aria2c, axel)
+  EGET_BACKEND              - force specific backend (wget, wget2, curl, aria2c, axel)
   EGET_OPTIONS              - extra options applied after command line args
   EGET_MIRRORS              - override default mirrors for --allow-mirrors
   EGET_WGET_OPTIONS         - extra options passed to wget
@@ -1189,9 +1189,15 @@ case "$orig_EGET_BACKEND" in
         RSYNC="$(print_command_path rsync)"
         [ -n "$RSYNC" ] || fatal "There are no rsync in the system. Install it with $ epm install rsync"
         ;;
-    */wget)
+    */wget|*/wget2)
         WGET="$orig_EGET_BACKEND"
         [ -x "$WGET" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+        EGET_BACKEND="wget"
+        ;;
+    wget2)
+        WGET="$(print_command_path wget2)"
+        [ -n "$WGET" ] || fatal "There are no wget2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget2"
+        EGET_BACKEND="wget"
         ;;
     wget)
         WGET="$(print_command_path wget)"
