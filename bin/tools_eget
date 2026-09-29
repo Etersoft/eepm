@@ -1272,6 +1272,13 @@ __wget()
 {
     local outputdir="$USEOUTPUTDIR"
     if [ -n "$WGET2" ] ; then
+        local arg
+        for arg in "$@" ; do
+            case "$arg" in
+                ftp://*|ftps://*)
+                    fatal "wget2 does not support FTP, use EGET_BACKEND=wget or EGET_BACKEND=curl" ;;
+            esac
+        done
         # wget2 treats absolute -P path as relative to the current dir, so make it relative via ../
         case "$outputdir" in
             /*) outputdir="$(echo "$PWD" | sed -e 's|/[^/]*|../|g')${outputdir#/}" ;;
