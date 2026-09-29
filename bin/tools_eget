@@ -1347,7 +1347,9 @@ __timestamping_download()
 # and lowercase header names without leading spaces
 __wget2_filter_response()
 {
-	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[A-Za-z][A-Za-z-]*: /p' -e 's|^Enqueue \(https\?://.*\)|location: \1|p' | \
+	# --save-headers keeps CRLF line endings; wget2 2.x prints "Enqueuing URL" for redirects
+	tr -d '\r' | \
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[A-Za-z][A-Za-z-]*: /p' -e 's|^Enqueu[a-z]* \(https\?://.*\)|location: \1|p' | \
 	sed -e 's/^\([A-Za-z-]*:\)/\L\1/'
 }
 
