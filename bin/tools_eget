@@ -1282,7 +1282,8 @@ __wget()
     [ "$nodirectories" ] && set -- -nd "$@"
     [ "$nosslcheck" ] && set -- --no-check-certificate "$@"
     [ "$HEADER_VALUE" ] && set -- --header="$HEADER_VALUE" "$@"
-    [ "$compressed" ] && set -- --compression=auto "$@"
+    # wget2 requests and decodes compressed content by default and has no --compression=auto
+    [ "$compressed" ] && [ -z "$WGET2" ] && set -- --compression=auto "$@"
     [ "$NOGLOB" ] && set -- --no-glob "$@"
     [ "$showprogress" ] && set -- --show-progress "$@"
     [ "$quiet" ] && set -- -q "$@"
