@@ -1270,7 +1270,14 @@ fi
 # Defined globally so it can be used by aria2/axel backends for header operations
 __wget()
 {
-    [ "$USEOUTPUTDIR" ] && set -- -P "$USEOUTPUTDIR" "$@"
+    local outputdir="$USEOUTPUTDIR"
+    if [ -n "$WGET2" ] ; then
+        # wget2 treats absolute -P path as relative to the current dir, so make it relative via ../
+        case "$outputdir" in
+            /*) outputdir="$(echo "$PWD" | sed -e 's|/[^/]*|../|g')${outputdir#/}" ;;
+        esac
+    fi
+    [ "$outputdir" ] && set -- -P "$outputdir" "$@"
     [ "$USERAGENT" ] && set -- -U "$USERAGENT" "$@"
     [ "$trustservernames" ] && set -- --trust-server-names "$@"
     [ "$COOKIES_FILE" ] && set -- --load-cookies "$COOKIES_FILE" "$@"
