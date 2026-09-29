@@ -1347,7 +1347,8 @@ __timestamping_download()
 # and lowercase header names without leading spaces
 __wget2_filter_response()
 {
-	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[a-z].*: /p'
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[A-Za-z][A-Za-z-]*: /p' -e 's|^Enqueue \(https\?://.*\)|location: \1|p' | \
+	sed -e 's/^\([A-Za-z-]*:\)/\L\1/'
 }
 
 # Extract HTTP headers from wget1 -S output and normalize:
@@ -1366,11 +1367,11 @@ __wget_url_get_response()
 
 	if [ -n "$WGET2" ] ; then
 		# wget2 -S is broken for HTTP/1.1 (shows only a few headers),
-		# use --save-headers to stdout and filter header lines with grep
+		# use --save-headers to stdout and filter header lines.
 		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
-		answer="$(__wget --timeout 20 --tries 1 --save-headers -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response)"
+		answer="$(__wget --timeout 20 --tries 1 --method=HEAD --save-headers -O - "$URL" 2>&1 | tr -d '\0' | __wget2_filter_response)"
 		if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
-			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response
+			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>&1 | tr -d '\0' | __wget2_filter_response
 			return
 		fi
 		echo "$answer"
