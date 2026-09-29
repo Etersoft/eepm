@@ -2105,14 +2105,14 @@ url_get_filename()
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
         #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
-        filename="$(echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
+        filename="$(echo "$cd" | grep -i "filename\*= *UTF-8" | tail -n1 | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
         filename="$(echo "$filename" | sed -e 's|.*[/\\]||' -e 's|.*%5[cC]||' -e 's|.*%2[fF]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        filename="$(echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
+        filename="$(echo "$cd" | grep -i "filename=" | tail -n1 | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
         filename="$(echo "$filename" | sed -e 's|.*[/\\]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
