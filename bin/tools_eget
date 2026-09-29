@@ -1205,15 +1205,17 @@ case "$orig_EGET_BACKEND" in
         CURL="$(print_command_path curl)"
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
-    */aria2)
+    */aria2|*/aria2c)
         ARIA2="$orig_EGET_BACKEND"
         [ -x "$ARIA2" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        EGET_BACKEND="aria2"
         # aria2 needs wget for headers and stdout
         WGET="$(print_command_path wget)"
         ;;
-    aria2)
-        ARIA2="$(print_command_path aria2)"
-        [ -n "$ARIA2" ] || fatal "There are no aria2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+    aria2|aria2c)
+        ARIA2="$(print_command_path aria2c || print_command_path aria2)"
+        [ -n "$ARIA2" ] || fatal "There are no aria2c in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        EGET_BACKEND="aria2"
         # aria2 needs wget for headers and stdout
         WGET="$(print_command_path wget)"
         ;;
@@ -1345,7 +1347,8 @@ __timestamping_download()
 # and lowercase header names without leading spaces
 __wget2_filter_response()
 {
-	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[a-z].*: /p'
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[A-Za-z][A-Za-z-]*: /p' -e 's|^Enqueue \(https\?://.*\)|location: \1|p' | \
+	sed -e 's/^\([A-Za-z-]*:\)/\L\1/'
 }
 
 # Extract HTTP headers from wget1 -S output and normalize:
@@ -1364,11 +1367,11 @@ __wget_url_get_response()
 
 	if [ -n "$WGET2" ] ; then
 		# wget2 -S is broken for HTTP/1.1 (shows only a few headers),
-		# use --save-headers to stdout and filter header lines with grep
+		# use --save-headers to stdout and filter header lines.
 		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
-		answer="$(__wget --timeout 20 --tries 1 --save-headers -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response)"
+		answer="$(__wget --timeout 20 --tries 1 --method=HEAD --save-headers -O - "$URL" 2>&1 | tr -d '\0' | __wget2_filter_response)"
 		if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
-			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response
+			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>&1 | tr -d '\0' | __wget2_filter_response
 			return
 		fi
 		echo "$answer"
@@ -2102,14 +2105,14 @@ url_get_filename()
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
         #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
-        filename="$(echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
+        filename="$(echo "$cd" | grep -i "filename\*= *UTF-8" | tail -n1 | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
         filename="$(echo "$filename" | sed -e 's|.*[/\\]||' -e 's|.*%5[cC]||' -e 's|.*%2[fF]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        filename="$(echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
+        filename="$(echo "$cd" | grep -i "filename=" | tail -n1 | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
         filename="$(echo "$filename" | sed -e 's|.*[/\\]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
