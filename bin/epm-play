@@ -305,7 +305,7 @@ Options:
     --list-updates        - list installed apps that have available updates
     --list-scripts        - list all available scripts
     --short (with --list) - list names only
-    --installed <app>     - check if the app is installed
+    --installed [<app>]   - check if the app is installed (list all installed apps without <app>)
     --ipfs <app>          - use IPFS for downloading
     --product-alternatives- list alternatives (use like epm play app=beta)
 
@@ -761,6 +761,10 @@ case "$1" in
 
     --installed)
         shift
+        if [ -z "$1" ] ; then
+            __epm_play_list_installed | __epm_colorize_search_output
+            exit
+        fi
         __is_app_installed "$1" "$2"
         #[ -n "$quiet" ] && exit
         exit
