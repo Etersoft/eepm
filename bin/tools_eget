@@ -1205,15 +1205,17 @@ case "$orig_EGET_BACKEND" in
         CURL="$(print_command_path curl)"
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
-    */aria2)
+    */aria2|*/aria2c)
         ARIA2="$orig_EGET_BACKEND"
         [ -x "$ARIA2" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        EGET_BACKEND="aria2"
         # aria2 needs wget for headers and stdout
         WGET="$(print_command_path wget)"
         ;;
-    aria2)
-        ARIA2="$(print_command_path aria2)"
-        [ -n "$ARIA2" ] || fatal "There are no aria2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+    aria2|aria2c)
+        ARIA2="$(print_command_path aria2c || print_command_path aria2)"
+        [ -n "$ARIA2" ] || fatal "There are no aria2c in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        EGET_BACKEND="aria2"
         # aria2 needs wget for headers and stdout
         WGET="$(print_command_path wget)"
         ;;
