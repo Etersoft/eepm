@@ -51,14 +51,83 @@ __run_script()
 }
 
 
+# Print the language part of the locale used for messages.  Localized
+# descriptions intentionally support language-only fields (DESCRIPTION_ru),
+# so territory, codeset, and modifier are ignored.
+__get_description_language()
+{
+    local locale
+    locale="${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}"
+
+    case "$locale" in
+        ''|C|C.*|POSIX|POSIX.*)
+            return
+            ;;
+    esac
+
+    printf '%s\n' "$locale" | LC_ALL=C sed -nE 's/^([a-z]{2,3})(_[A-Z]{2}|_[0-9]{3})?(\.[a-zA-Z0-9-]+)?(@[a-zA-Z0-9_-]+)?$/\1/p'
+}
+
+# Read grep -H metadata records in batches, without executing scripts.
+# Output: app, selected description, base description (separated by RS).
+__select_app_descriptions()
+{
+    awk -v language="$(__get_description_language)" '
+        function emit() {
+            if (base != "")
+                printf "%s\036%s\036%s\n", app, translated != "" ? translated : base, base
+        }
+        {
+            separator = index($0, ":")
+            file = substr($0, 1, separator - 1)
+            if (file != previous) {
+                emit()
+                previous = file
+                app = file
+                sub(/^.*\//, "", app)
+                sub(/\.sh$/, "", app)
+                base = translated = ""
+            }
+            assignment = substr($0, separator + 1)
+            separator = index(assignment, "=")
+            field = substr(assignment, 1, separator - 1)
+            if (field != "DESCRIPTION" && field != "DESCRIPTION_" language)
+                next
+            value = substr(assignment, separator + 1)
+            quote = substr(value, 1, 1)
+            if (quote != "\"" && quote != sprintf("%c", 39))
+                next
+            value = substr(value, 2)
+            text = ""
+            for (closing = 1; closing <= length(value); closing++) {
+                character = substr(value, closing, 1)
+                if (character == quote)
+                    break
+                # Only these escapes have special meaning inside double quotes.
+                if (quote == "\"" && character == "\\" &&
+                    substr(value, closing + 1, 1) ~ /^[\\"$`\\\\]$/)
+                    character = substr(value, ++closing, 1)
+                text = text character
+            }
+            if (closing > length(value) || substr(value, closing + 1) !~ /^[[:space:]]*(#.*)?$/)
+                next
+            value = text
+            if (field == "DESCRIPTION") base = value
+            else translated = value
+        }
+        END { emit() }
+    '
+}
+
 # args: script, host arch
 __get_app_description()
 {
     local arch="$2"
+    local script="$psdir/$1.sh"
     #__run_script "$1" --description "$arch" 2>/dev/null
     #return
-    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$psdir/$1.sh" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$psdir/$1.sh" || ! grep -q "^SUPPORTEDARCHES=" "$psdir/$1.sh" ; then
-        grep -oP "^DESCRIPTION=[\"']*\K[^\"']+" "$psdir/$1.sh" | sed -e 's| *#*$||'
+    if grep -q '^SUPPORTEDARCHES=.*\<'"$arch"'\>' "$script" || grep -q "^SUPPORTEDARCHES=[\"'][\"']$" "$script" || ! grep -q "^SUPPORTEDARCHES=" "$script" ; then
+        grep -H '^DESCRIPTION' "$script" | __select_app_descriptions | cut -d "$(printf '\036')" -f2
     fi
 }
 
@@ -117,9 +186,8 @@ __get_fast_int_list_app()
     local arch="$1"
     [ -n "$arch" ] || fatal
     local IGNOREi586
-    local RIFS=$'\x1E'
     [ "$arch" = "x86_64" ] && IGNOREi586='NoNo' || IGNOREi586='i586-'
-    find $psdir -maxdepth 1 -name '*.sh' ! -type l | xargs grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\<$arch\>)" | xargs grep -oP "^DESCRIPTION=[\"']*\K[^\"']+"  | sed -e "s|.*/\(.*\).sh:|\1$RIFS|" | grep -v -E "(^$IGNOREi586|^common|#.*$)" | LC_ALL=C sort
+    find "$psdir" -maxdepth 1 -name '*.sh' ! -type l | xargs -r grep -l -E "^SUPPORTEDARCHES=(''|\"\"|.*\\<$arch\\>)" | xargs -r grep -H '^DESCRIPTION' | __select_app_descriptions | grep -v -E "(^$IGNOREi586|^common)" | LC_ALL=C sort
 }
 
 # Suggest similar apps using fzf fuzzy search
@@ -167,7 +235,7 @@ __epm_play_list()
     local psdir="$1"
     local extra="$2"
     local i
-    local RIFS=$'\x1E'
+    local RIFS="$(printf '\036')"
     local arch="$SYSTEMARCH"
 
     if [ -n "$short" ] && [ -z "$extra" ] ; then
@@ -186,12 +254,7 @@ __epm_play_list()
         return
     fi
 
-    if [ -n "$quiet" ] && [ -z "$extra" ] ; then
-        __get_fast_int_list_app $arch | sed -e "s|$RIFS| - |"
-        return
-    fi
-
-    __get_fast_int_list_app $arch | while IFS=$'\x1E' read -r app desc; do
+    __get_fast_int_list_app $arch | while IFS="$RIFS" read -r app desc base; do
         if [ -n "$quiet" ] ; then
             printf "%s - %s\n" "$app" "$desc"
         else
@@ -215,9 +278,20 @@ __epm_play_search()
 {
     local pattern="$1"
     local arch="$SYSTEMARCH"
-    local RIFS=$'\x1E'
+    local RIFS="$(printf '\036')"
+    local list matches
 
-    __get_fast_int_list_app $arch | grep -i "$pattern" | while IFS=$'\x1E' read -r app desc; do
-        printf "  %-25s - %s\n" "$app" "$desc"
+    list="$(__get_fast_int_list_app $arch)"
+    [ -n "$list" ] || return 0
+    # Search separate name/description lines so regex anchors retain their meaning.
+    matches="$(printf '%s\n' "$list" | awk -F "$RIFS" '{print $1 FS $2; print $1 FS $3}' | grep -i -- "$pattern" | cut -d "$RIFS" -f1)"
+    printf '%s\n' "$list" | while IFS="$RIFS" read -r app desc base; do
+        case "
+$matches
+" in
+            *"
+$app
+"*) printf "  %-25s - %s\n" "$app" "$desc" ;;
+        esac
     done
 }

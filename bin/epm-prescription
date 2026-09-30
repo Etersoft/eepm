@@ -33,7 +33,7 @@ epm_prescription_help()
 epm_prescription()
 {
 
-local psdir="$CONFIGDIR/prescription.d"
+local psdir="$(realpath $CONFIGDIR/prescription.d)"
 
 if [ "$1" = "--list-all" ] || [ -z "$*" ] ; then
     [ -n "$short" ] || [ -n "$quiet" ] || message "Run with a name of a prescription to run:"
