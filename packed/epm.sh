@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.67"
+export EPMVERSION="3.64.68"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -1519,13 +1519,13 @@ __epm_addrepo_rhel()
         powertools)
             # https://serverfault.com/questions/997896/how-to-enable-powertools-repository-in-centos-8
             assure_exists dnf-plugins-core
-            sudocmd dnf config-manager --set-enabled powertools
+            sudocmd $DNFCMD config-manager --set-enabled powertools
             return 1
             ;;
         crb)
             # https://wiki.rockylinux.org/rocky/repo/
             assure_exists dnf-plugins-core
-            sudocmd dnf config-manager --set-enabled crb
+            sudocmd $DNFCMD config-manager --set-enabled crb
             return 1
             ;;
     esac
@@ -2152,10 +2152,10 @@ case "$1" in
         case $PMTYPE in
             dnf-rpm)
                 assure_exists dnf-plugins-core
-                sudocmd dnf copr enable -y "$owner_project"
+                sudocmd $DNFCMD copr enable -y "$owner_project"
                 ;;
             dnf5-rpm)
-                sudocmd dnf copr enable -y "$owner_project"
+                sudocmd $DNFCMD copr enable -y "$owner_project"
                 ;;
             yum-rpm)
                 assure_exists yum-plugin-copr
@@ -2206,11 +2206,11 @@ case $PMTYPE in
         ;;
     dnf-rpm)
         __epm_addrepo_rhel "$repo" || return
-        sudocmd dnf config-manager --add-repo "$repo"
+        sudocmd $DNFCMD config-manager --add-repo "$repo"
         ;;
     dnf5-rpm)
         __epm_addrepo_rhel "$repo" || return
-        sudocmd dnf config-manager addrepo --from-repofile "$repo"
+        sudocmd $DNFCMD config-manager addrepo --from-repofile "$repo"
         ;;
     urpm-rpm)
         sudocmd urpmi.addmedia "$@"
@@ -2808,7 +2808,7 @@ case $PMTYPE in
         if [ -n "$dryrun" ] ; then
             fatal "--dry-run is not supported yet"
         fi
-        sudocmd dnf autoremove
+        sudocmd $DNFCMD autoremove
         ;;
     # see autoorhans
     #urpm-rpm)
@@ -2958,7 +2958,7 @@ __epm_changelog_unlocal_names()
             ;;
         dnf-rpm|dnf5-rpm)
             #assure_exist yum-changelog
-            docmd dnf changelog "$1"
+            docmd $DNFCMD changelog "$1"
             ;;
         urpm-rpm)
             docmd urpmq --changelog "$1"
@@ -3060,7 +3060,7 @@ case $PMTYPE in
     dnf-rpm|dnf5-rpm)
         __epm_rpm_rebuilddb
 
-        sudocmd dnf check $DNFOPTIONS
+        sudocmd $DNFCMD check $DNFOPTIONS
         ;;
     emerge)
         sudocmd revdep-rebuild
@@ -3522,7 +3522,7 @@ case $PMTYPE in
         #sudocmd yum makecache
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf clean all
+        sudocmd $DNFCMD clean all
         ;;
     urpm-rpm)
         sudocmd urpmi --clean
@@ -4740,9 +4740,9 @@ __epm_downgrade_do()
         ;;
     dnf-rpm|dnf5-rpm)
         if [ -n "$pkg_filenames" ] ; then
-            sudocmd dnf downgrade $(subst_option download_only --downloadonly) $pkg_filenames
+            sudocmd $DNFCMD downgrade $(subst_option download_only --downloadonly) $pkg_filenames
         else
-            sudocmd dnf distro-sync $(subst_option download_only --downloadonly)
+            sudocmd $DNFCMD distro-sync $(subst_option download_only --downloadonly)
         fi
         ;;
     urpm-rpm)
@@ -5065,7 +5065,7 @@ epm_download()
         docmd apt-get download $*
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf download $print_url $*
+        sudocmd $DNFCMD download $print_url $*
         ;;
     aptcyg)
         sudocmd apt-cyg download $*
@@ -5079,7 +5079,7 @@ epm_download()
         sudocmd yumdownloader $*
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf download $*
+        sudocmd $DNFCMD download $*
         ;;
     urpm-rpm)
         sudocmd urpmi --no-install $URPMOPTIONS $@
@@ -5314,7 +5314,7 @@ __epm_filelist_remote()
             ;;
         dnf-rpm|dnf5-rpm)
             assure_exists dnf-plugins-core
-            docmd dnf repoquery -l "$@"
+            docmd $DNFCMD repoquery -l "$@"
             ;;
         *)
             fatal "Query filelist for non installed packages is not implemented yet."
@@ -5784,10 +5784,10 @@ case $PMTYPE in
         docmd cat /var/log/dpkg.log
         ;;
     dnf-rpm)
-        sudocmd dnf history
+        sudocmd $DNFCMD history
         ;;
     dnf5-rpm)
-        sudocmd dnf history list
+        sudocmd $DNFCMD history list
         ;;
     eopkg)
         sudocmd eopkg history
@@ -5894,7 +5894,7 @@ case $PMTYPE in
                 docmd urpmq -i $pkg_names
                 ;;
             dnf-rpm|dnf5-rpm)
-                docmd dnf info $pkg_names
+                docmd $DNFCMD info $pkg_names
                 ;;
             zypper-rpm)
                 docmd zypper info $pkg_names
@@ -6113,7 +6113,7 @@ epm_info_obsoletes_names()
             if is_installed $pkg_names ; then
                 docmd rpm -q --obsoletes $pkg_names
             else
-                docmd dnf repoquery --obsoletes $pkg_names
+                docmd $DNFCMD repoquery --obsoletes $pkg_names
             fi
             ;;
         yum-rpm)
@@ -6192,7 +6192,7 @@ epm_info_recommends_names()
             if is_installed $pkg_names ; then
                 docmd rpm -q --recommends $pkg_names
             else
-                docmd dnf repoquery --recommends $pkg_names
+                docmd $DNFCMD repoquery --recommends $pkg_names
             fi
             ;;
         yum-rpm)
@@ -6271,7 +6271,7 @@ epm_info_suggests_names()
             if is_installed $pkg_names ; then
                 docmd rpm -q --suggests $pkg_names
             else
-                docmd dnf repoquery --suggests $pkg_names
+                docmd $DNFCMD repoquery --suggests $pkg_names
             fi
             ;;
         yum-rpm)
@@ -6341,6 +6341,48 @@ __separate_sudocmd()
     return 0
 }
 
+__epm_apt_install()
+{
+    local APTOPTIONS="$APTOPTIONS"
+    local noremove="$noremove"
+    local VIRTAPTOPTIONS=''
+    local simulate=''
+
+    [ -n "$dryrun" ] && simulate="--simulate"
+    [ -n "$norecommends" ] && APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
+    if [ "$PMTYPE" = "apt-dpkg" ] && [ -n "$force_overwrite" ] ; then
+        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
+    fi
+
+    if [ "$PMTYPE" = "apt-rpm" ] ; then
+        # https://bugzilla.altlinux.org/44670
+        VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
+        # not for kernel packages
+        echo "$*" | grep -q "^kernel-" && VIRTAPTOPTIONS=''
+    fi
+
+    if [ -n "$non_interactive" ] ; then
+        [ -z "$noremove" ] && [ -z "$force" ] && [ -z "$allow_remove" ] && noremove="--no-remove"
+        case $PMTYPE in
+            apt-rpm)
+                sudocmd apt-get $__EPM_APT_REPO_OPTIONS $simulate -y $noremove --force-yes $VIRTAPTOPTIONS $APTOPTIONS install "$@"
+                ;;
+            apt-dpkg)
+                sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get $__EPM_APT_REPO_OPTIONS $simulate -y $noremove --allow-unauthenticated --allow-downgrades --allow-change-held-packages -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install "$@"
+                ;;
+        esac
+        return $?
+    fi
+
+    APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
+    if [ -n "$parallel" ] && [ -z "$simulate" ] ; then
+        info "Downloading packages to the cache... "
+        __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install "$@"
+    fi
+
+    sudocmd apt-get $__EPM_APT_REPO_OPTIONS $simulate $VIRTAPTOPTIONS $APTOPTIONS $noremove install "$@"
+}
+
 epm_install_names()
 {
     [ -z "$1" ] && return
@@ -6374,12 +6416,7 @@ epm_install_names()
         return
     fi
 
-    if [ -n "$force_overwrite" ] ; then
-        APTOPTIONS="$APTOPTIONS -o Dpkg::Options::=--force-overwrite"
-    fi
-
     if [ -n "$norecommends" ] ; then
-        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
         YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
         URPMOPTIONS="$URPMOPTIONS --no-suggests"
         ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
@@ -6387,19 +6424,7 @@ epm_install_names()
 
     case $PMTYPE in
         apt-rpm|apt-dpkg)
-            APTOPTIONS="$APTOPTIONS -o APT::Sandbox::User=root $(subst_option debug "-o Debug::pkgMarkInstall=1 -o Debug::pkgProblemResolver=1")"
-
-            # https://bugzilla.altlinux.org/44670
-            VIRTAPTOPTIONS="-o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true"
-            # not for kernel packages
-            echo "$*" | grep -q "^kernel-"  && VIRTAPTOPTIONS=''
-
-            if [ -n "$parallel" ] ; then
-                info "Downloading packages to the cache... "
-                __epm_alt_download_to_cache $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
-            fi
-
-            sudocmd apt-get $__EPM_APT_REPO_OPTIONS $VIRTAPTOPTIONS $APTOPTIONS $noremove install $@
+            __epm_apt_install "$@"
             local res=$?
             if [ "$res" = 0 ] ; then
                 save_installed_packages $@
@@ -6461,7 +6486,7 @@ epm_install_names()
             sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf install $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
+            sudocmd $DNFCMD install $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         snappy)
             sudocmd snappy install $@
@@ -6544,18 +6569,14 @@ epm_ni_install_names()
     [ -z "$noremove" ] && [ -z "$force" ] && [ -z "$allow_remove" ] && noremove="--no-remove"
 
     if [ -n "$norecommends" ] ; then
-        APTOPTIONS="$APTOPTIONS -o APT::Install-Recommends=false"
         YUMOPTIONS="$YUMOPTIONS --setopt=install_weak_deps=0"
         URPMOPTIONS="$URPMOPTIONS --no-suggests"
         ZYPPEROPTIONS="$ZYPPEROPTIONS --no-recommends"
     fi
 
     case $PMTYPE in
-        apt-rpm)
-            sudocmd apt-get $__EPM_APT_REPO_OPTIONS -y $noremove --force-yes -o APT::Install::VirtualVersion=true -o APT::Install::Virtual=true -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
-            return ;;
-        apt-dpkg)
-            sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive apt-get -y $noremove --allow-unauthenticated --allow-downgrades --allow-change-held-packages -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" $APTOPTIONS install $@
+        apt-rpm|apt-dpkg)
+            __epm_apt_install "$@"
             return ;;
         apm-rpm)
             sudocmd apm system install $@
@@ -6567,7 +6588,7 @@ epm_ni_install_names()
             sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf install -y $(subst_option noremove '' --allowerasing) $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
+            sudocmd $DNFCMD install -y $(subst_option noremove '' --allowerasing) $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
             return ;;
         urpm-rpm)
             sudocmd urpmi --auto $URPMOPTIONS $@
@@ -7664,7 +7685,7 @@ epm_print_install_names_command()
             echo "yum -y $YUMOPTIONS install $*"
             return ;;
         dnf-rpm|dnf5-rpm)
-            echo "dnf install -y $YUMOPTIONS --allowerasing $*"
+            echo "$DNFCMD install -y $YUMOPTIONS --allowerasing $*"
             return ;;
         urpm-rpm)
             echo "urpmi --auto $URPMOPTIONS $*"
@@ -8149,12 +8170,12 @@ case $PMTYPE in
         # TODO: --format json?
         CMD="apm system list --limit 100000"
         ;;
-    dnf-*)
+    dnf-*|dnf5-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf list --available | sed -e "s| .*||g"
+            docmd $DNFCMD list --available | sed -e "s| .*||g"
         else
-            docmd dnf list --available
+            docmd $DNFCMD list --available
         fi
         ;;
     yum-*)
@@ -8428,12 +8449,12 @@ case $PMTYPE in
             docmd apt list --upgradable
         fi
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         warmup_rpmbase
         if [ -n "$short" ] ; then
-            docmd dnf check-update | sed -e "s| .*||g"
+            docmd $DNFCMD check-update | sed -e "s| .*||g"
         else
-            docmd dnf check-update
+            docmd $DNFCMD check-update
         fi
         ;;
     pacman)
@@ -8565,7 +8586,7 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
-        sudocmd dnf versionlock add "$@"
+        sudocmd $DNFCMD versionlock add "$@"
         ;;
     zypper-rpm)
         sudocmd zypper al "$@"
@@ -8605,7 +8626,7 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         __dnf_assure_versionlock
-        sudocmd dnf versionlock delete "$@"
+        sudocmd $DNFCMD versionlock delete "$@"
         ;;
     zypper-rpm)
         sudocmd zypper rl "$@"
@@ -8643,9 +8664,9 @@ case $PMTYPE in
         __dnf_is_supported_versionlock || return 0
         __dnf_assure_versionlock
         if [ -n "$short" ] ; then
-            docmd dnf versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
+            docmd $DNFCMD versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
         else
-            docmd dnf versionlock list "$@"
+            docmd $DNFCMD versionlock list "$@"
         fi
         ;;
     zypper-rpm)
@@ -8671,7 +8692,7 @@ case $PMTYPE in
         # there is no hold entries without versionlock
         __dnf_is_supported_versionlock || return 1
         __dnf_assure_versionlock
-        docmd dnf versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
+        docmd $DNFCMD versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
         return
         ;;
 esac
@@ -8701,10 +8722,10 @@ case $PMTYPE in
         sudocmd apt-mark auto "$@"
         ;;
     dnf-rpm)
-        sudocmd dnf mark remove "$@"
+        sudocmd $DNFCMD mark remove "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf mark dependency "$@"
+        sudocmd $DNFCMD mark dependency "$@"
         ;;
     pacman)
             sudocmd pacman -D --asdeps "$@"
@@ -8740,10 +8761,10 @@ case $PMTYPE in
         sudocmd apt-mark manual "$@"
         ;;
     dnf-rpm)
-        sudocmd dnf mark install "$@"
+        sudocmd $DNFCMD mark install "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf mark user "$@"
+        sudocmd $DNFCMD mark user "$@"
         ;;
     pacman)
             sudocmd pacman -D --asexplicit "$@"
@@ -8774,7 +8795,7 @@ case $PMTYPE in
         sudocmd apt-mark showauto "$@"
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf repoquery --unneeded
+        sudocmd $DNFCMD repoquery --unneeded
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_mark_showauto()'
@@ -8798,7 +8819,7 @@ case $PMTYPE in
         sudocmd apt-mark showmanual "$@"
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd dnf repoquery --userinstalled
+        sudocmd $DNFCMD repoquery --userinstalled
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_mark_showmanual'
@@ -9729,7 +9750,7 @@ Options:
     --list-updates        - list installed apps that have available updates
     --list-scripts        - list all available scripts
     --short (with --list) - list names only
-    --installed <app>     - check if the app is installed
+    --installed [<app>]   - check if the app is installed (list all installed apps without <app>)
     --ipfs <app>          - use IPFS for downloading
     --product-alternatives- list alternatives (use like epm play app=beta)
 
@@ -9915,7 +9936,9 @@ __list_available_updates()
     # installed_file: pkg app installed_version
     # latest_file: pkg latest_version [release]
     # result: pkg app installed_version latest_version [release]
-    LC_ALL=C join -11 -21 "$installed_file" "$latest_file" >"$joined_file"
+    # Keep apps absent from the catalog: their target may come from an
+    # installed driver (hplip-plugin, virtualbox-extpack).
+    LC_ALL=C join -a1 -11 -21 "$installed_file" "$latest_file" >"$joined_file"
 
     # Step 4: compare versions and output updates
     local updates_found=0
@@ -9925,12 +9948,19 @@ __list_available_updates()
     while read -r pkg app installed latest _ ; do
         [ -n "$pkg" ] || continue
         [ -n "$installed" ] || continue
-        [ -n "$latest" ] || continue
-
-        local cmp
-        cmp="$(__compare_versions "$latest" "$installed")"
-
-        [ "$cmp" = "1" ] || continue
+        if grep -q '^get_target_version()' "$psdir/$app.sh" 2>/dev/null ; then
+            latest="$(__run_script "$app" --available-version 2>/dev/null)" || continue
+            [ -n "$latest" ] || continue
+            # Ignore packaging epoch/release; the plugin must match its driver
+            # after both upgrades and downgrades.
+            local installed_target
+            installed_target="$(epm print version for package "$pkg" 2>/dev/null | head -n1)"
+            [ -n "$installed_target" ] || continue
+            [ "$installed_target" != "$latest" ] || continue
+        else
+            [ -n "$latest" ] || continue
+            [ "$(__compare_versions "$latest" "$installed")" = "1" ] || continue
+        fi
 
         updates_found=1
 
@@ -10172,6 +10202,10 @@ case "$1" in
 
     --installed)
         shift
+        if [ -z "$1" ] ; then
+            __epm_play_list_installed | __epm_colorize_search_output
+            exit
+        fi
         __is_app_installed "$1" "$2"
         #[ -n "$quiet" ] && exit
         exit
@@ -10474,7 +10508,7 @@ esac
 
 case $PMTYPE in
     dnf-*|dnf5-*)
-        docmd dnf info $pkg_names
+        docmd $DNFCMD info $pkg_names
         ;;
     yum-*)
         fatal "policy command is not implemented for yum"
@@ -10801,8 +10835,8 @@ print_srcpkgname()
             return
             ;;
         dnf-rpm|dnf5-rpm)
-            showcmd dnf repoquery --qf '%{SOURCERPM}' "$@"
-            a= dnf repoquery --qf '%{SOURCERPM}' "$@"
+            showcmd $DNFCMD repoquery --qf '%{SOURCERPM}' "$@"
+            a= $DNFCMD repoquery --qf '%{SOURCERPM}' "$@"
             return
             ;;
     esac
@@ -11186,7 +11220,7 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --provides"
         else
-            CMD="dnf repoquery --provides"
+            CMD="$DNFCMD repoquery --provides"
         fi
         ;;
     emerge)
@@ -11869,7 +11903,7 @@ epm_reinstall_names()
             sudocmd yum reinstall $@
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf reinstall $@
+            sudocmd $DNFCMD reinstall $@
             return ;;
         homebrew)
             sudocmd brew reinstall $@
@@ -12042,19 +12076,19 @@ epm_release_downgrade()
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         docmd epm install dnf
         #docmd epm install epel-release yum-utils
-        sudocmd dnf --refresh upgrade
-        #sudocmd dnf clean all
+        sudocmd $DNFCMD --refresh upgrade
+        #sudocmd $DNFCMD clean all
         assure_exists dnf-plugin-system-upgrade
-        sudocmd dnf upgrade --refresh
+        sudocmd $DNFCMD upgrade --refresh
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
         #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
         confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+        sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER
         # TODO: from docs:
         # dnf system-upgrade reboot
         # FIXME: download all packages again
-        sudocmd dnf distro-sync --releasever=$RELEASEVER
+        sudocmd $DNFCMD distro-sync --releasever=$RELEASEVER
         info "Run epm autoorphans to remove orphaned packages"
         ;;
     urpm-rpm)
@@ -12704,19 +12738,19 @@ epm_release_upgrade()
         return
         ;;
      "OpenMandrivaLx")
-        #sudocmd dnf clean all
-        sudocmd dnf distro-sync --allowerasing
+        #sudocmd $DNFCMD clean all
+        sudocmd $DNFCMD distro-sync --allowerasing
         return
         ;;
     "ROSA")
-        sudocmd dnf $(subst_option non_interactive -y) --refresh upgrade || fatal
-        #sudocmd dnf clean all
+        sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+        #sudocmd $DNFCMD clean all
         DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
         [ "$DV" = "2021" ] && DV=12
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DV + 1))
         confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing
+        sudocmd $DNFCMD distro-sync -y --releasever=$RELEASEVER --allowerasing
         sudocmd rpm --rebuilddb
         epm upgrade
         return
@@ -12777,15 +12811,15 @@ epm_release_upgrade()
                     -e 's!^#?baseurl=http://(mirror|vault).centos.org/\$contentdir/\$releasever/!baseurl=https://dl.rockylinux.org/vault/centos/8.5.2111/!i' \
                         /etc/yum.repos.d/CentOS-*.repo
             docmd epm install centos-release-stream
-            sudocmd dnf swap centos-{linux,stream}-repos
-            sudocmd dnf distro-sync
+            sudocmd $DNFCMD swap centos-{linux,stream}-repos
+            sudocmd $DNFCMD distro-sync
             info "You can run '# epm autoorphans' to remove orphaned packages"
             exit
         fi
 
         if [ "$DISTRNAME" = "RockyLinux" ] ; then
-            sudocmd dnf $(subst_option non_interactive -y) --refresh upgrade || fatal
-            #sudocmd dnf clean all
+            sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+            #sudocmd $DNFCMD clean all
 
             DV=$(echo "$DISTRVERSION" | sed -e "s|\..*||")
             local RELEASEVER="$1"
@@ -12798,29 +12832,29 @@ epm_release_upgrade()
             sudocmd rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-$RELEASEVER"
 
             epm install --nodeps "$ROCKY_URL/rocky-repos*.rpm" "$ROCKY_URL/rocky-release*.rpm" || fatal
-            sudocmd dnf distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
+            sudocmd $DNFCMD distro-sync -y --releasever=$RELEASEVER --allowerasing --setopt=deltarpm=false
             sudocmd rpm --rebuilddb
             epm upgrade
             info "You can run '# epm autoorphans' to remove orphaned packages"
-            info "Use # dnf module reset <module> to resolve 'nothing provides module' error"
+            info "Use # $DNFCMD module reset <module> to resolve 'nothing provides module' error"
             exit
         fi
 
         info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
         #docmd epm install epel-release yum-utils
-        sudocmd dnf $(subst_option non_interactive -y) --refresh upgrade || fatal
-        #sudocmd dnf clean all
+        sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+        #sudocmd $DNFCMD clean all
         assure_exists dnf-plugin-system-upgrade
-        sudocmd dnf $(subst_option non_interactive -y) upgrade --refresh
+        sudocmd $DNFCMD $(subst_option non_interactive -y) upgrade --refresh
         local RELEASEVER="$1"
         [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
         #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
         confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd dnf system-upgrade download --refresh --releasever=$RELEASEVER
+        sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER
         # TODO: from docs:
         # dnf system-upgrade reboot
         # FIXME: download all packages again
-        sudocmd dnf distro-sync --releasever=$RELEASEVER
+        sudocmd $DNFCMD distro-sync --releasever=$RELEASEVER
         info "You can run '# epm autoorphans' to remove orphaned packages"
         ;;
     zypper-rpm)
@@ -12968,7 +13002,7 @@ epm_remove_names()
             sudocmd yum remove $@
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf remove $@
+            sudocmd $DNFCMD remove $@
             return ;;
         snappy)
             sudocmd snappy uninstall $@
@@ -13064,7 +13098,7 @@ epm_remove_nonint()
             sudocmd yum -y remove $@
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd dnf remove --assumeyes $@
+            sudocmd $DNFCMD remove --assumeyes $@
             return ;;
         zypper-rpm)
             sudocmd zypper --non-interactive remove --clean-deps $@
@@ -13453,7 +13487,7 @@ case "$1" in
         local owner_project="$(echo "$1" | sed 's|^copr/||')"
         case $PMTYPE in
             dnf-rpm|dnf5-rpm)
-                sudocmd dnf copr disable "$owner_project"
+                sudocmd $DNFCMD copr disable "$owner_project"
                 ;;
             yum-rpm)
                 sudocmd yum copr disable "$owner_project"
@@ -13512,11 +13546,11 @@ case $PMTYPE in
         sudocmd yum-config-manager --disable "$@"
         ;;
     dnf-rpm)
-        repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
+        repo_file_name=$(env LC_ALL=C $DNFCMD repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
         sudocmd rm "$repo_file_name"
         ;;
     dnf5-rpm)
-        repo_file_name=$(env LC_ALL=C dnf repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
+        repo_file_name=$(env LC_ALL=C $DNFCMD repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
         sudocmd rm "$repo_file_name"
         ;;
     urpm-rpm)
@@ -14717,7 +14751,7 @@ case $PMTYPE in
     apt-dpkg)
         __epm_addkey_deb "$@"
         ;;
-    dnf-*|yum-*)
+    dnf-*|dnf5-*|yum-*)
         __epm_addkey_dnf "$@"
         ;;
 esac
@@ -14859,10 +14893,10 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm)
-        sudocmd dnf config-manager --enable $verbose "$@"
+        sudocmd $DNFCMD config-manager --enable $verbose "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf config-manager setopt "$@.enabled=0"
+        sudocmd $DNFCMD config-manager setopt "$@.enabled=0"
         ;;
     pisi)
         docmd pisi disable-repo "$@"
@@ -14931,10 +14965,10 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm)
-        sudocmd dnf config-manager --disable $verbose "$@"
+        sudocmd $DNFCMD config-manager --disable $verbose "$@"
         ;;
     dnf5-rpm)
-        sudocmd dnf config-manager setopt "$@.enabled=1"
+        sudocmd $DNFCMD config-manager setopt "$@.enabled=1"
         ;;
     eoget)
         docmd eoget enable-repo "$@"
@@ -15545,7 +15579,7 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm|dnf5-rpm)
-        docmd dnf repolist $verbose
+        docmd $DNFCMD repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     urpm-rpm)
@@ -15991,11 +16025,36 @@ __epm_repo_pkgupdate_alt()
 {
     local dir="$1"
     shift
-    for i in "$@" ; do
-        pkg="$(epm print name for package $i)" || fatal
-        __epm_repo_pkgdel_alt "$dir" $pkg
+    # A task or a wildcard can contain several versions of the same package.
+    # Keep only the newest EVR for each name/architecture pair.
+    local selected_dir candidate candidate_name candidate_arch candidate_epoch candidate_evr
+    local selected_file selected_evr selected_package comparison
+    selected_dir="$(mktemp -d)" || fatal "Cannot create temp directory"
+
+    for candidate in "$@" ; do
+        candidate_name="$(epm print name for package "$candidate")" || fatal
+        candidate_arch="$(epm print arch for package "$candidate")" || fatal
+        candidate_epoch="$(epm print field epoch for package "$candidate")" || fatal
+        [ "$candidate_epoch" = "(none)" ] && candidate_epoch=0
+        candidate_evr="$candidate_epoch:$(epm print version-release for package "$candidate")" || fatal
+        selected_file="$selected_dir/$candidate_name.$candidate_arch"
+
+        if [ -s "$selected_file" ] ; then
+            selected_evr="$(sed -n '1p' "$selected_file")"
+            comparison="$(epm print compare version "$selected_evr" "$candidate_evr")" || fatal
+            [ "$comparison" -ge 0 ] && continue
+        fi
+        printf '%s\n%s\n' "$candidate_evr" "$candidate" > "$selected_file"
     done
-    __epm_repo_pkgadd_alt "$dir" "$@"
+
+    for selected_file in "$selected_dir"/* ; do
+        [ -s "$selected_file" ] || continue
+        selected_package="$(sed -n '2p' "$selected_file")"
+        candidate_name="$(epm print name for package "$selected_package")" || fatal
+        __epm_repo_pkgdel_alt "$dir" "$candidate_name"
+        __epm_repo_pkgadd_alt "$dir" "$selected_package"
+    done
+    rm -rf "$selected_dir"
 }
 
 
@@ -16426,7 +16485,7 @@ case $PMTYPE in
         if is_installed $pkg_names ; then
             CMD="rpm -q --requires"
         else
-            CMD="dnf repoquery --requires"
+            CMD="$DNFCMD repoquery --requires"
         fi
         ;;
     pacman)
@@ -17218,7 +17277,7 @@ case $PMTYPE in
         CMD="yum search"
         ;;
     dnf-rpm|dnf5-rpm)
-        CMD="dnf search"
+        CMD="$DNFCMD search"
         ;;
     zypper-rpm)
         CMD="zypper search -d --"
@@ -17471,7 +17530,7 @@ case $PMTYPE in
     dnf-rpm|dnf5-rpm)
         # TODO
         info "Search by full packages list is not implemented yet"
-        CMD="dnf provides"
+        CMD="$DNFCMD provides"
         ;;
     urpm-rpm)
         CMD="urpmf"
@@ -17712,8 +17771,15 @@ get_url_to_etersoft_mirror()
     local REPOPATH
     local ETERSOFT_MIRROR="rsync://download.etersoft.ru/pub"
     local ALTREPO=$(get_alt_repo_path "$1")
-    echo "$ALTREPO" | grep -q "^ALTLinux" || echo "$ALTREPO" | grep -q "^altlinux" || return
-    echo "$ETERSOFT_MIRROR/$(echo "$ALTREPO" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
+    case "$ALTREPO" in
+        ALTLinux/*|altlinux/*)
+            echo "$ETERSOFT_MIRROR/$(echo "$ALTREPO" | sed -E 's@^(ALTLinux|altlinux)/@ALTLinux/contents_index/@')"
+            ;;
+        Etersoft/Sisyphus/Deferred/*|Etersoft/Sisyphus/Deferred_DEVEL/*|Etersoft/Sisyphus/Deferred_BETA/*)
+            # Deferred repositories already publish contents_index.gz in base/.
+            echo "$ETERSOFT_MIRROR/$ALTREPO"
+            ;;
+    esac
 }
 
 __add_to_contents_index_list()
@@ -17852,7 +17918,6 @@ update_alt_contents_index()
     done < "$URL_LIST_FILE"
     rm -f "$URL_LIST_FILE"
 }
-
 
 # File bin/epm-sh-backend:
 
@@ -18829,8 +18894,8 @@ _epm_do_simulate()
 
     case $PMTYPE in
         apt-rpm|apt-dpkg)
-            CMD="apt-get $__EPM_APT_REPO_OPTIONS --simulate install"
-            ;;
+            dryrun=--dry-run __epm_apt_install "$@"
+            return $? ;;
         aptitude-dpkg)
             CMD="aptitude -s install"
             ;;
@@ -18850,7 +18915,7 @@ EOF
             return $RES ;;
         dnf-rpm|dnf5-rpm)
             set_sudo
-            store_output sudocmd dnf --assumeno install $filenames
+            store_output sudocmd $DNFCMD --assumeno install $filenames
             __check_yum_result $RC_STDOUT $?
             RES=$?
             clean_store_output
@@ -19704,14 +19769,11 @@ __save_available_packages()
 
 __epm_update_content_index()
 {
-case $BASEDISTRNAME in
-    "alt")
+case $PMTYPE in
+    apt-rpm)
         update_alt_contents_index
         return
         ;;
-esac
-
-case $PMTYPE in
     apt-dpkg)
         is_command apt-file || return 0
         try_assure_exists apt-file || return 0
@@ -19723,13 +19785,40 @@ esac
 
 __epm_list_content_index()
 {
-case $BASEDISTRNAME in
-    "alt")
+case $PMTYPE in
+    apt-rpm)
         cat $ALT_CONTENTS_INDEX_LIST
         return
         ;;
 esac
 
+}
+
+__epm_update_apt()
+{
+    # hack against cd to cwd in apt-get on ALT
+    case $PMTYPE in
+        apt-rpm) cd / ;;
+    esac
+
+    local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-o Acquire::Verbose=1 -o Debug::pkgAcquire::Auth=1 -o Debug::identcdrom=1 -o Debug::Acquire::http=1 ")"
+    local UPDATE_LOG
+    UPDATE_LOG="$(mktemp)" || fatal
+    remove_on_exit "$UPDATE_LOG"
+    local CMDSTATUS="$UPDATE_LOG.status"
+    showcmd apt-get $__EPM_APT_REPO_OPTIONS update $APTOPTIONS
+    ( sudorun apt-get $__EPM_APT_REPO_OPTIONS update $APTOPTIONS 2>&1 ; echo $? >"$CMDSTATUS" ) | tee "$UPDATE_LOG"
+    ret="$(cat "$CMDSTATUS")"
+    rm -f "$CMDSTATUS"
+
+    case $PMTYPE in
+        apt-rpm) cd - >/dev/null ;;
+    esac
+
+    if [ "$ret" != "0" ] && [ -z "$quiet" ] ; then
+        __analyze_apt_update_errors "$UPDATE_LOG"
+    fi
+    return $ret
 }
 
 __epm_update()
@@ -19747,41 +19836,10 @@ case $PMTYPE in
         ;;
 esac
 
-case $BASEDISTRNAME in
-    "alt")
-        # TODO: hack against cd to cwd in apt-get on ALT
-        cd /
-        local APTOPTIONS="$dryrun $(subst_option non_interactive -y) $(subst_option debug "-o Acquire::Verbose=1 -o Debug::pkgAcquire::Auth=1 -o Debug::identcdrom=1 -o Debug::Acquire::http=1 ")"
-        local UPDATE_LOG
-        UPDATE_LOG="$(mktemp)" || fatal
-        remove_on_exit "$UPDATE_LOG"
-        local CMDSTATUS="$UPDATE_LOG.status"
-        showcmd apt-get $__EPM_APT_REPO_OPTIONS update $APTOPTIONS
-        ( sudorun apt-get $__EPM_APT_REPO_OPTIONS update $APTOPTIONS 2>&1 ; echo $? >"$CMDSTATUS" ) | tee "$UPDATE_LOG"
-        ret="$(cat "$CMDSTATUS")"
-        rm -f "$CMDSTATUS"
-        cd - >/dev/null
-        if [ "$ret" != "0" ] && [ -z "$quiet" ] ; then
-            __analyze_apt_update_errors "$UPDATE_LOG"
-        fi
-        return $ret
-        ;;
-esac
-
-
 case $PMTYPE in
-    apt-rpm)
-        # TODO: hack against cd to cwd in apt-get on ALT
-        cd /
-        sudocmd apt-get $__EPM_APT_REPO_OPTIONS update
-        ret="$?"
-        cd - >/dev/null
-        return $ret
-        ;;
-    apt-dpkg)
-        sudocmd apt-get $__EPM_APT_REPO_OPTIONS update || return
-        # apt-get update retrieve Contents file too
-        #sudocmd apt-file update
+    apt-rpm|apt-dpkg)
+        __epm_update_apt
+        return
         ;;
     apm-rpm)
         sudocmd apm system update
@@ -19799,10 +19857,10 @@ case $PMTYPE in
         sudocmd yum makecache
         ;;
     dnf-rpm)
-        sudocmd dnf makecache
+        sudocmd $DNFCMD makecache
         ;;
     dnf5-rpm)
-        sudocmd dnf5 makecache
+        sudocmd $DNFCMD makecache
         ;;
     urpm-rpm)
         sudocmd urpmi.update -a
@@ -20107,7 +20165,7 @@ __epm_upgrade_do()
         ;;
     dnf-rpm|dnf5-rpm)
         local OPTIONS="$(subst_option non_interactive -y)"
-        CMD="dnf $OPTIONS upgrade $*"
+        CMD="$DNFCMD $OPTIONS upgrade $*"
         ;;
     snappy)
         CMD="snappy update"
@@ -20265,7 +20323,7 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         # check command: dnf repoquery --whatrequires
-        CMD="dnf repoquery --whatrequires"
+        CMD="$DNFCMD repoquery --whatrequires"
         ;;
     emerge)
         assure_exists equery
@@ -20396,7 +20454,7 @@ case $PMTYPE in
         CMD="urpmq --whatprovides"
         ;;
     dnf-rpm|dnf5-rpm)
-        CMD="dnf repoquery --whatprovides"
+        CMD="$DNFCMD repoquery --whatprovides"
         ;;
     zypper-rpm)
         CMD="zypper what-provides"
@@ -22317,7 +22375,7 @@ Supported backends (set like EGET_BACKEND=curl)
   wget, curl and partially aria2c, axel, rsync
 
 Environment variables:
-  EGET_BACKEND              - force specific backend (wget, curl, aria2c, axel)
+  EGET_BACKEND              - force specific backend (wget, wget2, curl, aria2c, axel)
   EGET_OPTIONS              - extra options applied after command line args
   EGET_MIRRORS              - override default mirrors for --allow-mirrors
   EGET_WGET_OPTIONS         - extra options passed to wget
@@ -22938,9 +22996,15 @@ case "$orig_EGET_BACKEND" in
         RSYNC="$(print_command_path rsync)"
         [ -n "$RSYNC" ] || fatal "There are no rsync in the system. Install it with $ epm install rsync"
         ;;
-    */wget)
+    */wget|*/wget2)
         WGET="$orig_EGET_BACKEND"
         [ -x "$WGET" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget"
+        EGET_BACKEND="wget"
+        ;;
+    wget2)
+        WGET="$(print_command_path wget2)"
+        [ -n "$WGET" ] || fatal "There are no wget2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install wget2"
+        EGET_BACKEND="wget"
         ;;
     wget)
         WGET="$(print_command_path wget)"
@@ -22954,15 +23018,17 @@ case "$orig_EGET_BACKEND" in
         CURL="$(print_command_path curl)"
         [ -n "$CURL" ] || fatal "There are no curl in the system but you forced using it via EGET_BACKEND. Install it with $ epm install curl"
         ;;
-    */aria2)
+    */aria2|*/aria2c)
         ARIA2="$orig_EGET_BACKEND"
         [ -x "$ARIA2" ] || fatal "There are no $orig_EGET_BACKEND in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        EGET_BACKEND="aria2"
         # aria2 needs wget for headers and stdout
         WGET="$(print_command_path wget)"
         ;;
-    aria2)
-        ARIA2="$(print_command_path aria2)"
-        [ -n "$ARIA2" ] || fatal "There are no aria2 in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+    aria2|aria2c)
+        ARIA2="$(print_command_path aria2c || print_command_path aria2)"
+        [ -n "$ARIA2" ] || fatal "There are no aria2c in the system but you forced using it via EGET_BACKEND. Install it with $ epm install aria2"
+        EGET_BACKEND="aria2"
         # aria2 needs wget for headers and stdout
         WGET="$(print_command_path wget)"
         ;;
@@ -23011,7 +23077,21 @@ fi
 # Defined globally so it can be used by aria2/axel backends for header operations
 __wget()
 {
-    [ "$USEOUTPUTDIR" ] && set -- -P "$USEOUTPUTDIR" "$@"
+    local outputdir="$USEOUTPUTDIR"
+    if [ -n "$WGET2" ] ; then
+        local arg
+        for arg in "$@" ; do
+            case "$arg" in
+                ftp://*|ftps://*)
+                    fatal "wget2 does not support FTP, use EGET_BACKEND=wget or EGET_BACKEND=curl" ;;
+            esac
+        done
+        # wget2 treats absolute -P path as relative to the current dir, so make it relative via ../
+        case "$outputdir" in
+            /*) outputdir="$(echo "$PWD" | sed -e 's|/[^/]*|../|g')${outputdir#/}" ;;
+        esac
+    fi
+    [ "$outputdir" ] && set -- -P "$outputdir" "$@"
     [ "$USERAGENT" ] && set -- -U "$USERAGENT" "$@"
     [ "$trustservernames" ] && set -- --trust-server-names "$@"
     [ "$COOKIES_FILE" ] && set -- --load-cookies "$COOKIES_FILE" "$@"
@@ -23023,7 +23103,8 @@ __wget()
     [ "$nodirectories" ] && set -- -nd "$@"
     [ "$nosslcheck" ] && set -- --no-check-certificate "$@"
     [ "$HEADER_VALUE" ] && set -- --header="$HEADER_VALUE" "$@"
-    [ "$compressed" ] && set -- --compression=auto "$@"
+    # wget2 requests and decodes compressed content by default and has no --compression=auto
+    [ "$compressed" ] && [ -z "$WGET2" ] && set -- --compression=auto "$@"
     [ "$NOGLOB" ] && set -- --no-glob "$@"
     [ "$showprogress" ] && set -- --show-progress "$@"
     [ "$quiet" ] && set -- -q "$@"
@@ -23094,7 +23175,10 @@ __timestamping_download()
 # and lowercase header names without leading spaces
 __wget2_filter_response()
 {
-	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[a-z].*: /p'
+	# --save-headers keeps CRLF line endings; wget2 2.x prints "Enqueuing URL" for redirects
+	tr -d '\r' | \
+	sed -n -e 's/^:status: \([0-9]*\)/HTTP\/2 \1/p' -e '/^HTTP\//p' -e '/^[A-Za-z][A-Za-z-]*: /p' -e 's|^Enqueu[a-z]* \(https\?://.*\)|location: \1|p' | \
+	sed -e 's/^\([A-Za-z-]*:\)/\L\1/'
 }
 
 # Extract HTTP headers from wget1 -S output and normalize:
@@ -23113,11 +23197,11 @@ __wget_url_get_response()
 
 	if [ -n "$WGET2" ] ; then
 		# wget2 -S is broken for HTTP/1.1 (shows only a few headers),
-		# use --save-headers to stdout and filter header lines with grep
+		# use --save-headers to stdout and filter header lines.
 		# wget2 -q suppresses -S output (unlike wget1), so don't use quiet=1
-		answer="$(__wget --timeout 20 --tries 1 --save-headers -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response)"
+		answer="$(__wget --timeout 20 --tries 1 --method=HEAD --save-headers -O - "$URL" 2>&1 | tr -d '\0' | __wget2_filter_response)"
 		if echo "$answer" | grep -q "^HTTP/[12.]* 40[45]" ; then
-			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>/dev/null | tr -d '\0' | __wget2_filter_response
+			__wget --timeout 20 --tries 1 --save-headers --header="Range: bytes=0-0" -O - "$URL" 2>&1 | tr -d '\0' | __wget2_filter_response
 			return
 		fi
 		echo "$answer"
@@ -23851,14 +23935,14 @@ url_get_filename()
     if echo "$cd" | grep -qi "filename\*= *UTF-8" ; then
         #Content-Disposition: attachment; filename="unityhub-amd64-3.3.0.deb"; filename*=UTF-8''"unityhub-amd64-3.3.0.deb"
         #Content-Disposition: attachment; filename*=UTF-8''t1client-standalone-4.5.28.0-1238402-Release.deb; filename="t1client-standalone-4.5.28.0-1238402-Release.deb"
-        filename="$(echo "$cd" | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
+        filename="$(echo "$cd" | grep -i "filename\*= *UTF-8" | tail -n1 | sed -e "s|.*filename\*= *UTF-8''||i" -e 's|^"||' -e 's|";$||' -e 's|"$||' -e 's|; filename=.*||')"
         filename="$(echo "$filename" | sed -e 's|.*[/\\]||' -e 's|.*%5[cC]||' -e 's|.*%2[fF]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
     if echo "$cd" | grep -qi "filename=" ; then
         #Content-Disposition: attachment; filename=postman-linux-x64.tar.gz
         #content-disposition: attachment; filename="code-1.77.1-1680651749.el7.x86_64.rpm"
-        filename="$(echo "$cd" | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
+        filename="$(echo "$cd" | grep -i "filename=" | tail -n1 | sed -e 's|.*filename= *||i' -e 's|^"||' -e 's|";.*||' -e 's|"$||')"
         filename="$(echo "$filename" | sed -e 's|.*[/\\]||')"
         [ "$filename" != "unspecified" ] && echo "$filename" && return
     fi
