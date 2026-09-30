@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.67
+Version: 3.64.68
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -188,6 +188,57 @@ EOF
 # metapackage, no files
 
 %changelog
+* Wed Sep 30 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.68-alt1
+- epm play: add gswitch support
+- epm play: add open-pdf-studio
+- epm play: add komet
+- fish completions epm: preserve Fish package descriptions as metadata
+- epm play portmaster2: ensure patool dependency before unpacking deb
+- epm repack waywallen: add forced Qt6 QML requires
+- epm play unityhub: fix install (eterbug #17865)
+- epm play happ: add service setup instructions after installation
+- epm play: add codexbar-cli
+- epm play vintasoft-web-twain-service: fix download url (eterbug #17865)
+- epm play betaflight: rename betaflight-configurator to betaflight
+- epm play mts-link: migrate to new debian package distribution
+- epm play: add quickadb
+- epm play: add QtScrcpy
+- epm play: add Sharp UD PCL6 package scripts
+- epm play telegram: update upstream url (eterbug #17865)
+- epm play: unify adbmanager asset URL resolution
+- epm play mailspring: fix package architecture (eterbug #17865)
+- epm play: add Figma Linux Next
+- epm play pantum-r: fix install (eterbug #17865)
+- epm pack davinci-resolve: fix packaging (eterbug #18117)
+- epm play codex: update repack to musl (eterbug #19633)
+- epm repack: support chrome_sandbox in fix_chrome_sandbox
+- epm play: added cromite (eterbug #19567)
+- epm repack: fix Chromium crashpad permissions
+- epm play: added helium (eterbug #19565)
+- epm play: add zed-i18n
+- epm play trueconf: add Qt5 requires
+- epm play: add yandex-document
+- epm play spravki-bk: update
+- epm play: add Bettbox
+- epm play: add amethyst-mod-manager
+- epm repack: add check_binary
+- epm play rustdesk: fix /opt installation check (eterbug #19568)
+- epm play wps-office-cn: add qt5 req (eterbug #19551)
+- epm play onlyoffice: add Qt5 QML and Quick requirements
+- epm install: remove dpkg options from apt-rpm command
+- epm simulate: share APT options with install
+- epm play: add libxml2_16 from GNOME 49 runtime
+- epm play orion: fix native installation and startup on p11
+- epm play: track driver-bound app versions in updates
+- epm play: match HPLIP plugin to installed driver
+- epm play: add Koda Desktop
+- epm play: add Entropy keyboard configurator
+- epm contents-index: use rsync for Deferred repos
+- epm repo pkgupdate: keep newest package version
+- epm play: --installed without app lists installed apps
+- eget: fixes for aria2c and wget2
+- epm update: check PMTYPE for ALT-specific apt-get update path
+
 * Tue Sep 08 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.67-alt1
 - commit packed 3.64.66
 - epm play freeoffice: fix scraping URL, remove hardcoded YEAR
