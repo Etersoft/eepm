@@ -2,7 +2,7 @@
 
 BASEPKGNAME=codex
 SUPPORTEDARCHES="x86_64 aarch64"
-PRODUCTALT="'' preview"
+PRODUCTALT="'' preview voice"
 VERSION="$2"
 DESCRIPTION="Codex CLI is a coding agent from OpenAI that runs locally on your computer."
 URL="https://github.com/openai/codex"
