@@ -153,6 +153,65 @@ __epm_removerepo_alt()
 
 }
 
+# remove section [id] from repo file (remove file if there are no sections left)
+__epm_removerepo_dnf_section()
+{
+    local file="$1"
+    local id="$2"
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    awk -v id="$id" '/^\[.*\]/ { skip = ($0 == "[" id "]") } !skip' "$file" >$tmpfile
+    if grep -q "^\[" $tmpfile ; then
+        chmod 644 $tmpfile
+        sudocmd cp $tmpfile "$file"
+    else
+        sudocmd rm -f "$file"
+    fi
+}
+
+# args: all | <name> (/etc/yum.repos.d/<name>.repo, alt-<name>.repo) | <repo id>
+__epm_removerepo_dnf()
+{
+    local repo f found
+    for repo in "$@" ; do
+        if [ "$repo" = "all" ] ; then
+            info "removing all repos"
+            for f in /etc/yum.repos.d/*.repo ; do
+                [ -e "$f" ] || continue
+                sudocmd rm -f "$f"
+            done
+            continue
+        fi
+
+        if [ "$BASEDISTRNAME" = "alt" ] ; then
+            case "$repo" in
+                tasks|task|archive|cdroms|autoimports|korinf|[0-9]*)
+                    info 'Skipping $repo: it is not supported for $PMTYPE'
+                    continue
+                    ;;
+            esac
+        fi
+
+        found=''
+        for f in /etc/yum.repos.d/$repo.repo /etc/yum.repos.d/alt-$repo.repo ; do
+            [ -e "$f" ] || continue
+            sudocmd rm -f "$f"
+            found=1
+        done
+        [ -n "$found" ] && continue
+
+        for f in /etc/yum.repos.d/*.repo ; do
+            grep -q -F "[$repo]" "$f" 2>/dev/null || continue
+            __epm_removerepo_dnf_section "$f" "$repo"
+            found=1
+        done
+        # not an error - repo may be already removed (idempotency)
+        [ -n "$found" ] || info 'Repo $repo is not found in /etc/yum.repos.d'
+    done
+    return 0
+}
+
 epm_removerepo()
 {
 
@@ -185,13 +244,8 @@ case $BASEDISTRNAME in
 esac
 
 case "$PMTYPE:$1" in
-    dnf-rpm:all|dnf5-rpm:all|yum-rpm:all)
-        info "removing all repos"
-        local i
-        for i in /etc/yum.repos.d/*.repo ; do
-            [ -e "$i" ] || continue
-            sudocmd rm -f "$i"
-        done
+    yum-rpm:all)
+        __epm_removerepo_dnf "$@"
         return
         ;;
 esac
@@ -235,13 +289,8 @@ case $PMTYPE in
         assure_exists yum-utils
         sudocmd yum-config-manager --disable "$@"
         ;;
-    dnf-rpm)
-        repo_file_name=$(env LC_ALL=C $DNFCMD repoinfo "$@" 2>/dev/null | sed -n 's/^Repo-filename\s*:\s*//p')
-        sudocmd rm "$repo_file_name"
-        ;;
-    dnf5-rpm)
-        repo_file_name=$(env LC_ALL=C $DNFCMD repoinfo "$@" 2>/dev/null | sed -n 's/^Config file\s*:\s*//p')
-        sudocmd rm "$repo_file_name"
+    dnf-rpm|dnf5-rpm)
+        __epm_removerepo_dnf "$@"
         ;;
     urpm-rpm)
         if [ "$1" = "all" ] ; then
