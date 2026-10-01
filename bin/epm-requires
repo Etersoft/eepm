@@ -179,9 +179,21 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         if is_installed $pkg_names ; then
+            if [ "$BASEDISTRNAME" = "alt" ] ; then
+                __epm_alt_rpm_requires $pkg_names
+                return
+            fi
             CMD="rpm -q --requires"
         else
             CMD="$DNFCMD repoquery --requires"
+            if [ "$BASEDISTRNAME" = "alt" ] ; then
+                if [ -n "$short" ] ; then
+                    docmd $CMD $pkg_names | __epm_filter_out_base_alt_reqs | sed -e "s| .*||"
+                else
+                    docmd $CMD $pkg_names | __epm_filter_out_base_alt_reqs
+                fi
+                return
+            fi
         fi
         ;;
     pacman)
