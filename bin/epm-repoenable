@@ -70,11 +70,8 @@ case $PMTYPE in
         docmd yum repolist $verbose
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
-    dnf-rpm)
-        sudocmd $DNFCMD config-manager --disable $verbose "$@"
-        ;;
-    dnf5-rpm)
-        sudocmd $DNFCMD config-manager setopt "$@.enabled=1"
+    dnf-rpm|dnf5-rpm)
+        __epm_dnf_set_repo_enabled 1 "$@"
         ;;
     eoget)
         docmd eoget enable-repo "$@"

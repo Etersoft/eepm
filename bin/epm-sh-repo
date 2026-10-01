@@ -145,3 +145,39 @@ __filter_repos_list()
 
     [ -n "$result" ] && echo "$result"
 }
+
+# set enabled=<0|1> for dnf/yum repos in /etc/yum.repos.d
+# args: <0|1> <name|repo id> ...
+# name: all repos from /etc/yum.repos.d/<name>.repo or alt-<name>.repo
+__epm_dnf_set_repo_enabled()
+{
+    local value="$1"
+    shift
+    local repo f ids found
+    for repo in "$@" ; do
+        found=''
+        for f in /etc/yum.repos.d/*.repo ; do
+            [ -e "$f" ] || continue
+            if [ "$f" = "/etc/yum.repos.d/$repo.repo" ] || [ "$f" = "/etc/yum.repos.d/alt-$repo.repo" ] ; then
+                ids="*"
+            elif grep -q -F "[$repo]" "$f" ; then
+                ids="$repo"
+            else
+                continue
+            fi
+            found=1
+            local tmpfile
+            tmpfile=$(mktemp) || fatal
+            remove_on_exit $tmpfile
+            awk -v ids="$ids" -v value="$value" '
+                /^\[.*\]/ { insec = (ids == "*" || $0 == "[" ids "]"); print; if (insec) print "enabled=" value; next }
+                insec && /^[[:space:]]*enabled[[:space:]]*=/ { next }
+                { print }' "$f" >$tmpfile
+            cmp -s $tmpfile "$f" && continue
+            chmod 644 $tmpfile
+            sudocmd cp $tmpfile "$f"
+        done
+        [ -n "$found" ] || warning 'Repo $repo is not found in /etc/yum.repos.d'
+    done
+    return 0
+}
