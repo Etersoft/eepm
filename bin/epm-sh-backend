@@ -22,7 +22,7 @@ VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm
 # Check if args contain backend:package syntax (snap:pkg, nix:pkg)
 __has_backend_syntax()
 {
-    [ -z "$PPARGS" ] && echo "$*" | grep -q -E '(^| )[a-z][a-z][a-z]*:'
+    [ -z "$PPARGS" ] && echo "$*" | grep -q -E '(^| )[a-z][a-z][a-z0-9]*:'
 }
 
 # Check if args contain repo/package syntax (p10/pkg, sisyphus/pkg)
@@ -36,7 +36,7 @@ __get_tpmtype() {
     local tpmtype="$(echo "$arg" | cut -d: -f1)"
 
     # need first three chars
-    echo "$arg" | grep -q "^[a-z][a-z][a-z-]*:" || return
+    echo "$arg" | grep -q "^[a-z][a-z][a-z0-9-]*:" || return
 
     # aliases
     [ "$tpmtype" = "pkcon" ] && tpmtype="packagekit"
@@ -111,8 +111,18 @@ __process_backend_arguments() {
         package_groups["$pmtype"]+="$name "
     done
 
+    local dnfcmd
     for pmtype in "${!package_groups[@]}"; do
-        (PMTYPE="$pmtype" PPARGS=1 $func ${package_groups[$pmtype]})
+        dnfcmd="$DNFCMD"
+        case "$pmtype" in
+            dnf5-rpm)
+                dnfcmd="dnf5"
+                ;;
+            dnf-rpm)
+                dnfcmd="dnf"
+                ;;
+        esac
+        (PMTYPE="$pmtype" DNFCMD="$dnfcmd" PPARGS=1 $func ${package_groups[$pmtype]})
     done
 }
 
