@@ -269,6 +269,70 @@ __epm_addrepo_to_file()
 
 }
 
+# export ALT vendor keys from alt-gpgkeys for dnf gpgcheck
+# TODO: use a package with ALT keys in /etc/pki/rpm-gpg when it appears
+__epm_addrepo_alt_dnf_gpgkey()
+{
+    local keyfile="$1"
+    [ -s "$keyfile" ] && return
+
+    local keyring=/usr/lib/alt-gpgkeys
+    local vendors=/etc/apt/vendors.list.d/alt.list
+    [ -d "$keyring" ] || fatal 'Missed $keyring (install alt-gpgkeys package).'
+    assure_exists gpg gnupg2
+
+    # 80EF7625 (ALT Security Team) is not in vendors list, but still signs some old Sisyphus packages
+    local keys="80EF7625"
+    [ -s "$vendors" ] && keys="$keys $(sed -n 's/.*Fingerprint "\([0-9A-F]*\)".*/\1/p' $vendors | sort -u)"
+
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    a='' gpg --homedir $keyring --export --armor $keys >$tmpfile 2>/dev/null
+    [ -s "$tmpfile" ] || fatal 'Can'\''t export ALT keys from $keyring'
+    chmod 644 $tmpfile
+    sudocmd mkdir -p "$(dirname "$keyfile")"
+    sudocmd cp $tmpfile "$keyfile"
+}
+
+# create /etc/yum.repos.d/alt-<branch>.repo for dnf on ALT
+# args: sisyphus|p11|...
+__epm_addrepo_alt_dnf()
+{
+    local branch="$1"
+    local repopart
+    [ "$branch" = "sisyphus" ] && repopart="Sisyphus" || repopart="$branch/branch"
+    # rpm-md metadata is generated only on download.etersoft.ru mirror
+    local baseurl="$ETERSOFTPUBURL/ALTLinux/$repopart"
+
+    eget --check-url "$baseurl/$DISTRARCH/repodata/repomd.xml" || fatal 'There is no rpm-md metadata for dnf in $baseurl/$DISTRARCH'
+
+    local keyfile="/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-$branch"
+    __epm_addrepo_alt_dnf_gpgkey "$keyfile"
+
+    local name="ALT Sisyphus"
+    [ "$branch" = "sisyphus" ] || name="ALT $branch"
+
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    local i
+    for i in $(get_archlist) ; do
+        cat >>$tmpfile <<EOF
+[$branch-$i]
+name=$name $i
+baseurl=$baseurl/$i
+enabled=1
+gpgcheck=1
+gpgkey=file://$keyfile
+
+EOF
+    done
+    chmod 644 $tmpfile
+    sudocmd mkdir -p /etc/yum.repos.d
+    sudocmd cp $tmpfile /etc/yum.repos.d/alt-$branch.repo
+}
+
 __epm_addrepo_altlinux()
 {
     local repo="$*"
@@ -716,6 +780,18 @@ case $BASEDISTRNAME in
         if [ "$PMTYPE" = "apt-rpm" ] ; then
             __epm_addrepo_altlinux "$@"
             return
+        fi
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+            case "$1" in
+                sisyphus|p[0-9]*|c[0-9]*)
+                    __epm_addrepo_alt_dnf "$1"
+                    return
+                    ;;
+                alt|basealt|etersoft)
+                    __epm_addrepo_alt_dnf "$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+                    return
+                    ;;
+            esac
         fi
         ;;
     "astra")
