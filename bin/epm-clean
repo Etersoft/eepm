@@ -71,6 +71,10 @@ case $PMTYPE in
         #sudocmd yum makecache
         ;;
     dnf-rpm|dnf5-rpm)
+        if [ -n "$dryrun" ] ; then
+            showcmd $DNFCMD clean all
+            return 0
+        fi
         sudocmd $DNFCMD clean all
         ;;
     urpm-rpm)
