@@ -302,13 +302,8 @@ __epm_addrepo_alt_dnf()
     local branch="$1"
     local repopart
     [ "$branch" = "sisyphus" ] && repopart="Sisyphus" || repopart="$branch/branch"
-    # rpm-md metadata is generated only on download.etersoft.ru mirror
     local baseurl="$ETERSOFTPUBURL/ALTLinux/$repopart"
-
-    eget --check-url "$baseurl/$DISTRARCH/repodata/repomd.xml" || fatal 'There is no rpm-md metadata for dnf in $baseurl/$DISTRARCH'
-
     local keyfile="/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-$branch"
-    __epm_addrepo_alt_dnf_gpgkey "$keyfile"
 
     local name="ALT Sisyphus"
     [ "$branch" = "sisyphus" ] || name="ALT $branch"
@@ -316,8 +311,9 @@ __epm_addrepo_alt_dnf()
     local tmpfile
     tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
-    local i
+    local i repoids=''
     for i in $(get_archlist) ; do
+        repoids="$repoids${repoids:+,}$branch-$i"
         cat >>$tmpfile <<EOF
 [$branch-$i]
 name=$name $i
@@ -330,7 +326,18 @@ EOF
     done
     chmod 644 $tmpfile
     sudocmd mkdir -p /etc/yum.repos.d
-    sudocmd cp $tmpfile /etc/yum.repos.d/alt-$branch.repo
+    local target=/etc/yum.repos.d/alt-$branch.repo
+    sudocmd cp $tmpfile $target
+
+    # check rpm-md metadata via dnf itself (it is generated only on download.etersoft.ru mirror)
+    if ! sudocmd $DNFCMD makecache --repo=$repoids ; then
+        sudocmd rm -f $target
+        fatal 'There is no rpm-md metadata for dnf in $baseurl'
+    fi
+
+    __epm_addrepo_alt_dnf_gpgkey "$keyfile"
+    # dnf5 on ALT does not import gpgkey from repo file itself
+    sudocmd rpm --import "$keyfile" || fatal
 }
 
 __epm_addrepo_altlinux()
