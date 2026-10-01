@@ -240,6 +240,13 @@ epm_autoremove()
 
 case $BASEDISTRNAME in
     "alt")
+        if [ "$PMTYPE" != "apt-rpm" ] ; then
+            [ -n "$direct" ] && fatal "--direct is supported only with apt-rpm"
+            [ -n "$1" ] && fatal "Please, run autoremove without args. Check epm autoremove --help to available commands."
+            sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) autoremove || return
+            docmd epm remove-old-kernels $dryrun
+            return
+        fi
 
         if [ -z "$direct" ] ; then
             [ -n "$1" ] && fatal "Please, run autoremove without args or with --direct. Check epm autoremove --help to available commands."
