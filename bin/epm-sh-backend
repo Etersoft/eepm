@@ -22,7 +22,7 @@ VALID_BACKENDS="apt-rpm apt-dpkg apm-rpm stplr aptitude-dpkg deepsolver-rpm urpm
 # Check if args contain backend:package syntax (snap:pkg, nix:pkg)
 __has_backend_syntax()
 {
-    [ -z "$PPARGS" ] && echo "$*" | grep -q -E '(^| )[a-z][a-z][a-z0-9]*:'
+    [ -z "$PPARGS" ] && echo "$*" | grep -q -E '(^| )[a-z][a-z][a-z0-9-]*:'
 }
 
 # Check if args contain repo/package syntax (p10/pkg, sisyphus/pkg)
