@@ -31,8 +31,13 @@ epm_remove_old_kernels()
             info "No installed kernel packages, skipping cleaning"
             return
         fi
-        assure_exists update-kernel update-kernel 0.9.9
-        sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
+        if [ "$PMTYPE" = "apt-rpm" ] ; then
+            assure_exists update-kernel update-kernel 0.9.9
+            sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
+        else
+            # remove-old-kernels uses apt, dnf keeps the running kernel and installonly_limit latest ones
+            sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) remove --oldinstallonly
+        fi
 
         [ -n "$dryrun" ] && return
 
