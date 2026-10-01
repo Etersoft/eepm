@@ -131,6 +131,35 @@ __epm_repoindex_deb()
 }
 
 
+# create/update rpm-md repo index (flat dir with rpm packages)
+__epm_repoindex_rpmmd()
+{
+    local dir=''
+    local opt
+    while [ -n "$1" ] ; do
+        opt="$1"
+        case "$opt" in
+            --init)
+                ;;
+            --sign|--default-key=*)
+                warning '$opt is not supported for $PMTYPE'
+                ;;
+            -*)
+                fatal 'Unknown option $opt'
+                ;;
+            *)
+                [ -n "$dir" ] || dir="$opt"
+                ;;
+        esac
+        shift
+    done
+    [ -n "$dir" ] || dir="$(pwd)"
+
+    assure_exists createrepo_c
+    docmd mkdir -pv "$dir" || fatal
+    docmd createrepo_c -v --update "$dir"
+}
+
 epm_repoindex()
 {
 
@@ -168,33 +197,8 @@ case $PMTYPE in
         docmd createrepo -v -s md5 "$@"
         docmd verifytree
         ;;
-    dnf-rpm)
-        local init=''
-        if [ "$1" = "--init" ] ; then
-            init="1"
-            shift
-        fi
-        epm install --skip-installed createrepo || fatal
-        docmd mkdir -pv "$@"
-        if [ -n "$init" ] ; then
-            docmd createrepo -v "$@"
-        else
-            docmd createrepo -v --update "$@"
-        fi
-        ;;
-    dnf5-rpm)
-        local init=''
-        if [ "$1" = "--init" ] ; then
-            init="1"
-            shift
-        fi
-        epm install --skip-installed createrepo_c || fatal
-        docmd mkdir -pv "$@"
-        if [ -n "$init" ] ; then
-            docmd createrepo_c -v "$@"
-        else
-            docmd createrepo_c -v --update "$@"
-        fi
+    dnf-rpm|dnf5-rpm)
+        __epm_repoindex_rpmmd "$@"
         ;;
     eoget)
         docmd eoget index "$@"
