@@ -295,6 +295,130 @@ __epm_addrepo_alt_dnf_gpgkey()
     sudocmd cp $tmpfile "$keyfile"
 }
 
+# copy repo file to /etc/yum.repos.d (just print it with --dry-run)
+# args: <tmpfile> <target>
+__epm_addrepo_dnf_install_file()
+{
+    local tmpfile="$1"
+    local target="$2"
+
+    if [ -n "$dryrun" ] ; then
+        echo "# $target"
+        cat $tmpfile
+        return 1
+    fi
+
+    # warn about the same repo ids in other files
+    local id f
+    for id in $(sed -n 's|^\[\(.*\)\][[:space:]]*$|\1|p' $tmpfile) ; do
+        for f in /etc/yum.repos.d/*.repo ; do
+            [ "$f" = "$target" ] && continue
+            grep -q "^\[$id\]" "$f" 2>/dev/null && warning 'Repo id $id is already used in $f'
+        done
+    done
+
+    chmod 644 $tmpfile
+    sudocmd mkdir -p /etc/yum.repos.d
+    sudocmd cp $tmpfile $target
+}
+
+# create /etc/yum.repos.d/<name>.repo with baseurl for dnf
+# args: <name> <url> <gpgcheck>
+__epm_addrepo_dnf_baseurl()
+{
+    local name="$1"
+    local url="$2"
+    local gpgcheck="$3"
+
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    cat >$tmpfile <<EOF
+[$name]
+name=$name
+baseurl=$url
+enabled=1
+gpgcheck=$gpgcheck
+EOF
+    local target=/etc/yum.repos.d/$name.repo
+    __epm_addrepo_dnf_install_file $tmpfile $target || return 0
+
+    if ! sudocmd $DNFCMD makecache --repo=$name ; then
+        sudocmd rm -f $target
+        fatal 'There is no rpm-md metadata for dnf in $url'
+    fi
+}
+
+__epm_addrepo_altlinux_dnf_help()
+{
+    message '
+epm repo add - add repo for $PMTYPE on ALT (to /etc/yum.repos.d).
+Supported:
+    sisyphus, p11, ...       - ALT branch (rpm-md metadata from download.etersoft.ru)
+    alt, basealt, etersoft   - current ALT branch
+    deferred                 - Etersoft Sisyphus Deferred repo
+    deferred.org             - Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)
+    deferred-devel           - Etersoft Sisyphus Deferred DEVEL repo
+    deferred-beta            - Etersoft Sisyphus Deferred BETA repo
+    URL/file.repo            - repo file
+    URL or /path/to/repo     - rpm-md repo (f.i. created with epm repo index)
+'
+}
+
+# add repo for dnf on ALT
+__epm_addrepo_altlinux_dnf()
+{
+    if [ -z "$1" ] || [ "$1" = "-h" ] || [ "$1" = "--list" ] || [ "$1" = "--help" ] ; then
+        __epm_addrepo_altlinux_dnf_help
+        return
+    fi
+
+    local repo="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$repo" in
+        sisyphus|p[0-9]*|c[0-9]*|deferred|deferred.org|deferred-devel|deferred-beta)
+            __epm_addrepo_alt_dnf "$repo"
+            return
+            ;;
+        alt|basealt|etersoft)
+            __epm_addrepo_alt_dnf "$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
+            return
+            ;;
+    esac
+
+    local name
+    case "$1" in
+        *.repo)
+            local tmpfile
+            tmpfile=$(mktemp) || fatal
+            remove_on_exit $tmpfile
+            if is_url "$1" ; then
+                local url="$1"
+                eget -q -O $tmpfile "$url" || fatal 'Can'\''t download $url'
+            else
+                cp "$1" $tmpfile || fatal
+            fi
+            __epm_addrepo_dnf_install_file $tmpfile /etc/yum.repos.d/$(basename "$1") || return 0
+            return
+            ;;
+    esac
+
+    if [ -d "$1" ] ; then
+        local dir="$(realpath "$1")"
+        name="local-$(basename "$dir")"
+        __epm_addrepo_dnf_baseurl "$name" "file://$dir" 0
+        return
+    fi
+
+    if is_url "$1" ; then
+        name="$(echo "$1" | sed -e 's|^[a-z]*://||' -e 's|/*$||' -e 's|[^A-Za-z0-9._-]|_|g')"
+        __epm_addrepo_dnf_baseurl "$name" "$1" 1
+        return
+    fi
+
+    name="$1"
+    fatal 'Repo $name is not supported for $PMTYPE on ALT (there is no rpm-md metadata for it). Use # epm repo add --help'
+}
+
 # create /etc/yum.repos.d/alt-<name>.repo for dnf on ALT
 # args: <name> <title> <baseurl> [keyname]
 __epm_addrepo_alt_dnf_repo()
@@ -320,10 +444,8 @@ gpgkey=file://$keyfile
 
 EOF
     done
-    chmod 644 $tmpfile
-    sudocmd mkdir -p /etc/yum.repos.d
     local target=/etc/yum.repos.d/alt-$repo.repo
-    sudocmd cp $tmpfile $target
+    __epm_addrepo_dnf_install_file $tmpfile $target || return 0
 
     # check rpm-md metadata via dnf itself (it is generated only on download.etersoft.ru mirror)
     if ! sudocmd $DNFCMD makecache --repo=$repoids ; then
@@ -812,16 +934,8 @@ case $BASEDISTRNAME in
             return
         fi
         if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
-            case "$1" in
-                sisyphus|p[0-9]*|c[0-9]*|deferred|deferred.org|deferred-devel|deferred-beta)
-                    __epm_addrepo_alt_dnf "$1"
-                    return
-                    ;;
-                alt|basealt|etersoft)
-                    __epm_addrepo_alt_dnf "$(echo "$DISTRVERSION" | tr "[:upper:]" "[:lower:]")"
-                    return
-                    ;;
-            esac
+            __epm_addrepo_altlinux_dnf "$@"
+            return
         fi
         ;;
     "astra")
