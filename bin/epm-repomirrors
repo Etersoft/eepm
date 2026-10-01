@@ -298,6 +298,11 @@ __epm_repomirrors_check_alt()
 {
     case $BASEDISTRNAME in
         "alt")
+            case $PMTYPE in
+                dnf-rpm|dnf5-rpm)
+                    fatal 'epm repo mirrors is not supported for $PMTYPE: rpm-md metadata is available only on download.etersoft.ru mirror'
+                    ;;
+            esac
             ;;
         *)
             fatal "epm repo mirrors is only supported for ALT Linux"
