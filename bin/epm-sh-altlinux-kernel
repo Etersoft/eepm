@@ -1,0 +1,751 @@
+#!/bin/sh
+#
+# Copyright (C) 2026  Etersoft
+# Copyright (C) 2026  Vitaly Lipatov <lav@etersoft.ru>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+# ALT kernel management: update-kernel and remove-old-kernels logic for apt and dnf
+# Based on update-kernel and remove-old-kernels from update-kernel package (ALT Linux Team)
+
+load_helper epm-sh-altlinux
+
+# Kernel package versions are used without epoch and disttag: 6.18.54-alt1
+
+
+#############################################################################
+# Package manager backend (apt-rpm or dnf)
+
+__ak_is_dnf()
+{
+    [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ]
+}
+
+# apt version string 6.18.54-alt1:sisyphus+434294.100.1.1@1790368635 -> 6.18.54-alt1 1790368635
+__ak_apt_parse_version()
+{
+    local v="$1" bt=''
+    case "$v" in
+        *@*)
+            bt="${v##*@}"
+            v="${v%@*}"
+            ;;
+    esac
+    # strip epoch and disttag
+    echo "$v" | grep -q -E '^[0-9]+:' && v="${v#*:}"
+    v="${v%%:*}"
+    echo "$v $bt"
+}
+
+# print apt ids (name#version) for available in repo versions of the package
+__ak_apt_repo_ids()
+{
+    local id
+    a='' apt-cache $__EPM_APT_REPO_OPTIONS pkgnames "$1#" 2>/dev/null | while read -r id ; do
+        a='' apt-cache $__EPM_APT_REPO_OPTIONS policy "$id" 2>/dev/null | grep -q -w 'pkglist$' && echo "$id"
+    done
+}
+
+# print "version buildtime" for all versions of the package available in repo
+__ak_repo_versions()
+{
+    if __ak_is_dnf ; then
+        a='' $DNFCMD -q repoquery --qf '%{version}-%{release} %{buildtime}\n' "$1" 2>/dev/null
+        return
+    fi
+    local id
+    for id in $(__ak_apt_repo_ids "$1") ; do
+        __ak_apt_parse_version "${id#*#}"
+    done
+}
+
+# print "name version buildtime" for all kernel images available in repo
+__ak_repo_kernels()
+{
+    if __ak_is_dnf ; then
+        a='' $DNFCMD -q repoquery --qf '%{name} %{version}-%{release} %{buildtime}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo "
+        return
+    fi
+    local name id
+    for name in $(a='' apt-cache $__EPM_APT_REPO_OPTIONS pkgnames 'kernel-image-' 2>/dev/null | grep '#' | grep -v -- '-debuginfo#' | sed -e 's|#.*||' | sort -u) ; do
+        for id in $(__ak_apt_repo_ids "$name") ; do
+            echo "$name $(__ak_apt_parse_version "${id#*#}")"
+        done
+    done
+}
+
+# print "name version" of external modules in repo built for the kernel
+# args: flavour version
+__ak_repo_modules()
+{
+    local flavour="$1" version="$2"
+    if __ak_is_dnf ; then
+        a='' $DNFCMD -q repoquery --qf '%{name} %{version}-%{release}\n' --whatrequires "kernel-image-$flavour-$version" 2>/dev/null | grep "^kernel-modules-.*-$flavour " | sort -u
+        return
+    fi
+    local id
+    id="$(__ak_apt_repo_ids "kernel-image-$flavour" | while read -r id ; do
+        [ "$(__ak_apt_parse_version "${id#*#}" | cut -d' ' -f1)" = "$version" ] && echo "$id"
+    done | head -n1)"
+    [ -n "$id" ] || return 0
+    a='' apt-cache $__EPM_APT_REPO_OPTIONS whatdepends "$id" 2>/dev/null | grep "kernel-modules-.*-$flavour#" | \
+        sed -e 's|-[^-]*-[^-]*$||' -e 's|^ *||' | sort -u | while read -r id ; do
+            echo "${id%%#*} $(__ak_apt_parse_version "${id#*#}" | cut -d' ' -f1)"
+    done
+}
+
+# install packages: name or name=version
+# kernel packages are installed alongside the old ones (Allow-Duplicated in apt, installonly in dnf)
+__ak_install()
+{
+    local yes=''
+    [ -n "$non_interactive" ] || [ -n "$force" ] && yes='-y'
+    if __ak_is_dnf ; then
+        local items='' i modules=''
+        for i in "$@" ; do
+            case "$i" in
+                *=*)
+                    items="$items ${i%%=*}-${i#*=}"
+                    ;;
+                *)
+                    items="$items $i"
+                    ;;
+            esac
+            case "$i" in
+                kernel-modules-*)
+                    modules="$modules ${i%%=*}"
+                    ;;
+            esac
+        done
+        sudocmd $DNFCMD $yes $(subst_option dryrun --assumeno) $(subst_option download_only --downloadonly) $(__alt_dnf_installonly_opt $modules) install $items
+        local RES=$?
+        # dnf returns error on --assumeno
+        [ -n "$dryrun" ] && return 0
+        return $RES
+    fi
+    sudocmd apt-get $__EPM_APT_REPO_OPTIONS install -o APT::Install::Virtual=true $yes $reinstall $(subst_option dryrun --simulate) $(subst_option download_only -d) "$@"
+}
+
+# remove packages: name=version
+__ak_remove()
+{
+    local yes=''
+    [ -n "$non_interactive" ] || [ -n "$force" ] && yes='-y'
+    if __ak_is_dnf ; then
+        local items='' i
+        for i in "$@" ; do
+            items="$items ${i%%=*}-${i#*=}"
+        done
+        # dnf removes kernel modules for removed kernels as dependent packages
+        sudocmd $DNFCMD $yes $(subst_option dryrun --assumeno) remove $items
+        local RES=$?
+        [ -n "$dryrun" ] && return 0
+        return $RES
+    fi
+    sudocmd apt-get $yes $(subst_option dryrun --simulate) remove "$@"
+}
+
+
+#############################################################################
+# Common logic
+
+__ak_uname_r()
+{
+    a='' uname -r
+}
+
+# 6.18.54-6.18-alt1 -> 6.18
+__ak_flavour_from_release()
+{
+    local f="${1#*-}"
+    echo "${f%-*}"
+}
+
+# 6.18.54-6.18-alt1 -> 6.18.54-alt1
+__ak_version_from_release()
+{
+    local ver="${1%%-*}" rel="${1##*-}"
+    echo "$ver-$rel"
+}
+
+# is version $1 <= version $2
+__ak_version_le()
+{
+    [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+}
+
+# print name=version if the version of the package is available in repo, else just name
+# (dnf does not update installed non-installonly package by name)
+__ak_pkg_version()
+{
+    if __ak_repo_versions "$1" | grep -q "^$2 " ; then
+        echo "$1=$2"
+    else
+        echo "$1"
+    fi
+}
+
+# print the latest version from "version buildtime" lines
+__ak_max_version()
+{
+    sort -V -k1,1 | tail -n1
+}
+
+# print short names of installed external modules for the flavour (kernel-modules-<name>-<flavour>)
+__ak_installed_modules()
+{
+    a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$1" 2>/dev/null | sed -e "s|^kernel-modules-||" -e "s|-$1\$||" | sort -u
+}
+
+# print stable flavours (x.y, std-def, un-def) with versions >= $1 from repo, the newest first
+# skip -rc kernels unless mainline is set
+__ak_next_flavours()
+{
+    local cutoff="${1:-0.0}" mainline="$2"
+    __ak_repo_kernels | sed -e 's|^kernel-image-||' | grep -E '^(std-def|un-def|[0-9]+\.[0-9]+) ' | \
+        { if [ -n "$mainline" ] ; then cat ; else grep -v -E ' [^ ]*\brc[0-9]' ; fi ; } | \
+        while read -r flavour version bt ; do
+            __ak_version_le "$cutoff" "$version" && echo "$version $flavour"
+        done | sort -r -V | cut -d' ' -f2 | awk '!seen[$0]++'
+}
+
+# run x11setupdrv/x11presetdrv after video drivers update (like update-kernel does)
+__ak_x11_setup_drv()
+{
+    [ -x /usr/bin/Xorg ] || return 0
+    echo "$*" | grep -q -E "drm|fglrx|nvidia" || return 0
+    [ -x /usr/bin/x11setupdrv ] && sudocmd /usr/bin/x11setupdrv
+    if [ -x /usr/sbin/x11presetdrv ] ; then
+        sudocmd /usr/sbin/x11presetdrv
+    else
+        message "You might need to run x11presetdrv: video drivers updated but /usr/sbin/x11presetdrv is missing"
+    fi
+    sudocmd ldconfig
+}
+
+# list available and installed kernels
+# args: [flavour]
+__ak_list_kernels()
+{
+    local kernel_flavour="$1"
+    local uname_r rflv def now
+    uname_r="$(__ak_uname_r)"
+    rflv="${kernel_flavour:-$(__ak_flavour_from_release "$uname_r")}"
+    def="$(readlink /boot/vmlinuz 2>/dev/null)"
+    def="${def#vmlinuz-}"
+    now="$(date +%s)"
+
+    local repo installed
+    repo="$(__ak_repo_kernels | grep "^kernel-image-${kernel_flavour}")"
+    installed="$(a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n' "kernel-image-${kernel_flavour}*" 2>/dev/null | grep -v -- "-debuginfo ")"
+    [ -n "$kernel_flavour" ] && installed="$(echo "$installed" | grep "^kernel-image-$kernel_flavour ")"
+
+    message 'List of available kernels:'
+    local files
+    files="$(a='' rpm -qa --qf '[%{NAME}\t%{FILENAMES}\n]' 'kernel-*' 2>/dev/null)"
+
+    local count=0 pkg version bt flv kver mark addons
+    while read -r pkg version bt ; do
+        [ -n "$pkg" ] || continue
+        flv="${pkg#kernel-image-}"
+        kver="${version%-*}-$flv-${version##*-}"
+        mark="   "
+        echo "$repo" | grep -q "^$pkg $version " && mark="  *"
+        if [ -n "$bt" ] && [ "$bt" -gt 0 ] 2>/dev/null ; then
+            printf "%s %7s %s" "$mark" "($(( (now - bt) / 86400 )) d)" "$pkg-$version"
+        else
+            printf "%s %7s %s" "$mark" "?" "$pkg-$version"
+        fi
+        if a='' rpm -q "$pkg-$version" >/dev/null 2>&1 ; then
+            [ "$def" = "$kver" ] && printf ' [default]' || printf ' [installed]'
+        elif [ "$mark" = "  *" ] && [ "$rflv" = "$flv" ] ; then
+            printf ' <--- upgrade'
+        fi
+        [ "$uname_r" = "$kver" ] && printf ' RUNNING'
+        addons="$(echo "$files" | grep -e "/lib/modules/$kver/" -e "	/usr/include/linux-${version%-*}-$flv\$" | cut -f1 | sort -u | \
+            grep -v "^$pkg\$" | sed -e "s|^kernel-modules-||" -e "s|^kernel-||" -e "s|-$flv\$||" | xargs)"
+        [ -n "$addons" ] && printf ' | %s' "$addons"
+        echo
+        count=$((count + 1))
+    done <<EOF
+$( { echo "$repo" ; echo "$installed" ; } | sort -u -k1,2 | sort -V -k2,2)
+EOF
+    if [ "$count" -eq 0 ] ; then
+        message "Nothing found."
+    else
+        message "[*] Latest available in repo. (d) Package age in days."
+    fi
+}
+
+# parse -r value, sets ak_release and maybe ak_flavour
+# formats: alt1, 5.7.19-alt1, 5.7.19-std-def-alt1, [kernel-image-]std-def-5.7.19-alt1, kernel-image-std-def=5.7.19-alt1
+__ak_parse_release()
+{
+    local r="$1" ver flv rel
+    r="${r#kernel-image-}"
+    if echo "$r" | grep -q -E '^[0-9]+\.[0-9]+[-=#][0-9:]+\.[0-9]+\.[0-9.]+-[^-]+$' ; then
+        # package format with x.y flavour: 6.18-6.18.44-alt1
+        flv="${r%%[-=#]*}"
+        rel="${r#"$flv"[-=#]}"
+        ak_release="${rel#*:}"
+    elif echo "$r" | grep -q -E '^[0-9]+\.[0-9.]+-.*-[^-]+$' ; then
+        # uname -r compatible format
+        ver="${r%%-*}"
+        rel="${r##*-}"
+        flv="${r#"$ver"-}"
+        flv="${flv%-"$rel"}"
+        ak_release="$ver-$rel"
+    elif echo "$r" | grep -q -E '^(kernel-image-)?.*[-=#][0-9:]+\.[0-9.]+-[^-]+$' ; then
+        # package format
+        ver="${r#kernel-image-}"
+        flv="${ver%[-=#]*-*}"
+        rel="${ver#"$flv"[-=#]}"
+        ak_release="${rel#*:}"
+    else
+        ak_release="$r"
+        return 0
+    fi
+    if [ -n "$ak_flavour" ] && [ "$ak_flavour" != "$flv" ] ; then
+        fatal 'Kernel flavour from -t $ak_flavour does not match flavour from -r ($flv).'
+    fi
+    ak_flavour="$flv"
+    ak_user_flavour="-r"
+}
+
+epm_alt_update_kernel_help()
+{
+    message 'epm update-kernel - install the latest kernel and external modules (the same as update-kernel)
+Usage: epm update-kernel [options]
+
+Options:
+  -l, --list           list available kernels
+  -a, --all            select all available kernel modules to install
+  -i, --interactive    interactive modules selection (via fzf)
+  -H, --headers        add kernel headers to install
+  --debuginfo          add debuginfo package to install
+  --fw, --firmware     add firmware packages to install
+  -A modulename        include (add) external module (by a short name)
+  -D modulename        exclude (del) external module from install
+  -f, -y, --force      force kernel upgrade
+  -t, --type           select desired kernel flavour (6.12, std-def, etc),
+                       by default it is the same as the booted kernel,
+                       latest selects the newest flavour, mainline also allows -rc kernels
+  -r, --release        desired kernel release for the current or specified flavour
+                       (alt1, 6.12.10-alt1, 6.12.10-6.12-alt1, kernel-image-6.12-6.12.10-alt1)
+  -u, --update         update package database before
+  -n, --dry-run        simulate install
+  -d, --download-only  download packages, but do not install
+  --no-kernel          exclude the kernel-image from install
+
+Run epm remove-old-kernels to uninstall unused kernels.
+'
+}
+
+# update kernel and external modules to the latest (or specified) version
+# options are the same as for update-kernel
+epm_alt_update_kernel()
+{
+    local ak_flavour='' ak_release='' ak_user_flavour=''
+    local all='' list='' headers='' debuginfo='' firmware='' nokernel='' update=''
+    local addmodules='' delmodules='' opt
+    local interactive_select=''
+    while [ -n "$1" ] ; do
+        opt="$1"
+        case "$opt" in
+            -t|--type)
+                ak_flavour="$2"
+                ak_user_flavour="-t"
+                shift
+                ;;
+            -r|--release)
+                local release_arg="$2"
+                shift
+                ;;
+            -a|--all)
+                all=1
+                ;;
+            -l|--list)
+                list=1
+                ;;
+            -i|--interactive)
+                interactive_select=1
+                ;;
+            -A|--add)
+                addmodules="$addmodules $2"
+                shift
+                ;;
+            -D|--del)
+                delmodules="$delmodules $2"
+                shift
+                ;;
+            -H|--headers)
+                headers=1
+                ;;
+            --fw|--firmware)
+                firmware=1
+                ;;
+            --debuginfo)
+                debuginfo=1
+                ;;
+            --no-kernel)
+                nokernel=1
+                ;;
+            -u|--update)
+                update=1
+                ;;
+            -h|--help)
+                epm_alt_update_kernel_help
+                return
+                ;;
+            -d|--download-only)
+                download_only="--download-only"
+                ;;
+            -n|--dry-run)
+                dryrun="--dry-run"
+                ;;
+            -f|-y|--force)
+                force="--force"
+                ;;
+            --reinstall)
+                reinstall="--reinstall"
+                ;;
+            -v|--verbose)
+                verbose="--verbose"
+                ;;
+            *)
+                fatal 'Unknown option $opt for update-kernel'
+                ;;
+        esac
+        shift
+    done
+    [ -n "$release_arg" ] && __ak_parse_release "$release_arg"
+
+    if [ -n "$update" ] ; then
+        docmd epm update || return
+    else
+        epm --quiet repo status >/dev/null 2>&1 || warning "Your package database is not up to date. Run # epm update"
+    fi
+
+    local uname_r current_flavour
+    uname_r="$(__ak_uname_r)"
+    if [ -n "$UPDATE_KERNEL_SYS_FLAVOUR" ] ; then
+        current_flavour="$UPDATE_KERNEL_SYS_FLAVOUR"
+    else
+        current_flavour="$(__ak_flavour_from_release "$uname_r")"
+    fi
+
+    # mainline is latest with -rc kernels
+    local mainline=''
+    if [ "$ak_flavour" = "mainline" ] ; then
+        mainline=1
+        ak_flavour=latest
+    fi
+    if [ "$ak_flavour" = "latest" ] ; then
+        ak_flavour="$(__ak_next_flavours "" "$mainline" | head -n1)"
+        [ -n "$ak_flavour" ] || fatal "Latest flavour not found."
+        info 'Currently available latest flavour is $ak_flavour'
+    fi
+
+    if [ -n "$list" ] ; then
+        __ak_list_kernels "$ak_flavour"
+        return
+    fi
+
+    local current_kernel_package
+    current_kernel_package="$(a='' rpm -qf --qf '%{NAME}-%{VERSION}-%{RELEASE}\n' "/boot/vmlinuz-$uname_r" 2>/dev/null)" || current_kernel_package=''
+    if [ -n "$current_kernel_package" ] ; then
+        info 'Running kernel: $current_kernel_package'
+    else
+        info 'Running kernel: $uname_r is not from package'
+    fi
+
+    local kernel_flavour="${ak_flavour:-$current_flavour}"
+
+    # get available kernels, switch to the next flavour if the current one is not available
+    local kernels
+    kernels="$(__ak_repo_versions "kernel-image-$kernel_flavour")"
+    if [ -z "$kernels" ] ; then
+        info 'There are no available kernels with flavour $kernel_flavour'
+        [ -z "$ak_user_flavour" ] || fatal 'Remove $ak_user_flavour to attempt an automatic upgrade.'
+        local current_kver="$uname_r"
+        echo "$kernel_flavour" | grep -q -E '^[0-9]+\.[0-9]+$' && current_kver="$kernel_flavour"
+        info 'Searching for a newer flavour (>= $current_kver) ...'
+        kernel_flavour="$(__ak_next_flavours "$current_kver" | tail -n1)"
+        [ -n "$kernel_flavour" ] || fatal "No newer flavours found. Use -t to select another flavour."
+        info 'Upgrade to the next available flavour $kernel_flavour'
+        kernels="$(__ak_repo_versions "kernel-image-$kernel_flavour")"
+    fi
+
+    if [ -n "$ak_release" ] ; then
+        kernels="$(echo "$kernels" | while read -r version bt ; do
+            [ "$version" = "$ak_release" ] || [ "${version#*-}" = "$ak_release" ] && echo "$version $bt"
+        done)"
+        [ -n "$kernels" ] || fatal 'There are no available $kernel_flavour kernels with package release $ak_release'
+    fi
+
+    local kmax kmaxver kmaxbt
+    kmax="$(echo "$kernels" | __ak_max_version)"
+    kmaxver="${kmax% *}"
+    kmaxbt="${kmax#* }"
+    [ -n "$kmaxver" ] || fatal "Requested kernel not found."
+
+    if a='' rpm -q "kernel-image-$kernel_flavour-$kmaxver" >/dev/null 2>&1 ; then
+        info 'Latest available kernel kernel-image-$kernel_flavour-$kmaxver is already installed on your system.'
+    else
+        info 'Latest available kernel is kernel-image-$kernel_flavour-$kmaxver'
+    fi
+    if [ -n "$kmaxbt" ] && [ "$kmaxbt" != "$kmaxver" ] ; then
+        local mons=$(( ($(date +%s) - kmaxbt) / 2592000 ))
+        [ "$mons" -gt 0 ] && warning 'Selected kernel is $mons months old.'
+    fi
+
+    local extra=''
+    # add headers
+    if [ -n "$headers" ] || a='' rpm -q kernel-headers-common >/dev/null 2>&1 ; then
+        extra="$extra $(__ak_pkg_version "kernel-headers-$kernel_flavour" "$kmaxver")"
+    fi
+    # install kernel-headers-modules if there is DKMS because it may need it at once
+    if [ -n "$headers" ] || a='' rpm -q "kernel-headers-modules-$current_flavour" >/dev/null 2>&1 || \
+       a='' rpm -q "kernel-headers-modules-$kernel_flavour" >/dev/null 2>&1 || is_command dkms ; then
+        extra="$extra $(__ak_pkg_version "kernel-headers-modules-$kernel_flavour" "$kmaxver")"
+    fi
+    if [ -n "$debuginfo" ] ; then
+        if [ -n "$(__ak_repo_versions "kernel-image-$kernel_flavour-debuginfo" | grep "^$kmaxver ")" ] ; then
+            extra="$extra kernel-image-$kernel_flavour-debuginfo=$kmaxver"
+        else
+            warning "Debuginfo package not found for the new kernel."
+        fi
+    fi
+    if [ -n "$firmware" ] ; then
+        extra="$extra $(a='' rpm -qa --qf '%{NAME}\n' 'firmware-*' VENDOR='ALT Linux Team' 2>/dev/null | xargs)"
+        a='' rpm -q firmware-linux >/dev/null 2>&1 || extra="$extra firmware-linux"
+    fi
+
+    # available external modules for the target kernel ("name version")
+    local allmodules allnames
+    allmodules="$(__ak_repo_modules "$kernel_flavour" "$kmaxver")"
+    allnames="$(echo "$allmodules" | cut -d' ' -f1 | sed -e "s|^kernel-modules-||" -e "s|-$kernel_flavour\$||" | grep -v -- "-debuginfo\$" | sort -u)"
+    local num_modules
+    num_modules="$(echo $allnames | wc -w)"
+    info 'Kernel $kernel_flavour version $kmaxver has $num_modules external modules.'
+
+    if [ -n "$delmodules" ] ; then
+        local missed
+        missed="$(estrlist exclude "$allnames" "$delmodules")"
+        [ -n "$missed" ] && warning 'Modules requested for exclusion but not found:' $missed
+        allnames="$(estrlist exclude "$delmodules" "$allnames")"
+    fi
+
+    # check if selected kernel has all external modules installed for the booted kernel
+    local lost
+    lost="$(estrlist exclude "$allnames" "$(__ak_installed_modules "$current_flavour")")"
+    lost="$(estrlist exclude "$delmodules" "$lost")"
+    if [ -n "$lost" ] ; then
+        warning 'Selected kernel does not have the following external module(s) which you have installed for your booted $current_flavour kernel:' $lost
+        warning "Do not answer yes if these modules are important for your system."
+    fi
+
+    # select modules: all, user selected, installed for booted or target flavour
+    local selected
+    if [ -n "$all" ] ; then
+        selected="$allnames"
+    else
+        selected="$(estrlist union "$(__ak_installed_modules "$kernel_flavour") $(__ak_installed_modules "$current_flavour") $addmodules")"
+        if [ -n "$interactive_select" ] ; then
+            assure_exists fzf
+            local chosen
+            chosen="$(echo "$allnames" | a='' fzf -m --prompt="Select modules (Tab to mark)> " --header="Kernel $kernel_flavour $kmaxver external modules")"
+            selected="$(estrlist union "$selected $chosen")"
+        fi
+        local missed
+        missed="$(estrlist exclude "$allnames" "$addmodules")"
+        [ -n "$missed" ] && warning 'Modules requested for install but not found:' $missed
+        selected="$(estrlist intersection "$selected" "$allnames")"
+    fi
+
+    local modules='' m mv
+    for m in $selected ; do
+        mv="$(echo "$allmodules" | grep "^kernel-modules-$m-$kernel_flavour " | cut -d' ' -f2 | sort -V | tail -n1)"
+        [ -n "$mv" ] && modules="$modules kernel-modules-$m-$kernel_flavour=$mv"
+    done
+    [ -n "$selected" ] && info 'The following extra modules will be installed:' $selected
+
+    local kernel_to_install=''
+    [ -n "$nokernel" ] || kernel_to_install="kernel-image-$kernel_flavour=$kmaxver"
+
+    # do we need to work?
+    local needwork="$force$reinstall" i
+    if [ -z "$needwork" ] ; then
+        for i in $kernel_to_install $modules $extra ; do
+            a='' rpm -q "$(echo "$i" | sed -e 's|=|-|')" >/dev/null 2>&1 || needwork=1
+        done
+    fi
+    if [ -z "$needwork" ] ; then
+        message "Everything is already installed, thus no upgrade is possible. Use -f to force install."
+        return 0
+    fi
+
+    __ak_install $kernel_to_install $modules $extra || fatal 'Failed to install kernel $kernel_flavour-$kmaxver packages'
+    [ -n "$dryrun" ] || [ -n "$download_only" ] && return 0
+    sync
+    __ak_x11_setup_drv $selected
+}
+
+# print kernel release (as uname -r) of the latest kernel with uptime >= 1 day
+__ak_backup_kernel_release()
+{
+    [ -f /var/log/wtmp ] || return
+    a='' last -a reboot 2>/dev/null | awk '$ 10 ~ /+/ {print $11; exit }'
+}
+
+epm_alt_remove_old_kernels_help()
+{
+    message 'epm remove-old-kernels - remove old kernels (the same as remove-old-kernels)
+Usage: epm remove-old-kernels [options]
+
+Options:
+  -f, -y, --force   do not ask for removal confirmation
+  -n, --dry-run     just simulate removal
+  -t, --type        remove old kernels for the specified flavour (6.12, un-def, etc)
+  -a, --all         remove old kernels for all flavours (keep latest for each one)
+  -A, --purge       purge other flavours
+  --no-backup       do not keep the backup kernel
+
+Note: currently booted and backup kernels will not be removed.
+The backup kernel is the latest kernel with uptime of more than a day.
+All numeric kernels (x.y) are considered to be a single flavour.
+'
+}
+
+# remove old kernels: keep the booted kernel, the backup one (latest with uptime >= 1 day)
+# and the latest kernel of the flavour, all numeric flavours (x.y) are considered as a single flavour
+# options are the same as for remove-old-kernels
+epm_alt_remove_old_kernels()
+{
+    local kernel_flavour='' all='' nobackup='' opt
+    while [ -n "$1" ] ; do
+        opt="$1"
+        case "$opt" in
+            -t|--type)
+                kernel_flavour="$2"
+                shift
+                ;;
+            -a|--all)
+                all=all
+                ;;
+            -A|--purge)
+                all=purge
+                ;;
+            --no-backup)
+                nobackup=1
+                ;;
+            -h|--help)
+                epm_alt_remove_old_kernels_help
+                return
+                ;;
+            -n|--dry-run)
+                dryrun="--dry-run"
+                ;;
+            -f|-y|--force)
+                force="--force"
+                ;;
+            *)
+                fatal 'Unknown option $opt for remove-old-kernels'
+                ;;
+        esac
+        shift
+    done
+
+    local uname_r current_kernel_package current_flavour
+    uname_r="$(__ak_uname_r)"
+    current_kernel_package="$(a='' rpm -qf --qf '%{NAME}-%{VERSION}-%{RELEASE}\n' "/lib/modules/$uname_r/kernel" 2>/dev/null)" || current_kernel_package=''
+    current_flavour="$(__ak_flavour_from_release "$uname_r")"
+    if [ -n "$current_kernel_package" ] ; then
+        info 'Running kernel version: $uname_r'
+    else
+        info 'Running kernel version: $uname_r (package not found)'
+    fi
+
+    # installed kernels as "flavour version" lines
+    local all_kernels
+    all_kernels="$(a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||')"
+
+    if [ -z "$kernel_flavour" ] && echo "$current_flavour" | grep -q -E '^[0-9]+\.[0-9]+$' ; then
+        # booted into one of x.y flavours
+        kernel_flavour=latest
+    fi
+
+    local flavours
+    if [ -n "$all" ] ; then
+        flavours="$(echo "$all_kernels" | cut -d' ' -f1 | sort -u)"
+    elif [ "$kernel_flavour" = "latest" ] ; then
+        flavours="$(echo "$all_kernels" | grep -v -E ' [^ ]*\brc[0-9]' | cut -d' ' -f1 | grep -E '^(std-def|un-def|[0-9]+\.[0-9]+)$' | sort -u)"
+    elif [ -n "$kernel_flavour" ] ; then
+        flavours="$kernel_flavour"
+    else
+        flavours="$current_flavour"
+    fi
+
+    local backup_package=''
+    if [ -z "$nobackup" ] ; then
+        local backup_release
+        backup_release="$(__ak_backup_kernel_release)"
+        if [ -n "$backup_release" ] && [ "$backup_release" != "$uname_r" ] ; then
+            backup_package="$(a='' rpm -qf --qf '%{NAME}-%{VERSION}-%{RELEASE}\n' "/lib/modules/$backup_release/kernel" 2>/dev/null)" || backup_package=''
+            [ -n "$backup_package" ] && info 'Previous kernel with uptime more than a day: $backup_package (backup)'
+        elif [ -z "$backup_release" ] ; then
+            warning "Backup kernel is not determined."
+        fi
+    fi
+
+    # the highest numeric flavour is used for the newest kernel check
+    local newest_stable_kernel='' newest_stable_flavour
+    newest_stable_flavour="$(echo "$flavours" | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail -n1)"
+    [ -n "$newest_stable_flavour" ] && newest_stable_kernel="kernel-image-$newest_stable_flavour-$(echo "$all_kernels" | grep "^$newest_stable_flavour " | cut -d' ' -f2 | sort -V | tail -n1)"
+
+    local flavour versions newest kernel package keep='' remove='' remove_items=''
+    for flavour in $flavours ; do
+        versions="$(echo "$all_kernels" | grep "^$flavour " | cut -d' ' -f2 | sort -V)"
+        newest="kernel-image-$flavour-$(echo "$versions" | tail -n1)"
+        echo "$flavour" | grep -q -E '^[0-9]+\.[0-9]+$' && newest="$newest_stable_kernel"
+        local pkglisted=1
+        [ "$all" = "purge" ] || [ -n "$(__ak_repo_versions "kernel-image-$flavour")" ] || pkglisted=''
+        for kernel in $versions ; do
+            package="kernel-image-$flavour-$kernel"
+            if [ "$package" = "$current_kernel_package" ] || [ "$package" = "$backup_package" ] ; then
+                keep="$keep $package"
+            elif [ "$all" = "purge" ] && [ "$flavour" != "$kernel_flavour" ] ; then
+                remove="$remove $package"
+            elif [ "$all" != "purge" ] && [ -z "$pkglisted" ] ; then
+                # EOL flavour
+                remove="$remove $package"
+            elif [ "$package" = "$newest" ] ; then
+                keep="$keep $package"
+            else
+                remove="$remove $package"
+            fi
+            echo " $remove " | grep -q " $package " && remove_items="$remove_items kernel-image-$flavour=$kernel"
+        done
+    done
+
+    [ -n "$keep" ] && message "Keeping kernels:" $keep
+    if [ -z "$remove" ] ; then
+        message "Nothing to remove."
+        return 0
+    fi
+    message "Will be removing kernels:" $remove
+
+    __ak_remove $remove_items
+}
