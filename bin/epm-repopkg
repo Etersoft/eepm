@@ -87,8 +87,39 @@ __epm_repo_pkgdel_alt()
 }
 
 
+# rpm-md repo is a flat dir with rpm packages
+__epm_repo_pkgadd_rpmmd()
+{
+    local REPO_DIR="$1"
+    shift
+    [ -d "$REPO_DIR" ] || fatal 'Can'\''t find repo dir $REPO_DIR.'
+    [ -n "$1" ] || fatal "Missed package name"
+    while [ -s "$1" ] ; do
+        cp -v "$1" "$REPO_DIR/" || fatal
+        shift
+    done
+}
+
+__epm_repo_pkgdel_rpmmd()
+{
+    local REPO_DIR="$1"
+    shift
+    [ -d "$REPO_DIR" ] || fatal 'Can'\''t find repo dir $REPO_DIR.'
+    [ -n "$1" ] || fatal "Missed package name"
+    local i
+    while [ -n "$1" ] ; do
+        for i in "$REPO_DIR"/$1*.rpm ; do
+            [ -e "$i" ] || continue
+            [ "$1" = "$(epm print name for package "$i")" ] || continue
+            rm -v "$i"
+        done
+        shift
+    done
+}
+
 __epm_repo_pkgupdate_alt()
 {
+    local __repo_kind="${__repo_kind:-alt}"
     local dir="$1"
     shift
     # A task or a wildcard can contain several versions of the same package.
@@ -117,8 +148,8 @@ __epm_repo_pkgupdate_alt()
         [ -s "$selected_file" ] || continue
         selected_package="$(sed -n '2p' "$selected_file")"
         candidate_name="$(epm print name for package "$selected_package")" || fatal
-        __epm_repo_pkgdel_alt "$dir" "$candidate_name"
-        __epm_repo_pkgadd_alt "$dir" "$selected_package"
+        __epm_repo_pkgdel_$__repo_kind "$dir" "$candidate_name"
+        __epm_repo_pkgadd_$__repo_kind "$dir" "$selected_package"
     done
     rm -rf "$selected_dir"
 }
@@ -164,7 +195,7 @@ __epm_repo_pkgadd_from_task()
         rm -rf "$tmpdir"
         fatal "No packages downloaded from task(s)"
     fi
-    __epm_repo_pkgadd_alt "$dir" $tmpdir/*.rpm
+    __epm_repo_pkgadd_${__repo_kind:-alt} "$dir" $tmpdir/*.rpm
     rm -rf "$tmpdir"
 }
 
@@ -179,6 +210,15 @@ case $PMTYPE in
             __epm_repo_pkgadd_from_task "$dir" "$@"
         else
             __epm_repo_pkgadd_alt "$dir" "$@"
+        fi
+        ;;
+    dnf-rpm|dnf5-rpm)
+        local dir="$1"
+        shift
+        if is_taskarg "$@" ; then
+            __repo_kind=rpmmd __epm_repo_pkgadd_from_task "$dir" "$@"
+        else
+            __epm_repo_pkgadd_rpmmd "$dir" "$@"
         fi
         ;;
     *)
@@ -222,6 +262,15 @@ case $PMTYPE in
             __epm_repo_pkgupdate_alt "$dir" "$@"
         fi
         ;;
+    dnf-rpm|dnf5-rpm)
+        local dir="$1"
+        shift
+        if is_taskarg "$@" ; then
+            __repo_kind=rpmmd __epm_repo_pkgupdate_from_task "$dir" "$@"
+        else
+            __repo_kind=rpmmd __epm_repo_pkgupdate_alt "$dir" "$@"
+        fi
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgupdate()'
         ;;
@@ -236,6 +285,9 @@ epm_repo_pkgdel()
 case $PMTYPE in
     apt-rpm|apm-rpm)
         __epm_repo_pkgdel_alt "$@"
+        ;;
+    dnf-rpm|dnf5-rpm)
+        __epm_repo_pkgdel_rpmmd "$@"
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repo_pkgdel()'
