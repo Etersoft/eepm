@@ -45,149 +45,6 @@ elif [ -f "$EFI/limine.conf" ]; then
     bootloader="limine"
 fi
 
-# print available kernel flavour with the latest version (like update-kernel -t latest)
-__epm_kernel_latest_flavour_alt_dnf()
-{
-    a='' $DNFCMD -q repoquery --qf '%{name}\n' 'kernel-image-*' 2>/dev/null | sed -n 's|^kernel-image-\([0-9]\+\.[0-9]\+\)$|\1|p' | sort -u -V | tail -n1
-}
-
-# print short names of installed external modules for the flavour (kernel-modules-<name>-<flavour>)
-__epm_kernel_installed_modules_alt_dnf()
-{
-    a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$1" 2>/dev/null | sed -e "s|^kernel-modules-||" -e "s|-$1\$||" | sort -u
-}
-
-# update-kernel uses apt, so do the same with dnf directly
-# supports update-kernel options: -t, -a, -A, -D, -H, --fw, --debuginfo, -d, --no-kernel, -l, -f
-__epm_kernel_update_alt_dnf()
-{
-    load_helper epm-sh-altlinux
-    load_helper epm-install-alt
-    local flavour='' all='' headers='' firmware='' debuginfo='' download='' nokernel=''
-    local addmodules='' delmodules='' opt
-    while [ -n "$1" ] ; do
-        opt="$1"
-        case "$opt" in
-            -t|--type)
-                flavour="$2"
-                shift
-                ;;
-            -a|--all)
-                all=1
-                ;;
-            -A|--add)
-                addmodules="$addmodules $2"
-                shift
-                ;;
-            -D|--del)
-                delmodules="$delmodules $2"
-                shift
-                ;;
-            -H|--headers)
-                headers=1
-                ;;
-            --fw|--firmware)
-                firmware=1
-                ;;
-            --debuginfo)
-                debuginfo=1
-                ;;
-            -d|--download-only)
-                download="--downloadonly"
-                ;;
-            --no-kernel)
-                nokernel=1
-                ;;
-            -l|--list)
-                docmd $DNFCMD list --showduplicates 'kernel-image-*'
-                return
-                ;;
-            -f|-y|--force|-n|--dry-run|-u|--update|-v|--verbose)
-                # handled by epm options or not needed with dnf
-                ;;
-            *)
-                fatal 'Option $opt is not supported for $PMTYPE'
-                ;;
-        esac
-        shift
-    done
-
-    local current_flavour
-    current_flavour="$(get_current_kernel_flavour)"
-    [ -n "$flavour" ] || flavour="$current_flavour"
-    if [ "$flavour" = "latest" ] ; then
-        flavour="$(__epm_kernel_latest_flavour_alt_dnf)"
-        [ -n "$flavour" ] || fatal "Can't detect the latest kernel flavour"
-        info 'Currently available latest flavour is $flavour'
-    fi
-
-    # all available external modules for target flavour
-    local available
-    available="$(a='' $DNFCMD -q repoquery --qf '%{name}\n' "kernel-modules-*-$flavour" 2>/dev/null | grep -v -- "-debuginfo\$" | sed -e "s|^kernel-modules-||" -e "s|-$flavour\$||" | sort -u)"
-
-    # inherit modules from the booted flavour and from installed kernels of the target flavour
-    local modules
-    if [ -n "$all" ] ; then
-        modules="$available"
-    else
-        modules="$(estrlist union "$(__epm_kernel_installed_modules_alt_dnf "$flavour") $(__epm_kernel_installed_modules_alt_dnf "$current_flavour") $addmodules")"
-    fi
-    [ -n "$delmodules" ] && modules="$(estrlist exclude "$delmodules" "$modules")"
-
-    local lost
-    lost="$(estrlist exclude "$available" "$modules")"
-    if [ -n "$lost" ] ; then
-        warning 'Selected kernel $flavour does not have the following external module(s):' $lost
-        modules="$(estrlist exclude "$lost" "$modules")"
-    fi
-
-    local pkgs='' m
-    [ -n "$nokernel" ] || pkgs="kernel-image-$flavour"
-    for m in $modules ; do
-        pkgs="$pkgs kernel-modules-$m-$flavour"
-    done
-
-    # add headers like update-kernel does
-    if [ -n "$headers" ] || a='' rpm -q kernel-headers-common >/dev/null 2>&1 ; then
-        pkgs="$pkgs kernel-headers-$flavour"
-    fi
-    if [ -n "$headers" ] || a='' rpm -q "kernel-headers-modules-$current_flavour" >/dev/null 2>&1 || \
-       a='' rpm -q "kernel-headers-modules-$flavour" >/dev/null 2>&1 || is_command dkms ; then
-        pkgs="$pkgs kernel-headers-modules-$flavour"
-    fi
-    [ -n "$debuginfo" ] && pkgs="$pkgs kernel-image-$flavour-debuginfo"
-    if [ -n "$firmware" ] ; then
-        pkgs="$pkgs $(a='' rpm -qa --qf '%{NAME}\n' 'firmware-*' VENDOR='ALT Linux Team' 2>/dev/null) firmware-linux"
-    fi
-
-    [ -n "$(echo $pkgs)" ] || fatal "Nothing to install"
-
-    local modpkgs
-    modpkgs="$(echo $pkgs | xargs -n1 | grep "^kernel-modules-")"
-    sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) $download $(__alt_dnf_installonly_opt $modpkgs) install $pkgs
-    local RES=$?
-    # dnf returns error on --assumeno
-    [ -n "$dryrun" ] && return 0
-    [ -n "$download" ] && return $RES
-
-    __epm_kernel_x11_setup_drv $modules
-    return $RES
-}
-
-# run x11setupdrv/x11presetdrv after video drivers update (like update-kernel does)
-__epm_kernel_x11_setup_drv()
-{
-    [ -x /usr/bin/Xorg ] || return 0
-    echo "$*" | grep -q -E "drm|fglrx|nvidia" || return 0
-    [ -x /usr/bin/x11setupdrv ] && sudocmd /usr/bin/x11setupdrv
-    if [ -x /usr/sbin/x11presetdrv ] ; then
-        sudocmd /usr/sbin/x11presetdrv
-    else
-        message "You might need to run x11presetdrv: video drivers updated but /usr/sbin/x11presetdrv is missing"
-    fi
-    sudocmd ldconfig
-}
-
 epm_kernel_update()
 {
 
@@ -228,20 +85,19 @@ esac
 
     case $BASEDISTRNAME in
     "alt")
-        if ! a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q . ; then
-            info "No installed kernel packages, skipping update"
-            return
-        fi
-        if [ "$PMTYPE" != "apt-rpm" ] ; then
-            __epm_kernel_update_alt_dnf "$@"
-            return
-        fi
-        assure_exists update-kernel update-kernel 0.9.9
-        local update_kernel_cmd
-        update_kernel_cmd="update-kernel"
-        # pass temporary APT config to update-kernel (e.g. when installing from another branch)
-        [ -n "$__EPM_APT_TMPDIR" ] && update_kernel_cmd="env APT_CONFIG=$__EPM_APT_TMPDIR/apt.conf update-kernel"
-        sudocmd $update_kernel_cmd $dryrun $(subst_option non_interactive -y) $force $interactive $reinstall $verbose "$@" || return
+        # list kernels even without installed ones
+        case " $* " in
+            *" -l "*|*" --list "*|*" -h "*|*" --help "*)
+                ;;
+            *)
+                if ! a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q . ; then
+                    info "No installed kernel packages, skipping update"
+                    return
+                fi
+                ;;
+        esac
+        load_helper epm-sh-altlinux-kernel
+        epm_alt_update_kernel "$@"
         return ;;
     esac
 
