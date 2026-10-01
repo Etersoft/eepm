@@ -386,9 +386,14 @@ __process_repo_arguments() {
         elif [ "$repo" = 'aur' ] ; then
             # Arch Linux AUR
             (PMTYPE=aur-pacman PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
+        elif startwith "$repo" "copr/" ; then
+            # Fedora Copr: enable repo, then install
+            epm repo add "$repo"
+            epm update
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         elif [ "$BASEDISTRNAME" = "alt" ] && [ "$PMTYPE" != "apt-rpm" ] ; then
             case "$repo" in
-                copr/*|archive/*)
+                archive/*)
                     fatal 'Repo $repo is not supported for $PMTYPE on ALT'
                     ;;
                 named:*)
@@ -400,11 +405,6 @@ __process_repo_arguments() {
             esac
             (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
             __EPM_DNF_REPO_OPTIONS=''
-        elif startwith "$repo" "copr/" ; then
-            # Fedora Copr: enable repo, then install
-            epm repo add "$repo"
-            epm update
-            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         elif startwith "$repo" "archive/" ; then
             # ALT Linux archive: archive/DATE/package -> use current branch + date
             local datestr="${repo#archive/}"
