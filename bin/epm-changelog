@@ -102,7 +102,10 @@ __epm_changelog_unlocal_names()
             docmd yum changelog "$1"
             ;;
         dnf-rpm|dnf5-rpm)
-            #assure_exist yum-changelog
+            # changelog command is from dnf5-plugins (dnf-plugins-core)
+            if ! a='' $DNFCMD changelog --help >/dev/null 2>&1 ; then
+                [ "$PMTYPE" = "dnf5-rpm" ] && epm install --skip-installed dnf5-plugins || epm install --skip-installed dnf-plugins-core
+            fi
             docmd $DNFCMD changelog "$1"
             ;;
         urpm-rpm)
