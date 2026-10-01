@@ -295,27 +295,23 @@ __epm_addrepo_alt_dnf_gpgkey()
     sudocmd cp $tmpfile "$keyfile"
 }
 
-# create /etc/yum.repos.d/alt-<branch>.repo for dnf on ALT
-# args: sisyphus|p11|...
-__epm_addrepo_alt_dnf()
+# create /etc/yum.repos.d/alt-<name>.repo for dnf on ALT
+# args: <name> <title> <baseurl> [keyname]
+__epm_addrepo_alt_dnf_repo()
 {
-    local branch="$1"
-    local repopart
-    [ "$branch" = "sisyphus" ] && repopart="Sisyphus" || repopart="$branch/branch"
-    local baseurl="$ETERSOFTPUBURL/ALTLinux/$repopart"
-    local keyfile="/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-$branch"
-
-    local name="ALT Sisyphus"
-    [ "$branch" = "sisyphus" ] || name="ALT $branch"
+    local repo="$1"
+    local name="$2"
+    local baseurl="$3"
+    local keyfile="/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-${4:-$repo}"
 
     local tmpfile
     tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
     local i repoids=''
     for i in $(get_archlist) ; do
-        repoids="$repoids${repoids:+,}$branch-$i"
+        repoids="$repoids${repoids:+,}$repo-$i"
         cat >>$tmpfile <<EOF
-[$branch-$i]
+[$repo-$i]
 name=$name $i
 baseurl=$baseurl/$i
 enabled=1
@@ -326,7 +322,7 @@ EOF
     done
     chmod 644 $tmpfile
     sudocmd mkdir -p /etc/yum.repos.d
-    local target=/etc/yum.repos.d/alt-$branch.repo
+    local target=/etc/yum.repos.d/alt-$repo.repo
     sudocmd cp $tmpfile $target
 
     # check rpm-md metadata via dnf itself (it is generated only on download.etersoft.ru mirror)
@@ -338,6 +334,37 @@ EOF
     __epm_addrepo_alt_dnf_gpgkey "$keyfile"
     # dnf5 on ALT does not import gpgkey from repo file itself
     sudocmd rpm --import "$keyfile" || fatal
+}
+
+# args: sisyphus|p11|...|deferred|deferred-devel|deferred-beta|deferred.org
+__epm_addrepo_alt_dnf()
+{
+    case "$1" in
+        deferred*)
+            [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            ;;
+    esac
+
+    case "$1" in
+        sisyphus)
+            __epm_addrepo_alt_dnf_repo sisyphus "ALT Sisyphus" "$ETERSOFTPUBURL/ALTLinux/Sisyphus"
+            ;;
+        deferred)
+            __epm_addrepo_alt_dnf_repo deferred "Etersoft Sisyphus Deferred" "$ETERSOFTPUBURL/Etersoft/Sisyphus/Deferred" sisyphus
+            ;;
+        deferred.org)
+            __epm_addrepo_alt_dnf_repo deferred "Etersoft Sisyphus Deferred" "http://mirror.eterfund.org/pub/Etersoft/Sisyphus/Deferred" sisyphus
+            ;;
+        deferred-devel)
+            __epm_addrepo_alt_dnf_repo deferred-devel "Etersoft Sisyphus Deferred DEVEL" "$ETERSOFTPUBURL/Etersoft/Sisyphus/Deferred_DEVEL" sisyphus
+            ;;
+        deferred-beta)
+            __epm_addrepo_alt_dnf_repo deferred-beta "Etersoft Sisyphus Deferred BETA" "$ETERSOFTPUBURL/Etersoft/Sisyphus/Deferred_BETA" sisyphus
+            ;;
+        *)
+            __epm_addrepo_alt_dnf_repo "$1" "ALT $1" "$ETERSOFTPUBURL/ALTLinux/$1/branch"
+            ;;
+    esac
 }
 
 __epm_addrepo_altlinux()
@@ -790,7 +817,7 @@ case $BASEDISTRNAME in
         fi
         if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
             case "$1" in
-                sisyphus|p[0-9]*|c[0-9]*)
+                sisyphus|p[0-9]*|c[0-9]*|deferred|deferred.org|deferred-devel|deferred-beta)
                     __epm_addrepo_alt_dnf "$1"
                     return
                     ;;
