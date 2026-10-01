@@ -59,6 +59,40 @@ __restore_alt_repo_lists()
     rmdir "$SAVELISTDIR/apt/sources.list.d" "$SAVELISTDIR/apt"
 }
 
+# under root only
+__save_yum_repo_lists()
+{
+    assure_root
+    info 'Creating copy of all repo files to $SAVELISTDIR ...'
+    rm -rf $verbose $SAVELISTDIR 2>/dev/null
+    mkdir -p $SAVELISTDIR/yum.repos.d/
+    local i
+    for i in /etc/yum.repos.d/*.repo ; do
+        [ -s "$i" ] || continue
+        cp -af $verbose "$i" $SAVELISTDIR/yum.repos.d/ || fatal 'Can'\''t save repo files to $SAVELISTDIR'
+    done
+}
+
+# under root only
+__restore_yum_repo_lists()
+{
+    assure_root
+    [ -d "$SAVELISTDIR/yum.repos.d" ] || return 0
+    info 'Restoring copy of all repo files from $SAVELISTDIR ...'
+    local i
+    # remove repo files added after save
+    for i in /etc/yum.repos.d/*.repo ; do
+        [ -e "$i" ] || continue
+        [ -e "$SAVELISTDIR/yum.repos.d/$(basename "$i")" ] || rm -f $verbose "$i"
+    done
+    mkdir -p /etc/yum.repos.d/
+    for i in $SAVELISTDIR/yum.repos.d/*.repo ; do
+        [ -e "$i" ] || continue
+        mv -f $verbose "$i" /etc/yum.repos.d/ || warning 'Can'\''t restore $i file'
+    done
+    rmdir "$SAVELISTDIR/yum.repos.d"
+}
+
 # save and restore repo lists
 __on_error_restore_alt_repo_lists()
 {
@@ -89,6 +123,13 @@ case $PMTYPE in
         fi
         __save_alt_repo_lists
         ;;
+    dnf-*|dnf5-*|yum-*)
+        if ! is_root ; then
+            sudoepm repo save
+            return
+        fi
+        __save_yum_repo_lists
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_reposave()'
         ;;
@@ -105,6 +146,13 @@ case $PMTYPE in
             return
         fi
         __restore_alt_repo_lists
+        ;;
+    dnf-*|dnf5-*|yum-*)
+        if ! is_root ; then
+            sudoepm repo restore
+            return
+        fi
+        __restore_yum_repo_lists
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_reporestore()'
