@@ -76,13 +76,26 @@ __alt_mark_showhold()
     grep -h "RPM::Hold" /etc/apt/apt.conf.d/hold-*.conf 2>/dev/null | sed -e 's|RPM::Hold {"^\(.*\)";};|\1|'
 }
 
+# versionlock is builtin command in dnf5
 __dnf_assure_versionlock()
 {
+    [ "$PMTYPE" = "dnf5-rpm" ] && return
     epm assure /etc/dnf/plugins/versionlock.conf 'dnf-command(versionlock)'
+}
+
+# print package names from versionlock list output
+__dnf_versionlock_names()
+{
+    if [ "$PMTYPE" = "dnf5-rpm" ] ; then
+        sed -n 's|^Package name: ||p'
+        return
+    fi
+    sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
 }
 
 __dnf_is_supported_versionlock()
 {
+    [ "$PMTYPE" = "dnf5-rpm" ] && return
     [ -f /etc/dnf/plugins/versionlock.conf ]
 }
 
@@ -188,7 +201,7 @@ case $PMTYPE in
         __dnf_assure_versionlock
         if [ -n "$short" ] ; then
             load_helper epm-query
-            docmd $DNFCMD versionlock list "$@" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short
+            docmd $DNFCMD versionlock list "$@" | __dnf_versionlock_names
         else
             docmd $DNFCMD versionlock list "$@"
         fi
@@ -218,7 +231,7 @@ case $PMTYPE in
         __dnf_is_supported_versionlock || return 1
         __dnf_assure_versionlock
         load_helper epm-query
-        docmd $DNFCMD versionlock list | grep "^$1" | sed -e 's|\.\*$||' | grep -v " " | filter_pkgnames_to_short | grep -q "^$1$"
+        docmd $DNFCMD versionlock list | __dnf_versionlock_names | grep -q "^$1$"
         return
         ;;
 esac
