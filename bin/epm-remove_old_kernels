@@ -19,6 +19,121 @@
 
 load_helper epm-sh-warmup
 
+# print kernel release (as uname -r) of the latest kernel with uptime >= 1 day
+__epm_get_backup_kernel_release()
+{
+    [ -f /var/log/wtmp ] || return
+    a='' last -a reboot 2>/dev/null | awk '$ 10 ~ /+/ {print $11; exit }'
+}
+
+# remove-old-kernels uses apt, so do the same logic with dnf:
+# keep the booted kernel, the backup one (latest with uptime >= 1 day) and the latest kernel of the flavour,
+# all numeric flavours (x.y) are considered as a single flavour
+# supports remove-old-kernels options: -t, -a, -A, --no-backup, -f, -n
+__epm_remove_old_kernels_alt_dnf()
+{
+    local kernel_flavour='' all='' nobackup='' opt
+    while [ -n "$1" ] ; do
+        opt="$1"
+        case "$opt" in
+            -t|--type)
+                kernel_flavour="$2"
+                shift
+                ;;
+            -a|--all)
+                all=all
+                ;;
+            -A|--purge)
+                all=purge
+                ;;
+            --no-backup)
+                nobackup=1
+                ;;
+            -f|-y|--force|-n|--dry-run)
+                # handled by epm options
+                ;;
+            *)
+                fatal 'Option $opt is not supported for $PMTYPE'
+                ;;
+        esac
+        shift
+    done
+
+    local uname_r current_kernel_package current_kernel_flavour
+    uname_r="$(uname -r)"
+    current_kernel_package="$(a='' rpm -qf "/lib/modules/$uname_r/kernel" 2>/dev/null)" || current_kernel_package=''
+    current_kernel_flavour="${uname_r#*-}"
+    current_kernel_flavour="${current_kernel_flavour%-*}"
+
+    # installed kernels as "flavour package" lines
+    local all_kernels
+    all_kernels="$(a='' rpm -qa --qf '%{NAME} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 'kernel-image-*' | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||')"
+
+    if [ -z "$kernel_flavour" ] && echo "$current_kernel_flavour" | grep -q -E '^[0-9]+\.[0-9]+$' ; then
+        # booted into one of x.y flavours
+        kernel_flavour=latest
+    fi
+
+    local flavours
+    if [ -n "$all" ] ; then
+        flavours="$(echo "$all_kernels" | cut -d' ' -f1 | sort -u)"
+    elif [ "$kernel_flavour" = "latest" ] ; then
+        flavours="$(echo "$all_kernels" | cut -d' ' -f1 | grep -E '^(std-def|un-def|[0-9]+\.[0-9]+)$' | sort -u)"
+    elif [ -n "$kernel_flavour" ] ; then
+        flavours="$kernel_flavour"
+    else
+        flavours="$current_kernel_flavour"
+    fi
+
+    local backup_package=''
+    if [ -z "$nobackup" ] ; then
+        local backup_release
+        backup_release="$(__epm_get_backup_kernel_release)"
+        [ -n "$backup_release" ] && backup_package="$(a='' rpm -qf "/lib/modules/$backup_release/kernel" 2>/dev/null)" || backup_package=''
+    fi
+
+    # the highest numeric flavour is used for the newest kernel check
+    local newest_stable_kernel='' newest_stable_flavour
+    newest_stable_flavour="$(echo "$flavours" | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail -n1)"
+    [ -n "$newest_stable_flavour" ] && newest_stable_kernel="$(echo "$all_kernels" | grep "^$newest_stable_flavour " | cut -d' ' -f2 | sort -V | tail -n1)"
+
+    local flavour kernels newest kernel keep='' remove=''
+    for flavour in $flavours ; do
+        kernels="$(echo "$all_kernels" | grep "^$flavour " | cut -d' ' -f2 | sort -V)"
+        newest="$(echo "$kernels" | tail -n1)"
+        echo "$flavour" | grep -q -E '^[0-9]+\.[0-9]+$' && newest="$newest_stable_kernel"
+        local pkglisted=1
+        [ "$all" = "purge" ] || a='' $DNFCMD -q repoquery --qf '%{name}\n' "kernel-image-$flavour" 2>/dev/null | grep -q . || pkglisted=''
+        for kernel in $kernels ; do
+            if [ "$kernel" = "$current_kernel_package" ] || [ "$kernel" = "$backup_package" ] ; then
+                keep="$keep $kernel"
+            elif [ "$all" = "purge" ] && [ "$flavour" != "$kernel_flavour" ] ; then
+                remove="$remove $kernel"
+            elif [ "$all" != "purge" ] && [ -z "$pkglisted" ] ; then
+                # EOL flavour
+                remove="$remove $kernel"
+            elif [ "$kernel" = "$newest" ] ; then
+                keep="$keep $kernel"
+            else
+                remove="$remove $kernel"
+            fi
+        done
+    done
+
+    [ -n "$keep" ] && message "Keeping kernels:" $keep
+    if [ -z "$remove" ] ; then
+        message "Nothing to remove."
+        return 0
+    fi
+
+    # dnf removes kernel modules for removed kernels as dependent packages
+    sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) remove $remove
+    local RES=$?
+    # dnf returns error on --assumeno
+    [ -n "$dryrun" ] && return 0
+    return $RES
+}
+
 epm_remove_old_kernels()
 {
 
@@ -34,8 +149,7 @@ epm_remove_old_kernels()
             assure_exists update-kernel update-kernel 0.9.9
             sudocmd remove-old-kernels $dryrun $(subst_option non_interactive -y) "$@"
         else
-            # remove-old-kernels uses apt, dnf keeps the running kernel and installonly_limit latest ones
-            sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) remove --oldinstallonly
+            __epm_remove_old_kernels_alt_dnf "$@" || return
         fi
 
         [ -n "$dryrun" ] && return
