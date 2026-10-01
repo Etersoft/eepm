@@ -369,7 +369,7 @@ epm_remove()
             dnf-rpm|dnf5-rpm)
                 nodeps="--test"
                 ;;
-            apt-deb)
+            apt-dpkg)
                 nodeps="--simulate"
                 APTOPTIONS="--simulate"
                 ;;
