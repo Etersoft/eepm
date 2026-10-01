@@ -227,8 +227,13 @@ __epm_upgrade_do()
         CMD="yum $OPTIONS upgrade $*"
         ;;
     dnf-rpm|dnf5-rpm)
-        local OPTIONS="$(subst_option non_interactive -y)"
-        CMD="$DNFCMD $OPTIONS upgrade $*"
+        local OPTIONS="$(subst_option non_interactive -y) $(subst_option dryrun --assumeno) $__EPM_DNF_REPO_OPTIONS"
+        # keep kernel modules for all installed kernels
+        if [ "$BASEDISTRNAME" = "alt" ] ; then
+            load_helper epm-sh-altlinux
+            OPTIONS="$OPTIONS $(__alt_dnf_installonly_opt)"
+        fi
+        CMD="$DNFCMD $OPTIONS upgrade"
         ;;
     snappy)
         CMD="snappy update"
