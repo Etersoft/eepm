@@ -125,6 +125,49 @@ EOF
 }
 
 
+# convert binary gpg key file to armored one in place (rpm --import accepts armored keys only)
+__epm_dearmor_to_armor()
+{
+    local file="$1"
+    grep -q -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" "$file" && return
+    assure_exists gpg gnupg2
+    local tmpdir
+    tmpdir=$(mktemp -d) || fatal
+    remove_on_exit $tmpdir
+    a='' gpg --homedir $tmpdir --quiet --import "$file" 2>/dev/null || fatal 'Can'\''t import key from $file'
+    a='' gpg --homedir $tmpdir --export --armor >"$file" 2>/dev/null || fatal
+}
+
+# put key to /etc/pki/rpm-gpg and import it to rpm db (dnf on ALT)
+# args: same as __epm_addkey_altlinux
+__epm_addkey_alt_dnf()
+{
+    local name
+    local url="$1"
+    shift
+    if is_url "$url" ; then
+        name="$(basename "$url" | sed -e 's/\.\(gpg\|asc\|key\)$//')"
+    else
+        name="$url"
+        url="$1"
+        shift
+    fi
+    # compat
+    [ -n "$3" ] && name="$3"
+
+    is_url "$url" || { warning 'Skipping key $name: there is no key URL' ; return 0 ; }
+
+    local target="/etc/pki/rpm-gpg/RPM-GPG-KEY-$name"
+    local tmpfile
+    tmpfile=$(__epm_get_file_from_url "$url") || fatal
+    [ -s "$tmpfile" ] || fatal 'Can'\''t download $url'
+    __epm_dearmor_to_armor $tmpfile
+    chmod 644 $tmpfile
+    sudocmd mkdir -p /etc/pki/rpm-gpg
+    sudocmd cp $tmpfile "$target"
+    sudocmd rpm --import "$target"
+}
+
 __epm_addkey_alpine()
 {
     local name
@@ -238,6 +281,13 @@ remove_on_exit
 
 case $BASEDISTRNAME in
     "alt")
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+            local tmpfile
+            tmpfile=$(__epm_get_file_from_url "$1") || fatal
+            __epm_dearmor_to_armor $tmpfile
+            sudocmd rpm --import $tmpfile
+            return
+        fi
         __epm_importgpg_altlinux "$@"
         return
         ;;
@@ -261,6 +311,10 @@ remove_on_exit
 
 case $BASEDISTRNAME in
     "alt")
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+            __epm_addkey_alt_dnf "$@"
+            return
+        fi
         __epm_addkey_altlinux "$@"
         return
         ;;
