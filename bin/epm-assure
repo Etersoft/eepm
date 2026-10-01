@@ -98,6 +98,16 @@ epm_assure()
 
     __epm_need_update $PACKAGE $PACKAGEVERSION || return 0
 
+    # dnf on ALT has no repos by default (they are in apt sources.list)
+    case $PMTYPE in
+        dnf-rpm|dnf5-rpm)
+            if [ "$BASEDISTRNAME" = "alt" ] && ! ls /etc/yum.repos.d/*.repo >/dev/null 2>&1 ; then
+                warning 'There are no repos for $PMTYPE to install $PACKAGE. Run # epm repo set sisyphus first.'
+                return 1
+            fi
+            ;;
+    esac
+
     info 'Installing appropriate package for $CMD command...'
     # can't be used in epm ei case
     #docmd epm --auto install $PACKAGE || return
