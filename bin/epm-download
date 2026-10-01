@@ -342,9 +342,6 @@ epm_download()
         assure_exists yumdownloader yum-utils
         sudocmd yumdownloader $*
         ;;
-    dnf-rpm|dnf5-rpm)
-        sudocmd $DNFCMD download $*
-        ;;
     urpm-rpm)
         sudocmd urpmi --no-install $URPMOPTIONS $@
         ;;
