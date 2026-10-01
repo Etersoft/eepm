@@ -89,8 +89,8 @@ __dnf_is_supported_versionlock()
 epm_mark_hold()
 {
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
 # TODO: use apt-mark if exists
 # https://bugzilla.altlinux.org/show_bug.cgi?id=34036#c54
         __alt_mark_hold "$@"
@@ -131,8 +131,8 @@ esac
 epm_mark_unhold()
 {
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         __alt_mark_unhold "$@"
         exit
         ;;
@@ -171,8 +171,8 @@ esac
 epm_mark_showhold()
 {
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         __alt_mark_showhold "$@"
         exit
         ;;
@@ -236,8 +236,8 @@ resolved="$(__epm_mark_resolve "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         sudocmd apt-mark auto "$@"
         exit
         ;;
@@ -275,8 +275,8 @@ resolved="$(__epm_mark_resolve "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         sudocmd apt-mark manual "$@"
         exit
         ;;
@@ -309,8 +309,8 @@ esac
 epm_mark_showauto()
 {
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         sudocmd apt-mark showauto "$@"
         exit
         ;;
@@ -333,8 +333,8 @@ esac
 epm_mark_showmanual()
 {
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         sudocmd apt-mark showmanual "$@"
         exit
         ;;
