@@ -54,7 +54,7 @@ __epm_kernel_latest_flavour_alt_dnf()
 # print short names of installed external modules for the flavour (kernel-modules-<name>-<flavour>)
 __epm_kernel_installed_modules_alt_dnf()
 {
-    a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$1" 2>/dev/null | sed -e "s|^kernel-modules-||" -e "s|-$1$||" | sort -u
+    a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$1" 2>/dev/null | sed -e "s|^kernel-modules-||" -e "s|-$1\$||" | sort -u
 }
 
 # update-kernel uses apt, so do the same with dnf directly
@@ -123,7 +123,7 @@ __epm_kernel_update_alt_dnf()
 
     # all available external modules for target flavour
     local available
-    available="$(a='' $DNFCMD -q repoquery --qf '%{name}\n' "kernel-modules-*-$flavour" 2>/dev/null | grep -v -- "-debuginfo$" | sed -e "s|^kernel-modules-||" -e "s|-$flavour$||" | sort -u)"
+    available="$(a='' $DNFCMD -q repoquery --qf '%{name}\n' "kernel-modules-*-$flavour" 2>/dev/null | grep -v -- "-debuginfo\$" | sed -e "s|^kernel-modules-||" -e "s|-$flavour\$||" | sort -u)"
 
     # inherit modules from the booted flavour and from installed kernels of the target flavour
     local modules
