@@ -142,6 +142,19 @@ if [ $PMTYPE = "apt-rpm" ] || [ $PMTYPE = "apm-rpm" ] ; then
     esac
 fi
 
+case "$PMTYPE:$option" in
+    *:-h|*:--help|*:help)
+        epm_history_help
+        return
+        ;;
+    dnf-rpm:--list|dnf5-rpm:--list)
+        shift
+        ;;
+    dnf-rpm:-*|dnf5-rpm:-*)
+        fatal 'Option $option is not supported for $PMTYPE'
+        ;;
+esac
+
 [ -z "$*" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
