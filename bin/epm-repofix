@@ -123,6 +123,14 @@ epm_reposwitch()
 
     assure_root
 
+    case $PMTYPE in
+        dnf-rpm|dnf5-rpm)
+            echo "$TO" | grep -q -E "^(${__alt_branch_reg}|Sisyphus|Deferred)$" || fatal 'Unsupported target form $TO. Use --list to get all targets.'
+            __epm_reposwitch_alt_dnf "$TO"
+            return
+            ;;
+    esac
+
     # Deferred is based on Sisyphus, replaces Sisyphus URLs with Deferred
     if [ "$TO" = "Deferred" ] ; then
         # Deferred is available on Etersoft mirrors, not on arbitrary ALT mirrors.
@@ -150,7 +158,14 @@ epm_reposwitch()
 
     __alt_repofix "$TO"
 
-    # TODO: improve for c10f1?
+    __alt_set_priority_distbranch "$TO"
+    #epm repo list
+}
+
+# TODO: improve for c10f1?
+__alt_set_priority_distbranch()
+{
+    local TO="$1"
     case $TO in
         "p10"|"p11"|"Sisyphus"|"Deferred")
             rm -fv /etc/rpm/macros.d/{p10,p11}
@@ -163,7 +178,25 @@ epm_reposwitch()
             rm -fv /etc/rpm/macros.d/{p10,p11,priority_distbranch}
             ;;
     esac
-    #epm repo list
+}
+
+# replace ALT branch repo in /etc/yum.repos.d for dnf
+__epm_reposwitch_alt_dnf()
+{
+    local TO="$1"
+    load_helper epm-reposave
+    try_change_alt_repo
+    local f
+    for f in /etc/yum.repos.d/alt-*.repo ; do
+        case "$(basename "$f" .repo)" in
+            alt-sisyphus|alt-p[0-9]*|alt-c[0-9]*|alt-deferred)
+                rm -f $verbose "$f"
+                ;;
+        esac
+    done
+    epm repo add "$(echo "$TO" | tr "[:upper:]" "[:lower:]")" || fatal 'Can'\''t switch repo to $TO'
+    end_change_alt_repo
+    __alt_set_priority_distbranch "$TO"
 }
 
 
@@ -223,6 +256,10 @@ epm_repofix()
 
 case $BASEDISTRNAME in
     "alt")
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+            info 'Nothing to fix for $PMTYPE'
+            return
+        fi
         [ -n "$quiet" ] || docmd epm repo list
         assure_root
 
@@ -248,6 +285,10 @@ esac
 
 epm_repoclean()
 {
+    if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+        info 'Nothing to clean for $PMTYPE'
+        return
+    fi
     epm repo remove tasks
     epm repo remove cdroms
 }
