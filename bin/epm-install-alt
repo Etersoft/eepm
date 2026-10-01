@@ -381,6 +381,28 @@ prepare_task_packages()
 }
 
 # copied from epm_upgrade_alt_tasks()
+# dnf can't use apt task repos: download task packages and install them as files
+# args: <package names> <task numbers...>
+__epm_install_alt_task_files()
+{
+    local names="$1"
+    shift
+    load_helper epm-repopkg
+    load_helper epm-install
+    local tmpdir
+    tmpdir="$(mktemp -d)" || fatal
+    remove_on_exit "$tmpdir"
+    __download_task_rpms "$tmpdir" "$@"
+    local f files=''
+    for f in "$tmpdir"/*.rpm ; do
+        [ -e "$f" ] || continue
+        estrlist contains "$(epm print name for package "$f")" "$names" || continue
+        files="$files $f"
+    done
+    [ -n "$files" ] || fatal "No packages downloaded from task(s)"
+    epm_install_files $files
+}
+
 epm_install_alt_tasks()
 {
     load_helper epm-install
@@ -410,6 +432,11 @@ epm_install_alt_tasks()
     if [ -z "$installlist" ] ; then
         warning 'No packages available for install from task(s)' "$*"
         return 22
+    fi
+
+    if [ "$PMTYPE" != "apt-rpm" ] ; then
+        __epm_install_alt_task_files "$installlist" $unique_tasks
+        return
     fi
 
     local res

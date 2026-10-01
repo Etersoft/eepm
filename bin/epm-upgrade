@@ -68,6 +68,12 @@ epm_upgrade_alt_tasks()
         [ -n "$tn" ] && task_numbers="$task_numbers $tn"
     done
 
+    if [ "$PMTYPE" != "apt-rpm" ] ; then
+        load_helper epm-install-alt
+        __epm_install_alt_task_files "$installlist" $task_numbers
+        return
+    fi
+
     local res
     __use_tmp_apt_for_tasks $task_numbers || return 1
     (pkg_names="$installlist" epm_install)
