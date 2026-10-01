@@ -283,6 +283,16 @@ __find_named_repo_file()
 {
     local name="$1"
 
+    case $PMTYPE in
+        dnf-*|dnf5-*|yum-*)
+            local f
+            for f in /etc/yum.repos.d/$name.repo /etc/yum.repos.d/alt-$name.repo ; do
+                [ -s "$f" ] && echo "$f" && return
+            done
+            return 1
+            ;;
+    esac
+
     load_helper epm-sh-repo
 
     [ -n "$APT_SOURCES_LIST_D" ] || return 1
@@ -318,6 +328,36 @@ __use_tmp_apt_with_named_repo()
     __epm_update || warning "Some repos failed to update, but continuing anyway"
 }
 
+# Use only ALT branch repo (rpm-md) for dnf via temporary repos
+# arg: branch
+__use_tmp_dnf_for_branch()
+{
+    local repo="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
+    load_helper epm-sh-altlinux
+    local baseurl
+    baseurl="$(__alt_dnf_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
+    local arch ids=''
+    __EPM_DNF_REPO_OPTIONS=''
+    for arch in $(__alt_dnf_archlist) ; do
+        __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS --repofrompath=tmp-$repo-$arch,$baseurl/$arch --setopt=tmp-$repo-$arch.gpgcheck=1"
+        ids="$ids${ids:+,}tmp-$repo-$arch"
+    done
+    __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS --repo=$ids"
+}
+
+# Enable named repo (even if disabled) for dnf
+# arg: repo name
+__use_dnf_with_named_repo()
+{
+    local name="$1"
+    local file
+    file="$(__find_named_repo_file "$name")" || fatal "Can't find repo '$name' in /etc/yum.repos.d"
+    local ids
+    ids="$(sed -n 's|^\[\(.*\)\][[:space:]]*$|\1|p' "$file" | tr '\n' ',' | sed -e 's|,$||')"
+    [ -n "$ids" ] || fatal "There are no repos in $file"
+    __EPM_DNF_REPO_OPTIONS="--enablerepo=$ids"
+}
+
 # call: __process_repo_arguments <function> args...
 __process_repo_arguments() {
     local func="$1"
@@ -344,6 +384,20 @@ __process_repo_arguments() {
         elif [ "$repo" = 'aur' ] ; then
             # Arch Linux AUR
             (PMTYPE=aur-pacman PPARGS=1 $func ${repo_groups[$repo]})
+        elif [ "$BASEDISTRNAME" = "alt" ] && [ "$PMTYPE" != "apt-rpm" ] ; then
+            case "$repo" in
+                copr/*|archive/*)
+                    fatal 'Repo $repo is not supported for $PMTYPE on ALT'
+                    ;;
+                named:*)
+                    __use_dnf_with_named_repo "${repo#named:}"
+                    ;;
+                *)
+                    __use_tmp_dnf_for_branch "$repo"
+                    ;;
+            esac
+            (PPARGS=1 $func ${repo_groups[$repo]})
+            __EPM_DNF_REPO_OPTIONS=''
         elif startwith "$repo" "copr/" ; then
             # Fedora Copr: enable repo, then install
             epm repo add "$repo"

@@ -55,7 +55,7 @@ epm_reinstall_names()
             return ;;
         dnf-rpm|dnf5-rpm)
             local YUMOPTIONS="$(subst_option non_interactive -y)"
-            sudocmd $DNFCMD reinstall $YUMOPTIONS $@
+            sudocmd $DNFCMD $__EPM_DNF_REPO_OPTIONS reinstall $YUMOPTIONS $@
             return ;;
         homebrew)
             sudocmd brew reinstall $@

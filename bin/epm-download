@@ -329,7 +329,7 @@ epm_download()
         docmd apt-get download $*
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd $DNFCMD download $print_url $*
+        sudocmd $DNFCMD $__EPM_DNF_REPO_OPTIONS download $print_url $*
         ;;
     aptcyg)
         sudocmd apt-cyg download $*
