@@ -187,6 +187,12 @@ for i in $CONFIGDIR/eepm.conf $CONFIGDIR/conf.d/*.conf ; do
     [ -f "$i" ] && . "$i"
 done
 
+# backend can be set in config (EPM_BACKEND), use it for nested epm calls too
+if [ -n "$EPM_BACKEND" ] ; then
+    export EPM_BACKEND
+    set_pm_type
+fi
+
 # export eget settings if set in config
 [ -n "$eget_backend" ] && export EGET_BACKEND="$eget_backend"
 [ -n "$eget_options" ] && export EGET_OPTIONS="$eget_options"
