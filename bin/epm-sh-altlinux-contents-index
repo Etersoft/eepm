@@ -110,6 +110,20 @@ get_url_to_etersoft_mirror()
     esac
 }
 
+# gz is read via gunzip, so check it with gzip directly
+# (erc test fails if there is no erc backend, it is not a broken file)
+__test_contents_index_file()
+{
+    case "$1" in
+        *.gz)
+            a='' gzip -t "$1" 2>/dev/null
+            ;;
+        *)
+            erc --quiet test "$1" >/dev/null 2>/dev/null
+            ;;
+    esac
+}
+
 # "comment" "file"
 __add_to_contents_index_list()
 {
@@ -117,7 +131,7 @@ __add_to_contents_index_list()
     local file="$2"
     [ -n "$verbose" ] && info 'Put $comment -> $file'
     [ -s "$file" ] || return
-    if rhas "$file" "\." && ! erc --quiet test "$file" >/dev/null 2>/dev/null ; then
+    if rhas "$file" "\." && ! __test_contents_index_file "$file" ; then
         warning "Broken contents_index: $file" ; rm -f "$file" ; return 1
     fi
     echo "$file" >>$ALT_CONTENTS_INDEX_LIST
