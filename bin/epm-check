@@ -40,7 +40,9 @@ is_root || fatal "Run me under root user."
 
 update_repo_if_needed
 local APTOPTIONS="$(subst_option non_interactive -y)"
-local DNFOPTIONS="$(subst_option non_interactive -y) $(subst_option verbose --verbose) "
+local DNFOPTIONS="$(subst_option non_interactive -y) "
+# dnf5 has no --verbose option
+[ "$PMTYPE" = "dnf5-rpm" ] || DNFOPTIONS="$DNFOPTIONS $(subst_option verbose --verbose) "
 
 case $BASEDISTRNAME in
     "alt")
