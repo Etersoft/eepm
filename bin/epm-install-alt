@@ -112,14 +112,15 @@ epm_install_files_alt()
     fi
 
     # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
+    # dnf on ALT can't install package files: nothing provides rpmlib() requires for them
 
-    if [ -z "$direct" ] && [ -z "$noscripts" ] ; then
+    if [ -z "$direct" ] && [ -z "$noscripts" ] && [ "$PMTYPE" = "apt-rpm" ] ; then
         epm_install_names $files
         return
     fi
 
     # TODO: use it always (apt can install version from repo instead of a file package)
-    info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
+    [ "$PMTYPE" = "apt-rpm" ] && info "Workaround for install packages via apt with --noscripts (see https://bugzilla.altlinux.org/44670)"
     info "Firstly install package requrements …"
     # names of packages to be installed
     local fl="$(epm print name for package $files)"
