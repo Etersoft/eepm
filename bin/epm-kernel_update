@@ -66,6 +66,8 @@ __epm_kernel_update_alt_dnf()
     local modules
     modules="$(a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$flavour" | sort -u)"
     sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) $(__alt_dnf_installonly_opt $modules) install kernel-image-$flavour $modules
+    # dnf returns error on --assumeno
+    [ -n "$dryrun" ] && return 0
 }
 
 epm_kernel_update()
