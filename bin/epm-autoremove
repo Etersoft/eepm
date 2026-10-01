@@ -243,7 +243,8 @@ case $BASEDISTRNAME in
         if [ "$PMTYPE" != "apt-rpm" ] ; then
             [ -n "$direct" ] && fatal "--direct is supported only with apt-rpm"
             [ -n "$1" ] && fatal "Please, run autoremove without args. Check epm autoremove --help to available commands."
-            sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) autoremove || return
+            # dnf returns error on --assumeno
+            sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) autoremove || [ -n "$dryrun" ] || return
             docmd epm remove-old-kernels $dryrun
             return
         fi

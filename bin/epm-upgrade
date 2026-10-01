@@ -234,6 +234,8 @@ __epm_upgrade_do()
             OPTIONS="$OPTIONS $(__alt_dnf_installonly_opt)"
         fi
         CMD="$DNFCMD $OPTIONS upgrade"
+        # dnf returns error on --assumeno
+        local ignore_dryrun_error="$dryrun"
         ;;
     snappy)
         CMD="snappy update"
@@ -324,6 +326,9 @@ __epm_upgrade_do()
         ;;
     esac
 
-    sudocmd $CMD "$@"
+    sudocmd $CMD "$@" && return
+    local RES=$?
+    [ -n "$ignore_dryrun_error" ] && return 0
+    return $RES
 
 }
