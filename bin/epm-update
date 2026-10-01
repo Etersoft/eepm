@@ -218,11 +218,8 @@ case $PMTYPE in
     yum-rpm)
         sudocmd yum makecache
         ;;
-    dnf-rpm)
-        sudocmd $DNFCMD makecache
-        ;;
-    dnf5-rpm)
-        sudocmd $DNFCMD makecache
+    dnf-rpm|dnf5-rpm)
+        sudocmd $DNFCMD makecache --refresh
         ;;
     urpm-rpm)
         sudocmd urpmi.update -a
