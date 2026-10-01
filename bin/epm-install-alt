@@ -233,7 +233,8 @@ epm_install_alt_kernel_module()
     done
 
     # firstly, update all needed kernels (by flavour)
-    for flavour in $(estrlist uniq $kflist); do
+    # dnf installs needed kernel by module requires
+    [ "$PMTYPE" = "apt-rpm" ] && for flavour in $(estrlist uniq $kflist); do
         info
         docmd epm update-kernel -t "$flavour" || exit
     done
@@ -262,9 +263,18 @@ epm_install_alt_kernel_module()
                 flavour=$(get_current_kernel_flavour)
                 ;;
         esac
+        if [ "$PMTYPE" != "apt-rpm" ] ; then
+            kmplist="$kmplist kernel-modules-$module-$flavour"
+            continue
+        fi
         kvf=$(get_latest_kernel_rel "$flavour")
         kmplist="$kmplist kernel-modules-$module-$kvf"
     done
+
+    if [ "$PMTYPE" != "apt-rpm" ] ; then
+        sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) $(__alt_dnf_installonly_opt $kmplist) install $kmplist
+        return
+    fi
 
     # secondly, install module(s)
     epm_install_names $kmplist
