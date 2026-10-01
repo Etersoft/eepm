@@ -182,6 +182,21 @@ case $BASEDISTRNAME in
             return
         fi
         ;;
+esac
+
+case "$PMTYPE:$1" in
+    dnf-rpm:all|dnf5-rpm:all|yum-rpm:all)
+        info "removing all repos"
+        local i
+        for i in /etc/yum.repos.d/*.repo ; do
+            [ -e "$i" ] || continue
+            sudocmd rm -f "$i"
+        done
+        return
+        ;;
+esac
+
+case $BASEDISTRNAME in
     "astra")
         # handle "all" and pattern-based removal
         case "$1" in
