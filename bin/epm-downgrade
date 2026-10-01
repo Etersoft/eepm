@@ -101,6 +101,16 @@ __epm_downgrade_to_alt_archive()
     return
 }
 
+__epm_downgrade_dnf()
+{
+    local OPTIONS="$(subst_option non_interactive -y) $(subst_option download_only --downloadonly)"
+    if [ -n "$pkg_filenames" ] ; then
+        sudocmd $DNFCMD $OPTIONS downgrade $pkg_filenames
+    else
+        sudocmd $DNFCMD $OPTIONS distro-sync
+    fi
+}
+
 epm_downgrade()
 {
     if [ -n "$exclude" ] ; then
@@ -137,6 +147,16 @@ __epm_downgrade_do()
 
     case $BASEDISTRNAME in
     alt)
+        # apt preferences are not used by dnf
+        if [ "$PMTYPE" != "apt-rpm" ] && [ -z "$pkg_files" ] ; then
+            case "$arg" in
+                archive|archive/*)
+                    fatal 'Downgrade to ALT archive is not supported for $PMTYPE'
+                    ;;
+            esac
+            __epm_downgrade_dnf
+            return
+        fi
         case "$arg" in
             # archive/date/package (simular to install arg)
             archive/*/*)
@@ -212,11 +232,7 @@ __epm_downgrade_do()
         fi
         ;;
     dnf-rpm|dnf5-rpm)
-        if [ -n "$pkg_filenames" ] ; then
-            sudocmd $DNFCMD downgrade $(subst_option download_only --downloadonly) $pkg_filenames
-        else
-            sudocmd $DNFCMD distro-sync $(subst_option download_only --downloadonly)
-        fi
+        __epm_downgrade_dnf
         ;;
     urpm-rpm)
         assure_exists urpm-reposync urpm-tools
