@@ -26,8 +26,8 @@ epm_whatdepends()
     local CMD
     local pkg
 
-case $BASEDISTRNAME in
-    "alt")
+case "$BASEDISTRNAME:$PMTYPE" in
+    "alt:apt-rpm"|"alt:apm-rpm")
         [ -n "$@" ] || fatal "Missed package name or some provides"
         pkg="$(print_name "$@")"
 
@@ -75,7 +75,8 @@ case $PMTYPE in
         ;;
     dnf-rpm|dnf5-rpm)
         # check command: dnf repoquery --whatrequires
-        CMD="$DNFCMD repoquery --whatrequires"
+        # --whatrequires takes the next arg as its value, so it must be the last option
+        CMD="$DNFCMD repoquery $([ -n "$short" ] && echo '--qf %{name}\n') --whatrequires"
         ;;
     emerge)
         assure_exists equery
