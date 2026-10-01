@@ -111,7 +111,7 @@ __process_backend_arguments() {
         package_groups["$pmtype"]+="$name "
     done
 
-    local dnfcmd
+    local dnfcmd res=0
     for pmtype in "${!package_groups[@]}"; do
         dnfcmd="$DNFCMD"
         case "$pmtype" in
@@ -122,8 +122,9 @@ __process_backend_arguments() {
                 dnfcmd="dnf"
                 ;;
         esac
-        (PMTYPE="$pmtype" DNFCMD="$dnfcmd" PPARGS=1 $func ${package_groups[$pmtype]})
+        (PMTYPE="$pmtype" DNFCMD="$dnfcmd" PPARGS=1 $func ${package_groups[$pmtype]}) || res=$?
     done
+    return $res
 }
 
 # Print the set of known ALT mirror hosts (lowercased domains), one per line,
@@ -378,12 +379,13 @@ __process_repo_arguments() {
         repo_groups["$repo"]+="$name "
     done
 
+    local res=0
     for repo in "${!repo_groups[@]}"; do
         if [ "$repo" = '.' ] ; then
-            (PPARGS=1 $func ${repo_groups[$repo]})
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         elif [ "$repo" = 'aur' ] ; then
             # Arch Linux AUR
-            (PMTYPE=aur-pacman PPARGS=1 $func ${repo_groups[$repo]})
+            (PMTYPE=aur-pacman PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         elif [ "$BASEDISTRNAME" = "alt" ] && [ "$PMTYPE" != "apt-rpm" ] ; then
             case "$repo" in
                 copr/*|archive/*)
@@ -396,28 +398,29 @@ __process_repo_arguments() {
                     __use_tmp_dnf_for_branch "$repo"
                     ;;
             esac
-            (PPARGS=1 $func ${repo_groups[$repo]})
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
             __EPM_DNF_REPO_OPTIONS=''
         elif startwith "$repo" "copr/" ; then
             # Fedora Copr: enable repo, then install
             epm repo add "$repo"
             epm update
-            (PPARGS=1 $func ${repo_groups[$repo]})
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         elif startwith "$repo" "archive/" ; then
             # ALT Linux archive: archive/DATE/package -> use current branch + date
             local datestr="${repo#archive/}"
             datestr="$(echo "$datestr" | sed 's|-|/|g')"
             __use_tmp_apt_for_branch archive "$DISTRVERSION" "$datestr" || return 1
-            (PPARGS=1 $func ${repo_groups[$repo]})
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         elif startwith "$repo" "named:" ; then
             # Named repo from sources.list.d
             local reponame="${repo#named:}"
             __use_tmp_apt_with_named_repo "$reponame" || return 1
-            (PPARGS=1 $func ${repo_groups[$repo]})
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         else
             # ALT Linux: use temporary APT directory instead of modifying system repos
             __use_tmp_apt_for_branch "$repo" || return 1
-            (PPARGS=1 $func ${repo_groups[$repo]})
+            (PPARGS=1 $func ${repo_groups[$repo]}) || res=$?
         fi
     done
+    return $res
 }
