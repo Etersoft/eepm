@@ -26,8 +26,7 @@ epm_remove_old_kernels()
 
     case $BASEDISTRNAME in
     "alt")
-        load_helper epm-query_package
-        if ! __epm_query_package kernel-image >/dev/null ; then
+        if ! a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q . ; then
             info "No installed kernel packages, skipping cleaning"
             return
         fi
