@@ -308,7 +308,7 @@ __epm_addrepo_alt_dnf_repo()
     tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
     local i repoids=''
-    for i in $(get_archlist) ; do
+    for i in $(__alt_dnf_archlist) ; do
         repoids="$repoids${repoids:+,}$repo-$i"
         cat >>$tmpfile <<EOF
 [$repo-$i]
@@ -339,32 +339,28 @@ EOF
 # args: sisyphus|p11|...|deferred|deferred-devel|deferred-beta|deferred.org
 __epm_addrepo_alt_dnf()
 {
-    case "$1" in
+    local repo="$1"
+    local baseurl
+    baseurl="$(__alt_dnf_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
+
+    local name
+    local keyname="sisyphus"
+    case "$repo" in
+        sisyphus)
+            name="ALT Sisyphus"
+            ;;
         deferred*)
             [ "$DISTRVERSION" = "Sisyphus" ] || fatal "Etersoft Sisyphus Deferred supported only for ALT Sisyphus based systems."
+            [ "$repo" = "deferred.org" ] && repo="deferred"
+            name="Etersoft Sisyphus $(echo "$repo" | sed -e 's|^deferred|Deferred|' -e 's|-devel$| DEVEL|' -e 's|-beta$| BETA|')"
+            ;;
+        *)
+            name="ALT $repo"
+            keyname="$repo"
             ;;
     esac
 
-    case "$1" in
-        sisyphus)
-            __epm_addrepo_alt_dnf_repo sisyphus "ALT Sisyphus" "$ETERSOFTPUBURL/ALTLinux/Sisyphus"
-            ;;
-        deferred)
-            __epm_addrepo_alt_dnf_repo deferred "Etersoft Sisyphus Deferred" "$ETERSOFTPUBURL/Etersoft/Sisyphus/Deferred" sisyphus
-            ;;
-        deferred.org)
-            __epm_addrepo_alt_dnf_repo deferred "Etersoft Sisyphus Deferred" "http://mirror.eterfund.org/pub/Etersoft/Sisyphus/Deferred" sisyphus
-            ;;
-        deferred-devel)
-            __epm_addrepo_alt_dnf_repo deferred-devel "Etersoft Sisyphus Deferred DEVEL" "$ETERSOFTPUBURL/Etersoft/Sisyphus/Deferred_DEVEL" sisyphus
-            ;;
-        deferred-beta)
-            __epm_addrepo_alt_dnf_repo deferred-beta "Etersoft Sisyphus Deferred BETA" "$ETERSOFTPUBURL/Etersoft/Sisyphus/Deferred_BETA" sisyphus
-            ;;
-        *)
-            __epm_addrepo_alt_dnf_repo "$1" "ALT $1" "$ETERSOFTPUBURL/ALTLinux/$1/branch"
-            ;;
-    esac
+    __epm_addrepo_alt_dnf_repo "$repo" "$name" "$baseurl" "$keyname"
 }
 
 __epm_addrepo_altlinux()

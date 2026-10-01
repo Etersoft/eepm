@@ -142,3 +142,44 @@ get_task_packages()
         get_task_arepo_packages_list "$tn"
     done
 }
+
+# rpm-md metadata for dnf on ALT is generated only on Etersoft mirror
+ALT_DNF_MIRROR="http://download.etersoft.ru/pub"
+
+# print base url (without arch) of rpm-md repo for dnf on ALT
+# args: sisyphus|p11|...|deferred|deferred.org|deferred-devel|deferred-beta
+__alt_dnf_baseurl()
+{
+    case "$1" in
+        sisyphus|Sisyphus)
+            echo "$ALT_DNF_MIRROR/ALTLinux/Sisyphus"
+            ;;
+        deferred)
+            echo "$ALT_DNF_MIRROR/Etersoft/Sisyphus/Deferred"
+            ;;
+        deferred.org)
+            echo "http://mirror.eterfund.org/pub/Etersoft/Sisyphus/Deferred"
+            ;;
+        deferred-devel)
+            echo "$ALT_DNF_MIRROR/Etersoft/Sisyphus/Deferred_DEVEL"
+            ;;
+        deferred-beta)
+            echo "$ALT_DNF_MIRROR/Etersoft/Sisyphus/Deferred_BETA"
+            ;;
+        p[0-9]*|c[0-9]*)
+            echo "$ALT_DNF_MIRROR/ALTLinux/$1/branch"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# print arch subdirs of ALT repo
+__alt_dnf_archlist()
+{
+    echo "noarch"
+    echo "$DISTRARCH"
+    [ "$DISTRARCH" = "x86_64" ] && echo "x86_64-i586"
+    return 0
+}
