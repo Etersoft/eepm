@@ -70,6 +70,34 @@ __epm_check_apt_db_days()
     return 1
 }
 
+# print number of days and error status if dnf metadata is older than one day
+__epm_check_dnf_db_days()
+{
+    local cachedir=/var/cache/dnf
+    [ "$PMTYPE" = "dnf5-rpm" ] && cachedir=/var/cache/libdnf5
+
+    local i t
+    local ts=0
+    # set ts to newest repomd.xml ctime
+    # shellcheck disable=SC2044
+    for i in $(find $cachedir -path "*/repodata/repomd.xml" 2>/dev/null); do
+        t=$(stat -c%Z "$i" 2>/dev/null) || continue
+        [ "$t" -gt "$ts" ] && ts=$t
+    done
+
+    if [ "$ts" = "0" ] ; then
+        message "never downloaded"
+        return 1
+    fi
+
+    local now=$(date +%s)
+    local days="$(( (now - ts) / (60 * 60 * 24) ))"
+    [ "$days" = "0" ] && return 0
+    [ "$days" = "1" ] && message "1 day old" && return 1
+    message '$days days old'
+    return 1
+}
+
 __epm_touch_apt_pkg()
 {
     local pkg

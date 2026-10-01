@@ -203,6 +203,18 @@ case $PMTYPE in
             return 1
         fi
         ;;
+    dnf-rpm|dnf5-rpm)
+        load_helper epm-check_updated_repo
+        local days
+        if [ -n "$short" ] ; then
+            days="$(__epm_check_dnf_db_days)" && return 0
+            echo "$days"
+            return 1
+        fi
+        days="$(__epm_check_dnf_db_days)" && info "$PMTYPE metadata is actual." && return 0
+        info '$PMTYPE metadata is $days.'
+        return 1
+        ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_repostatus()'
         ;;
