@@ -19,6 +19,10 @@
 
 __epm_orphan_altrpm()
 {
+    if [ "$PMTYPE" != "apt-rpm" ] ; then
+        docmd $DNFCMD -q repoquery --qf '%{name}\n' --extras
+        return
+    fi
     docmd apt-cache list-extras
 }
 
@@ -30,7 +34,7 @@ epm_autoorphans()
 case $BASEDISTRNAME in
     alt)
         # ALT Linux only
-        assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
+        [ "$PMTYPE" = "apt-rpm" ] && assure_exists /usr/share/apt/scripts/list-extras.lua apt-scripts
         if [ -z "$dryrun" ] ; then
             message "We will try remove all installed packages which are missed in repositories"
             warning "Use with caution!"
