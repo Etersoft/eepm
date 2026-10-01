@@ -180,10 +180,52 @@ __ak_version_from_release()
     echo "$ver-$rel"
 }
 
+# compare versions like rpmevrdtcmp from update-kernel: by EVR (rpmevrcmp), then by buildtime
+# args: version1 buildtime1 version2 buildtime2
+# prints -1, 0 or 1
+__ak_evrdtcmp()
+{
+    local v
+    v="$(a='' rpmevrcmp "$1" "$3")"
+    if [ "$v" = "0" ] && [ -n "$2" ] && [ -n "$4" ] ; then
+        [ "$2" -gt "$4" ] 2>/dev/null && v=1
+        [ "$2" -lt "$4" ] 2>/dev/null && v=-1
+    fi
+    echo "$v"
+}
+
 # is version $1 <= version $2
 __ak_version_le()
 {
-    [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -n1)" = "$1" ]
+    [ "$(__ak_evrdtcmp "$1" '' "$2" '')" -le 0 ]
+}
+
+# print the max line from "version [buildtime [rest]]" lines
+__ak_max_line()
+{
+    local max='' maxv='' maxbt='' line v bt rest
+    while read -r v bt rest ; do
+        [ -n "$v" ] || continue
+        if [ -z "$maxv" ] || [ "$(__ak_evrdtcmp "$v" "$bt" "$maxv" "$maxbt")" -gt 0 ] ; then
+            maxv="$v"
+            maxbt="$bt"
+            max="$(echo "$v $bt $rest" | sed -e 's| *$||')"
+        fi
+    done
+    [ -n "$max" ] && echo "$max"
+    return 0
+}
+
+# sort "version [buildtime [rest]]" lines by version and buildtime (descending, the newest first)
+__ak_sort_versions_desc()
+{
+    local lines max
+    lines="$(cat | grep -v '^ *$')"
+    while [ -n "$lines" ] ; do
+        max="$(echo "$lines" | __ak_max_line)"
+        echo "$max"
+        lines="$(echo "$lines" | awk -v m="$max" '!done && $0 == m { done = 1 ; next } { print }')"
+    done
 }
 
 # print name=version if the version of the package is available in repo, else just name
@@ -197,10 +239,10 @@ __ak_pkg_version()
     fi
 }
 
-# print the latest version from "version buildtime" lines
+# print the latest "version buildtime" line
 __ak_max_version()
 {
-    sort -V -k1,1 | tail -n1
+    __ak_max_line
 }
 
 # print short names of installed external modules for the flavour (kernel-modules-<name>-<flavour>)
@@ -217,8 +259,8 @@ __ak_next_flavours()
     __ak_repo_kernels | sed -e 's|^kernel-image-||' | grep -E '^(std-def|un-def|[0-9]+\.[0-9]+) ' | \
         { if [ -n "$mainline" ] ; then cat ; else grep -v -E ' [^ ]*\brc[0-9]' ; fi ; } | \
         while read -r flavour version bt ; do
-            __ak_version_le "$cutoff" "$version" && echo "$version $flavour"
-        done | sort -r -V | cut -d' ' -f2 | awk '!seen[$0]++'
+            __ak_version_le "$cutoff" "$version" && echo "$version $bt $flavour"
+        done | __ak_sort_versions_desc | cut -d' ' -f3 | awk '!seen[$0]++'
 }
 
 # run x11setupdrv/x11presetdrv after video drivers update (like update-kernel does)
@@ -280,7 +322,7 @@ __ak_list_kernels()
         echo
         count=$((count + 1))
     done <<EOF
-$( { echo "$repo" ; echo "$installed" ; } | sort -u -k1,2 | sort -V -k2,2)
+$( { echo "$repo" ; echo "$installed" ; } | sort -u -k1,2 | awk '{ print $2, $3, $1 }' | __ak_sort_versions_desc | awk '{ print $3, $1, $2 }' | tac)
 EOF
     if [ "$count" -eq 0 ] ; then
         message "Nothing found."
@@ -577,7 +619,7 @@ epm_alt_update_kernel()
 
     local modules='' m mv
     for m in $selected ; do
-        mv="$(echo "$allmodules" | grep "^kernel-modules-$m-$kernel_flavour " | cut -d' ' -f2 | sort -V | tail -n1)"
+        mv="$(echo "$allmodules" | grep "^kernel-modules-$m-$kernel_flavour " | cut -d' ' -f2 | __ak_max_line)"
         [ -n "$mv" ] && modules="$modules kernel-modules-$m-$kernel_flavour=$mv"
     done
     [ -n "$selected" ] && info 'The following extra modules will be installed:' $selected
@@ -678,9 +720,9 @@ epm_alt_remove_old_kernels()
         info 'Running kernel version: $uname_r (package not found)'
     fi
 
-    # installed kernels as "flavour version" lines
+    # installed kernels as "flavour version buildtime" lines
     local all_kernels
-    all_kernels="$(a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||')"
+    all_kernels="$(a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||')"
 
     if [ -z "$kernel_flavour" ] && echo "$current_flavour" | grep -q -E '^[0-9]+\.[0-9]+$' ; then
         # booted into one of x.y flavours
@@ -712,12 +754,12 @@ epm_alt_remove_old_kernels()
 
     # the highest numeric flavour is used for the newest kernel check
     local newest_stable_kernel='' newest_stable_flavour
-    newest_stable_flavour="$(echo "$flavours" | grep -E '^[0-9]+\.[0-9]+$' | sort -V | tail -n1)"
-    [ -n "$newest_stable_flavour" ] && newest_stable_kernel="kernel-image-$newest_stable_flavour-$(echo "$all_kernels" | grep "^$newest_stable_flavour " | cut -d' ' -f2 | sort -V | tail -n1)"
+    newest_stable_flavour="$(echo "$flavours" | grep -E '^[0-9]+\.[0-9]+$' | __ak_max_line)"
+    [ -n "$newest_stable_flavour" ] && newest_stable_kernel="kernel-image-$newest_stable_flavour-$(echo "$all_kernels" | grep "^$newest_stable_flavour " | cut -d' ' -f2,3 | __ak_max_line | cut -d' ' -f1)"
 
     local flavour versions newest kernel package keep='' remove='' remove_items=''
     for flavour in $flavours ; do
-        versions="$(echo "$all_kernels" | grep "^$flavour " | cut -d' ' -f2 | sort -V)"
+        versions="$(echo "$all_kernels" | grep "^$flavour " | cut -d' ' -f2,3 | __ak_sort_versions_desc | tac | cut -d' ' -f1)"
         newest="kernel-image-$flavour-$(echo "$versions" | tail -n1)"
         echo "$flavour" | grep -q -E '^[0-9]+\.[0-9]+$' && newest="$newest_stable_kernel"
         local pkglisted=1
