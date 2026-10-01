@@ -183,3 +183,16 @@ __alt_dnf_archlist()
     [ "$DISTRARCH" = "x86_64" ] && echo "x86_64-i586"
     return 0
 }
+
+# print dnf option to install kernel modules alongside (like kernel-image), as apt does with Allow-Duplicated
+# args: [module package names] (installed kernel-modules-* are added)
+__alt_dnf_installonly_opt()
+{
+    local cur
+    cur="$(a='' $DNFCMD --dump-main-config 2>/dev/null | sed -n 's/^installonlypkgs = //p')"
+    [ -n "$cur" ] || cur="kernel"
+    local modules
+    modules="$(estrlist union "$* $(a='' rpm -qa --qf '%{NAME}\n' 'kernel-modules-*' 2>/dev/null)")"
+    [ -n "$modules" ] || return 0
+    echo "--setopt=installonlypkgs=$cur,$(echo $modules | tr ' ' ',')"
+}

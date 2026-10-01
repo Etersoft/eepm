@@ -45,6 +45,29 @@ elif [ -f "$EFI/limine.conf" ]; then
     bootloader="limine"
 fi
 
+# update-kernel uses apt, so install latest kernel and modules with dnf directly
+# args: [-t|--type flavour]
+__epm_kernel_update_alt_dnf()
+{
+    load_helper epm-sh-altlinux
+    load_helper epm-install-alt
+    local flavour=''
+    while [ -n "$1" ] ; do
+        case "$1" in
+            -t|--type)
+                flavour="$2"
+                shift
+                ;;
+        esac
+        shift
+    done
+    [ -n "$flavour" ] || flavour="$(get_current_kernel_flavour)"
+
+    local modules
+    modules="$(a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$flavour" | sort -u)"
+    sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) $(__alt_dnf_installonly_opt $modules) install kernel-image-$flavour $modules
+}
+
 epm_kernel_update()
 {
 
@@ -88,6 +111,10 @@ esac
         load_helper epm-query_package
         if ! __epm_query_package kernel-image >/dev/null ; then
             info "No installed kernel packages, skipping update"
+            return
+        fi
+        if [ "$PMTYPE" != "apt-rpm" ] ; then
+            __epm_kernel_update_alt_dnf "$@"
             return
         fi
         assure_exists update-kernel update-kernel 0.9.9
