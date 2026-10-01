@@ -177,7 +177,7 @@ if __has_backend_syntax "$@" ; then
 fi
 
 # TODO
-[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || fatal "No arguments are allowed here"
+[ -z "$*" ] || [ "$PMTYPE" = "apt-rpm" ] || [ "$PMTYPE" = "apm-rpm" ] || [ "$PMTYPE" = "apt-dpkg" ] || [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] || fatal "No arguments are allowed here"
 
 case $PMTYPE in
     stplr)
@@ -197,8 +197,15 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm|dnf5-rpm)
-        docmd $DNFCMD repolist $verbose
-        [ -n "$verbose" ] || info "Use --verbose if you need detail information."
+        local DNFLISTOPTIONS=''
+        [ -n "$flagall" ] && DNFLISTOPTIONS="--all"
+        [ -n "$flagdisabled" ] && DNFLISTOPTIONS="--disabled"
+        if [ -n "$verbose" ] ; then
+            docmd $DNFCMD repoinfo $DNFLISTOPTIONS "$@"
+        else
+            docmd $DNFCMD repolist $DNFLISTOPTIONS "$@"
+            info "Use --verbose if you need detail information."
+        fi
         ;;
     urpm-rpm)
         docmd urpmq --list-media active --list-url
