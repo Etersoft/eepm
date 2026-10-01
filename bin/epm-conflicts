@@ -60,6 +60,13 @@ case $PMTYPE in
         # FIXME: use hi level commands
         CMD="rpm -q --conflicts"
         ;;
+    dnf-rpm|dnf5-rpm)
+        if is_installed $pkg_names ; then
+            CMD="rpm -q --conflicts"
+        else
+            CMD="$DNFCMD repoquery --conflicts"
+        fi
+        ;;
     #yum-rpm)
     #    CMD="yum deplist"
     #    ;;
