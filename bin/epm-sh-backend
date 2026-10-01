@@ -28,7 +28,7 @@ __has_backend_syntax()
 # Check if args contain repo/package syntax (p10/pkg, sisyphus/pkg)
 __has_repo_syntax()
 {
-    [ -z "$PPARGS" ] && echo "$*" | grep -q -E '(^| )[a-zA-Z][a-zA-Z0-9]*/'
+    [ -z "$PPARGS" ] && echo "$*" | grep -q -E '(^| )[a-zA-Z][a-zA-Z0-9._-]*/'
 }
 
 __get_tpmtype() {
