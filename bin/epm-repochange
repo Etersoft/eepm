@@ -84,6 +84,11 @@ __epm_repochange_alt()
 epm_repochange()
 {
     [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
+    case $PMTYPE in
+        dnf-rpm|dnf5-rpm)
+            [ "$BASEDISTRNAME" = "alt" ] && fatal 'Repo change is not supported for $PMTYPE: rpm-md metadata is available only on download.etersoft.ru mirror'
+            ;;
+    esac
     if [ "$1" != "--list" ] ; then
         load_helper epm-repofix
         epm_repofix
