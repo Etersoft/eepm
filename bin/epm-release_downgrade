@@ -66,6 +66,7 @@ epm_release_downgrade()
 
     case $BASEDISTRNAME in
     "alt")
+        [ "$PMTYPE" = "apt-rpm" ] || fatal 'Release switching on ALT is supported only with apt-rpm (not $PMTYPE) yet'
         __epm_ru_update || fatal
 
         # try to detect current release by repo

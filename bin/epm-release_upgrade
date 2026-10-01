@@ -581,6 +581,7 @@ epm_release_upgrade()
 
     case $BASEDISTRNAME in
     "alt")
+        [ "$PMTYPE" = "apt-rpm" ] || fatal 'Release switching on ALT is supported only with apt-rpm (not $PMTYPE) yet'
         [ "$FULLDISTRNAME" = "ALT Atomic" ] && fatal "Use epm upgrade for update to the new image."
         __epm_ru_update || fatal
 
