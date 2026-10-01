@@ -49,6 +49,13 @@ try_fix_apt_rpm_dupls()
 
 epm_dedup()
 {
+case $PMTYPE in
+    dnf-rpm|dnf5-rpm)
+        sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) remove --duplicates
+        return
+        ;;
+esac
+
 case "$BASEDISTRNAME" in
     "alt")
         assure_exists /usr/share/apt/scripts/dedup.lua apt-scripts
