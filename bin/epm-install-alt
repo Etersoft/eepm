@@ -69,8 +69,8 @@ epm_install_files_alt()
         return
     fi
 
-    # install packages via local repo if enabled
-    if [ -n "$use_local_repo" ] ; then
+    # install packages via local repo if enabled (apt only: it uses name=version install)
+    if [ -n "$use_local_repo" ] && [ "$PMTYPE" = "apt-rpm" ] ; then
         [ -n "$nodeps" ] && warning "Option --nodeps is not supported with local repo, ignored"
         epm_install_files_alt_via_repo $files
         return
