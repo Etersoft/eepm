@@ -50,10 +50,12 @@ epm_reinstall_names()
             docmd pkcon install --allow-reinstall $@
             return ;;
         yum-rpm)
-            sudocmd yum reinstall $@
+            local YUMOPTIONS="$(subst_option non_interactive -y)"
+            sudocmd yum reinstall $YUMOPTIONS $@
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd $DNFCMD reinstall $@
+            local YUMOPTIONS="$(subst_option non_interactive -y)"
+            sudocmd $DNFCMD reinstall $YUMOPTIONS $@
             return ;;
         homebrew)
             sudocmd brew reinstall $@
@@ -115,7 +117,7 @@ epm_reinstall()
 
     warmup_hibase
 
-    epm_reinstall_names $pkg_names
+    epm_reinstall_names $pkg_names || return
     epm_reinstall_files $pkg_files
 }
 
