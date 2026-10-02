@@ -31,7 +31,7 @@ __alt_local_content_filelist()
     load_helper epm-check_updated_repo
 
     local pkg="$1"
-    check_alt_contents_index || init_alt_contents_index
+    assure_alt_contents_index
     update_repo_if_needed
     local CI="$(cat $ALT_CONTENTS_INDEX_LIST)"
 

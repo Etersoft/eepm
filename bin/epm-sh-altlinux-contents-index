@@ -154,6 +154,13 @@ check_alt_contents_index()
     [ -f "$ALT_CONTENTS_INDEX_LIST" ]
 }
 
+# init contents_index cache if it is missed or empty (retry after a failed retrieving)
+assure_alt_contents_index()
+{
+    [ -s "$ALT_CONTENTS_INDEX_LIST" ] && return
+    init_alt_contents_index
+}
+
 clean_alt_contents_index()
 {
     sudocmd rm -vf "$ALT_CONTENTS_INDEX_LIST"
