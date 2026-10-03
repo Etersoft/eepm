@@ -319,6 +319,53 @@ esac
 }
 
 
+# mark as weak dependency (installed as a recommended package)
+epm_mark_weak()
+{
+
+local resolved
+resolved="$(__epm_mark_resolve "$@")" || return 1
+[ -n "$resolved" ] || return 1
+set -- $resolved
+
+case $PMTYPE in
+    dnf5-rpm)
+        sudocmd $DNFCMD $(subst_option non_interactive -y) mark weak "$@"
+        ;;
+    *)
+        # apt considers weak dependency as automatically installed
+        info 'There is no weak dependency mark for $PMTYPE, mark as automatically installed'
+        epm_mark_auto "$@"
+        ;;
+esac
+
+}
+
+# print installed packages with the given dnf reason(s)
+__epm_dnf_installed_by_reason()
+{
+    a='' LC_ALL=C $DNFCMD -q repoquery --installed --qf '%{name}|%{reason}\n' 2>/dev/null | \
+        awk -F'|' -v reasons="$*" 'BEGIN { n = split(reasons, r, ",") } { for (i = 1; i <= n; i++) if ($2 == r[i]) print $1 }' | sort -u
+}
+
+epm_mark_showweak()
+{
+
+case $PMTYPE in
+    dnf-rpm|dnf5-rpm)
+        __epm_dnf_installed_by_reason "Weak Dependency"
+        ;;
+    apt-rpm|apm-rpm)
+        # dnf5 on ALT writes 2 to AUTOINSTALLED rpm tag for weak dependencies
+        a='' rpm -qa --qf '%{NAME} %{AUTOINSTALLED}\n' 2>/dev/null | awk '$2 == 2 { print $1 }' | sort -u
+        ;;
+    *)
+        fatal 'Have no suitable command for $PMTYPE in epm_mark_showweak()'
+        ;;
+esac
+
+}
+
 epm_mark_showauto()
 {
 
@@ -444,6 +491,12 @@ epm_mark()
         ;;
     manual|install)                   # HELPCMD: mark the given package(s) as manually installed
         epm_mark_manual "$@"
+        ;;
+    weak)                             # HELPCMD: mark the given package(s) as weak dependency (auto for apt)
+        epm_mark_weak "$@"
+        ;;
+    showweak)                         # HELPCMD: print the list of packages installed as weak dependency
+        epm_mark_showweak "$@"
         ;;
     showauto)                         # HELPCMD: print the list of automatically installed packages
         epm_mark_showauto "$@"
