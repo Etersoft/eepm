@@ -261,10 +261,10 @@ case $PMTYPE in
         sudocmd apt-mark auto "$@"
         ;;
     dnf-rpm)
-        sudocmd $DNFCMD mark remove "$@"
+        sudocmd $DNFCMD $(subst_option non_interactive -y) mark remove "$@"
         ;;
     dnf5-rpm)
-        sudocmd $DNFCMD mark dependency "$@"
+        sudocmd $DNFCMD $(subst_option non_interactive -y) mark dependency "$@"
         ;;
     pacman)
             sudocmd pacman -D --asdeps "$@"
@@ -300,10 +300,10 @@ case $PMTYPE in
         sudocmd apt-mark manual "$@"
         ;;
     dnf-rpm)
-        sudocmd $DNFCMD mark install "$@"
+        sudocmd $DNFCMD $(subst_option non_interactive -y) mark install "$@"
         ;;
     dnf5-rpm)
-        sudocmd $DNFCMD mark user "$@"
+        sudocmd $DNFCMD $(subst_option non_interactive -y) mark user "$@"
         ;;
     pacman)
             sudocmd pacman -D --asexplicit "$@"
