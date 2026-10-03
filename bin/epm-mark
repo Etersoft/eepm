@@ -381,7 +381,8 @@ case $PMTYPE in
         sudocmd apt-mark showauto "$@"
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd $DNFCMD repoquery --unneeded
+        # apt considers weak dependency as automatically installed too
+        __epm_dnf_installed_by_reason "Dependency,Weak Dependency"
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_mark_showauto()'
@@ -405,7 +406,7 @@ case $PMTYPE in
         sudocmd apt-mark showmanual "$@"
         ;;
     dnf-rpm|dnf5-rpm)
-        sudocmd $DNFCMD repoquery --userinstalled
+        docmd $DNFCMD -q repoquery --qf '%{name}\n' --userinstalled
         ;;
     *)
         fatal 'Have no suitable command for $PMTYPE in epm_mark_showmanual'
