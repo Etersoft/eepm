@@ -128,22 +128,26 @@ __epm_addrepo_main_alt_repo()
 
 
 # 'rpm protocol:/path/to/repo component'
+# args: rpm <url/arch> <component> [sign]
 __epm_addrepo_altlinux_short()
 {
     [ "$1" = "rpm" ] || fatal "only for rpm repo"
     local url="$2"
     local repo="$3"
+    local sign="$4"
     local arch
 
     arch="$(basename "$url")"
     url="$(dirname "$url")"
-    docmd epm repo add "rpm $url $arch $repo"
+    docmd epm repo add "rpm ${sign:+$sign }$url $arch $repo"
 }
 
 
+# args: <url> [sign]
 __epm_addrepo_altlinux_url()
 {
     local url="$1"
+    local sign="$2"
     local arch
     local base
     local repo
@@ -156,7 +160,7 @@ __epm_addrepo_altlinux_url()
     if echo "$base" | grep -q "^RPMS\." ; then
         repo="$(echo $base | sed -e 's|.*\.||')"
         url="$(dirname $url)"
-        __epm_addrepo_altlinux_short rpm "$url" "$repo"
+        __epm_addrepo_altlinux_short rpm "$url" "$repo" "$sign"
         return
     fi
 
@@ -166,7 +170,7 @@ __epm_addrepo_altlinux_url()
     base="$(basename "$baseurl")"
     if echo "$base" | grep -q "^RPMS\." ; then
         REPO_NAME="$(echo "$base" | sed -e 's|.*\.||')"
-        __epm_addrepo_altlinux_short rpm "$url" "$REPO_NAME"
+        __epm_addrepo_altlinux_short rpm "$url" "$REPO_NAME" "$sign"
         return
     fi
 
@@ -176,7 +180,7 @@ __epm_addrepo_altlinux_url()
     arch=$DISTRARCH
     REPO_NAME="classic"
     if eget --check-url $url/$arch/base/pkglist.$REPO_NAME ; then
-        docmd epm repo add "rpm $url $arch $REPO_NAME"
+        docmd epm repo add "rpm ${sign:+$sign }$url $arch $REPO_NAME"
         return
     fi
 
@@ -188,7 +192,7 @@ __epm_addrepo_altlinux_url()
         [ -n "$rd" ] || continue
         local REPO_NAME="$(echo "$rd" | sed -e 's|/*$||' -e 's|.*\.||')"
         [ "$REPO_NAME" = "*" ] && continue
-        docmd epm repo add "rpm $url $arch $REPO_NAME"
+        docmd epm repo add "rpm ${sign:+$sign }$url $arch $REPO_NAME"
         res='1'
     done
     [ -n "$res" ] || warning "There is no arch repos in $url"
@@ -609,7 +613,7 @@ __epm_addrepo_altlinux()
         for arg in "$@" ; do
             is_taskarg "$arg" || continue
             tn=$(get_tasknumber_from_arg "$arg")
-            epm repo add "https://git.altlinux.org/tasks/$tn/build/repo"
+            __epm_addrepo_altlinux_url "https://git.altlinux.org/tasks/$tn/build/repo" "$(get_task_sign "$tn")"
         done
         return
     fi

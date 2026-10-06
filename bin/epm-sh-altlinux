@@ -95,6 +95,46 @@ get_task_status()
     docmd eget --check-url $ALTTASKURL/$tn/plan/add-bin
 }
 
+# print the branch of the task (sisyphus, p11, c10f2, ...)
+get_task_repo()
+{
+    local tn="$1"
+    fetch_url "$ALTTASKURL/$tn/task/repo" 2>/dev/null
+}
+
+# check if apt vendor (the key for [vendor] in sources.list) is defined in vendors.list
+__alt_has_vendor()
+{
+    grep -qs "^[[:space:]]*simple-key[[:space:]]*\"$1\"" /etc/apt/vendors.list /etc/apt/vendors.list.d/*.list
+}
+
+# print [vendor] for the task repo: girar signs it by the key of the task branch
+get_task_sign()
+{
+    local tn="$1"
+    local branch vendor
+    branch="$(get_task_repo "$tn")"
+    case "$branch" in
+        sisyphus)
+            vendor="alt"
+            ;;
+        p[0-9]*)
+            vendor="$branch"
+            ;;
+        c[0-9]*)
+            vendor="updates"
+            ;;
+        *)
+            return
+            ;;
+    esac
+    if ! __alt_has_vendor "$vendor" ; then
+        warning 'Vendor $vendor is missed in vendors.list, the signature of task $tn repo will not be checked'
+        return
+    fi
+    echo "[$vendor]"
+}
+
 get_task_arepo_status()
 {
     local tn="$1"
