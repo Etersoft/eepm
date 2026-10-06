@@ -78,7 +78,7 @@ epm_repo()
         # Remember current mirror before removing repos
         local current_mirror
         # dnf repos are available only on one mirror
-        [ "$PMTYPE" = "apt-rpm" ] && current_mirror=$(__get_current_mirror)
+        { [ "$PMTYPE" = "apt-rpm" ] || __alt_dnf_uses_apt_sources ; } && current_mirror=$(__get_current_mirror)
         try_change_alt_repo
         epm repo rm all
         epm addrepo "$@" || fatal 'Cannot add repo "'$@'", restoring...'

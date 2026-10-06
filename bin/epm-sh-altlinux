@@ -183,6 +183,15 @@ get_task_packages()
     done
 }
 
+# check if dnf5 takes repos from /etc/apt/sources.list* (libdnf5-plugin-apt)
+__alt_dnf_uses_apt_sources()
+{
+    [ "$PMTYPE" = "dnf5-rpm" ] || return
+    local conf=/etc/dnf/libdnf5-plugins/apt.conf
+    grep -qsE '^[[:space:]]*enabled[[:space:]]*=[[:space:]]*(1|yes|true|on)[[:space:]]*$' $conf || return
+    ! grep -qsE '^[[:space:]]*sources[[:space:]]*=[[:space:]]*(0|no|false|off)[[:space:]]*$' $conf
+}
+
 # rpm-md metadata for dnf on ALT is generated only on Etersoft mirror
 ALT_DNF_MIRROR="http://download.etersoft.ru/pub"
 

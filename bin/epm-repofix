@@ -19,6 +19,7 @@
 
 load_helper epm-query
 load_helper epm-sh-repo
+load_helper epm-sh-altlinux
 
 
 __replace_text_in_alt_repo()
@@ -123,7 +124,7 @@ epm_reposwitch()
 
     assure_root
 
-    case $PMTYPE in
+    __alt_dnf_uses_apt_sources || case $PMTYPE in
         dnf-rpm|dnf5-rpm)
             echo "$TO" | grep -q -E "^(${__alt_branch_reg}|Sisyphus|Deferred)$" || fatal 'Unsupported target form $TO. Use --list to get all targets.'
             __epm_reposwitch_alt_dnf "$TO"
@@ -256,7 +257,7 @@ epm_repofix()
 
 case $BASEDISTRNAME in
     "alt")
-        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] && ! __alt_dnf_uses_apt_sources ; then
             info 'Nothing to fix for $PMTYPE'
             return
         fi
@@ -285,7 +286,7 @@ esac
 
 epm_repoclean()
 {
-    if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+    if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] && ! __alt_dnf_uses_apt_sources ; then
         info 'Nothing to clean for $PMTYPE'
         return
     fi

@@ -197,6 +197,11 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm|dnf5-rpm)
+        # dnf5 takes repos from sources.list (libdnf5-plugin-apt): look for a source line there
+        if [ -n "$*" ] && __alt_dnf_uses_apt_sources ; then
+            print_apt_sources_list "$@"
+            return
+        fi
         local DNFLISTOPTIONS=''
         [ -n "$flagall" ] && DNFLISTOPTIONS="--all"
         [ -n "$flagdisabled" ] && DNFLISTOPTIONS="--disabled"

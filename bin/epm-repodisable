@@ -73,6 +73,10 @@ case $PMTYPE in
         [ -n "$verbose" ] || info "Use --verbose if you need detail information."
         ;;
     dnf-rpm|dnf5-rpm)
+        if __alt_dnf_uses_apt_sources ; then
+            __epm_repodisable_alt "$@"
+            return
+        fi
         __epm_dnf_set_repo_enabled 0 "$@"
         ;;
     pisi)

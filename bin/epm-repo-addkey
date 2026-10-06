@@ -322,7 +322,7 @@ remove_on_exit
 
 case $BASEDISTRNAME in
     "alt")
-        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] ; then
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] && ! __alt_dnf_uses_apt_sources ; then
             __epm_addkey_alt_dnf "$@"
             return
         fi
