@@ -289,24 +289,32 @@ prepare_task_packages()
 # copied from epm_upgrade_alt_tasks()
 # dnf can't use apt task repos: download task packages and install them as files
 # args: <package names> <task numbers...>
-__epm_install_alt_task_files()
+# download rpms with names from list $1 from task(s) to a temp dir, set task_files
+# (for non apt backends: task repos have no rpm-md)
+__epm_download_alt_task_files()
 {
     local names="$1"
     shift
     load_helper epm-repopkg
-    load_helper epm-install
     local tmpdir
     tmpdir="$(mktemp -d)" || fatal
     remove_on_exit "$tmpdir"
     __download_task_rpms "$tmpdir" "$@"
-    local f files=''
+    local f
+    task_files=''
     for f in "$tmpdir"/*.rpm ; do
         [ -e "$f" ] || continue
         estrlist contains "$(epm print name for package "$f")" "$names" || continue
-        files="$files $f"
+        task_files="$task_files $f"
     done
-    [ -n "$files" ] || fatal "No packages downloaded from task(s)"
-    epm_install_files $files
+    [ -n "$task_files" ] || fatal "No packages downloaded from task(s)"
+}
+
+__epm_install_alt_task_files()
+{
+    load_helper epm-install
+    __epm_download_alt_task_files "$@"
+    epm_install_files $task_files
 }
 
 epm_install_alt_tasks()
