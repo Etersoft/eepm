@@ -325,7 +325,8 @@ __use_tmp_apt_with_named_repo()
     load_helper epm-update
     __setup_tmp_apt_dir
     cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
-    { __get_system_sourceslist ; echo ; __get_named_repo_lines "$file" ; } > "$__EPM_APT_TMPDIR/sources.list"
+    # skip duplicates: the same source twice makes apt-get update hang (downloads to the same partial file)
+    { __get_system_sourceslist ; __get_named_repo_lines "$file" ; } | awk 'NF { $1=$1 ; if (!seen[$0]++) print }' > "$__EPM_APT_TMPDIR/sources.list"
     __epm_update || warning "Some repos failed to update, but continuing anyway"
 }
 
