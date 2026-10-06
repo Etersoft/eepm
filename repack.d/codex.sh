@@ -14,3 +14,6 @@ for i in $PRODUCTALT ; do
     [ "$i" = "$PKGNAME" ] && continue
     add_conflicts $i
 done
+
+# system config with daemon_auto_start = false (see pack.d/codex.sh)
+mark_config_noreplace /etc/codex/config.toml
