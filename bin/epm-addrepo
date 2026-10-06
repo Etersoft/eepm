@@ -299,6 +299,21 @@ __epm_addrepo_alt_dnf_gpgkey()
     sudocmd cp $tmpfile "$keyfile"
 }
 
+# rpm-md metadata on Etersoft mirror is signed by its own key (repomd.xml.asc)
+__epm_addrepo_alt_dnf_mirror_key()
+{
+    [ -s "$ALT_DNF_MIRROR_KEYFILE" ] && return
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    eget -q -O- "$ALT_DNF_MIRROR_KEYURL" >$tmpfile && [ -s $tmpfile ] || fatal 'Can'\''t download $ALT_DNF_MIRROR_KEYURL'
+    assure_exists gpg gnupg2
+    a='' gpg --with-colons --with-fingerprint $tmpfile 2>/dev/null | grep -q "^fpr:.*:$ALT_DNF_MIRROR_KEYFPR:" || fatal 'Wrong key in $ALT_DNF_MIRROR_KEYURL (expected fingerprint $ALT_DNF_MIRROR_KEYFPR)'
+    chmod 644 $tmpfile
+    sudocmd mkdir -p "$(dirname "$ALT_DNF_MIRROR_KEYFILE")"
+    sudocmd cp $tmpfile "$ALT_DNF_MIRROR_KEYFILE"
+}
+
 # copy repo file to /etc/yum.repos.d (just print it with --dry-run)
 # args: <tmpfile> <target>
 __epm_addrepo_dnf_install_file()
@@ -435,6 +450,14 @@ __epm_addrepo_alt_dnf_repo()
     local tmpfile
     tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
+    # repomd.xml is signed only on Etersoft mirror
+    local repo_gpgcheck=0 mirror_key=''
+    case "$baseurl" in
+        $ALT_DNF_MIRROR/*)
+            repo_gpgcheck=1
+            mirror_key=" file://$ALT_DNF_MIRROR_KEYFILE"
+            ;;
+    esac
     local i repoids=''
     for i in $(__alt_dnf_archlist) ; do
         repoids="$repoids${repoids:+,}$repo-$i"
@@ -444,20 +467,24 @@ name=$name $i
 baseurl=$baseurl/$i
 enabled=1
 gpgcheck=1
-gpgkey=file://$keyfile
+repo_gpgcheck=$repo_gpgcheck
+gpgkey=file://$keyfile$mirror_key
 
 EOF
     done
     local target=/etc/yum.repos.d/alt-$repo.repo
     __epm_addrepo_dnf_install_file $tmpfile $target || return 0
 
+    __epm_addrepo_alt_dnf_gpgkey "$keyfile"
+    [ "$repo_gpgcheck" = "1" ] && __epm_addrepo_alt_dnf_mirror_key
+
     # check rpm-md metadata via dnf itself (it is generated only on download.etersoft.ru mirror)
-    if ! sudocmd $DNFCMD makecache --repo=$repoids ; then
+    # -y: import the keys (the mirror key fingerprint is checked above)
+    if ! sudocmd $DNFCMD makecache -y --repo=$repoids ; then
         sudocmd rm -f $target
         fatal 'There is no rpm-md metadata for dnf in $baseurl'
     fi
 
-    __epm_addrepo_alt_dnf_gpgkey "$keyfile"
     # dnf5 on ALT does not import gpgkey from repo file itself
     sudocmd rpm --import "$keyfile" || fatal
 }

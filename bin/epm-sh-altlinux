@@ -194,6 +194,10 @@ __alt_dnf_uses_apt_sources()
 
 # rpm-md metadata for dnf on ALT is generated only on Etersoft mirror
 ALT_DNF_MIRROR="http://download.etersoft.ru/pub"
+# the key of repomd.xml.asc signatures on the mirror
+ALT_DNF_MIRROR_KEYURL="$ALT_DNF_MIRROR/Etersoft/RPM-GPG-KEY-etersoft-mirror-metadata"
+ALT_DNF_MIRROR_KEYFPR="24F2AD07095B62CC48D5AC7C81C29C26E0056291"
+ALT_DNF_MIRROR_KEYFILE="/etc/pki/rpm-gpg/RPM-GPG-KEY-etersoft-mirror-metadata"
 
 # print base url (without arch) of rpm-md repo for dnf on ALT
 # args: sisyphus|p11|...|deferred|deferred.org|deferred-devel|deferred-beta
