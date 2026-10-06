@@ -7,8 +7,16 @@ DESCRIPTION='ICU 78.3 runtime libraries (libicudata/libicui18n/libicuuc .so.78) 
 
 . $(dirname $0)/common.sh
 
-# ALT Sisyphus/p11 ship ICU up to 74. Applications built against Fedora 45
-# (e.g. Sunshine >= 2026) link libicu*.so.78, which ALT does not package.
+# Use the distro package if there is one (ALT Sisyphus has libicu78):
+# the repacked package with the same name and epoch 100 shadows it
+# and has no set: versioned provides required by distro packages (tesseract etc.)
+if epm status --installable libicu78 ; then
+    epm install libicu78
+    exit
+fi
+
+# ALT p11 ships ICU up to 74. Applications built against Fedora 45
+# (e.g. Sunshine >= 2026) link libicu*.so.78, which ALT p11 does not package.
 # Fedora 45 distributes ICU 78.3 as a native RPM. Repack only its runtime .so
 # files; the sonames are declared explicitly in pack.d/libicu78.sh.
 case "$(epm print info -a)" in
