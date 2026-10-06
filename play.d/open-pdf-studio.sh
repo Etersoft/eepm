@@ -8,11 +8,7 @@ URL="https://github.com/OpenAEC-Foundation/open-pdf-studio"
 
 . $(dirname $0)/common.sh
 
-if [ "$VERSION" = "*" ] ; then
-    VERSION=$(get_github_tag "$URL")
-    [ -n "$VERSION" ] || fatal "Can't get version from GitHub"
-fi
-
-PKGURL="$URL/releases/download/v$VERSION/Open.PDF.Studio_${VERSION}_amd64.deb"
+# tag (v2026.39) differs from the version in the file name (2026.39.0)
+PKGURL=$(get_github_url "$URL" "Open.PDF.Studio_${VERSION}_amd64.deb")
 
 install_pkgurl
