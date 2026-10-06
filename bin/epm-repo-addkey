@@ -98,8 +98,19 @@ __epm_addkey_altlinux()
 
     if [ -n "$url" ] ; then
         tmpfile=$(__epm_get_file_from_url "$url") || fatal
-        # __epm_importgpg_altlinux "$url"
-        __epm_altgpg --import $tmpfile
+        [ -s "$tmpfile" ] || fatal 'Can'\''t download $url'
+        # /usr/lib/alt-gpgkeys belongs to alt-gpgkeys package and is replaced on its update,
+        # apt-gpgkeys-pki merges it with the keys from /etc/pki/apt-gpg/sources (APT::GPG::Homedir)
+        epm install --skip-installed apt-gpgkeys-pki
+        if [ -x /usr/bin/apt-gpgkeys ] ; then
+            sudocmd mkdir -p /etc/pki/apt-gpg/sources
+            sudocmd cp $tmpfile /etc/pki/apt-gpg/sources/$name.gpg || fatal
+            sudocmd chmod 644 /etc/pki/apt-gpg/sources/$name.gpg
+            sudocmd /usr/bin/apt-gpgkeys update || fatal
+        else
+            warning 'apt-gpgkeys-pki is not installed, the key is imported to /usr/lib/alt-gpgkeys and will be lost on alt-gpgkeys update'
+            __epm_altgpg --import $tmpfile
+        fi
     fi
 
     if [ ! -s /etc/apt/vendors.list.d/$name.list ] ; then
