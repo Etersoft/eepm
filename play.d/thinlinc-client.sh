@@ -8,7 +8,14 @@ URL="https://www.cendio.com/thinlinc"
 
 . $(dirname $0)/common.sh
 
-[ "$VERSION" = "*" ] || VERSION="$VERSION-*"
+# there is no directory listing on the site anymore (redirects to a slow page without links),
+# so the build number (RELEASE) is required: use the last known one if missed
+if [ "$VERSION" = "*" ] || [ "$RELEASE" = "*" ] ; then
+    [ "$VERSION" = "*" ] || [ "$VERSION" = "4.21.0" ] || fatal "Build number is unknown for version $VERSION"
+    VERSION="4.21.0"
+    RELEASE="4588"
+fi
+VERSION="$VERSION-$RELEASE"
 
 pkgtype=$(epm print info -p)
 arch="$(epm print info -a)"
