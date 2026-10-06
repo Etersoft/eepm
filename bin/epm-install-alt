@@ -111,12 +111,14 @@ epm_install_files_alt()
         fatal "Only RPM 6 can install packages larger than 4 GB"
     fi
 
-    # try install via apt if we could't install package file via rpm (we guess we need install requirements firsly)
-    # dnf on ALT can't install package files: nothing provides rpmlib() requires for them
-
-    if [ -z "$direct" ] && [ -z "$noscripts" ] && [ "$PMTYPE" = "apt-rpm" ] ; then
-        epm_install_names $files
-        return
+    # try install via apt/dnf if we could't install package file via rpm (we guess we need install requirements firsly)
+    if [ -z "$direct" ] && [ -z "$noscripts" ] ; then
+        case "$PMTYPE" in
+            apt-rpm|dnf-rpm|dnf5-rpm)
+                epm_install_names $files
+                return
+                ;;
+        esac
     fi
 
     # TODO: use it always (apt can install version from repo instead of a file package)
