@@ -627,9 +627,15 @@ __get_package_for_command()
     esac
 }
 
+# check if /dev/tty can be opened (it exists, but can't be opened without a controlling terminal)
+has_tty()
+{
+    ( : </dev/tty ) 2>/dev/null
+}
+
 # read from /dev/tty if available, otherwise from stdin
 read_tty() {
-    if [ -c /dev/tty ] ; then
+    if has_tty ; then
         read -r "$@" </dev/tty
     else
         read -r "$@"
@@ -681,9 +687,10 @@ confirm_yes() {
 confirm_info()
 {
     info "$*" >&2
-    if [ -z "$non_interactive" ] ; then
-        confirm "Are you sure? [y/N]" || fatal "Exiting"
-    fi
+    [ -n "$non_interactive" ] && return
+    confirm "Are you sure? [y/N]" && return
+    has_tty || [ -t 0 ] || fatal 'There is no terminal to ask for confirmation. Use --auto to confirm automatically.'
+    fatal "Exiting"
 
 }
 
