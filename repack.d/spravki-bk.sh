@@ -39,6 +39,10 @@ Categories=Office;
 Terminal=false
 EOF
 
+# Vendor %post copies libgdiplus built for alt9/alt10/alt11 from bundle/ and removes it,
+# we use the system libgdiplus (bundled alt11 one requires libtiff.so.6 missed on c10f2)
+remove_dir $PRODUCTDIR/bundle
+
 # Add libgdiplus dependency
 add_unirequires libgdiplus.so.0
 
