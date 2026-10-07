@@ -6,20 +6,9 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
-# install desktop files (originals are in files/ subdir, postinstall copies them)
-install_file usr/share/bitdesk/files/bitdesk.desktop /usr/share/applications/$PRODUCT.desktop
-install_file usr/share/bitdesk/files/bitdesk-link.desktop /usr/share/applications/$PRODUCT-link.desktop
-
-# put service file to the normal place
-install_file usr/share/bitdesk/files/bitdesk.service /etc/systemd/system/$PRODUCT.service
-
-# remove files/ dir (contents already installed above)
-remove_dir /usr/share/bitdesk/files
-
-move_to_opt /usr/share/bitdesk
-
+move_to_opt /usr/lib/$PRODUCT
+subst "s|^ExecStart=/usr/lib/$PRODUCT/$PRODUCT|ExecStart=$PRODUCTDIR/$PRODUCT|" "$BUILDROOT/usr/lib/systemd/system/$PRODUCT.service"
 subst "s|^Categories.*|Categories=GNOME;GTK;Network;RemoteAccess;|" usr/share/applications/$PRODUCT.desktop
-
 add_bin_link_command
 
 add_unirequires curl
