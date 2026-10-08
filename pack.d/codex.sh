@@ -25,9 +25,49 @@ mkdir -p usr/bin
 ln -s /opt/codex/bin/codex usr/bin/codex
 ln -s /opt/codex/bin/codex-code-mode-host usr/bin/codex-code-mode-host
 
+# Keep auto-downloaded app-server releases from accumulating in each user's home.
+mkdir -p usr/lib/systemd/user
+cat >usr/bin/codex-clean-old-releases <<'EOF'
+#!/bin/sh
+set -eu
+codex_dir="$HOME/.codex/packages/app-server-daemon"
+[ -d "$codex_dir/releases" ] || exit 0
+codex_current=$(readlink -e "$codex_dir/current") || exit 0
+[ -d "$codex_current" ] || exit 0
+for release in "$codex_dir"/releases/* ; do
+    [ -d "$release" ] && [ ! -L "$release" ] || continue
+    [ "$release" != "$codex_current" ] || continue
+    # Running older servers must survive until their processes exit.
+    pgrep -u "$(id -u)" -f "$release/bin/" >/dev/null && continue
+    rm -rf -- "$release"
+done
+EOF
+chmod 755 usr/bin/codex-clean-old-releases
+
+cat >usr/lib/systemd/user/codex-release-cleanup.service <<'EOF'
+[Unit]
+Description=Remove unused old Codex releases
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/codex-clean-old-releases
+EOF
+
+cat >usr/lib/systemd/user/codex-release-cleanup.timer <<'EOF'
+[Unit]
+Description=Clean old Codex releases daily
+
+[Timer]
+OnStartupSec=15min
+OnUnitActiveSec=1d
+
+[Install]
+WantedBy=timers.target
+EOF
+
 PKGNAME=$PRODUCT-$VERSION
 
-erc pack $PKGNAME.tar opt usr/bin || fatal
+erc pack $PKGNAME.tar opt usr || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT

@@ -23,4 +23,11 @@ else
     PKGURL="https://github.com/openai/codex/releases/download/$tag/codex-package-$arch.tar.gz"
 fi
 
-install_pack_pkgurl
+install_pack_pkgurl || exit
+
+cat <<EOF
+
+Note: run as your regular user
+$ systemctl --user enable --now codex-release-cleanup.timer
+to enable daily cleanup of old Codex app-server releases
+EOF
