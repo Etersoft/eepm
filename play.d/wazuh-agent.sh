@@ -26,6 +26,6 @@ install_pkgurl
 
 echo
 echo 'Note: configure the agent before the first start (point it to your manager):
-    /var/ossec/bin/agent-auth -m MANAGER_IP    # register on the Wazuh manager
-    edit /var/ossec/etc/ossec.conf: <address>MANAGER_IP</address>
+    /opt/wazuh-agent/bin/agent-auth -m MANAGER_IP    # register on the Wazuh manager
+    edit /opt/wazuh-agent/etc/ossec.conf: <address>MANAGER_IP</address>
     serv wazuh-agent on && serv wazuh-agent start'
