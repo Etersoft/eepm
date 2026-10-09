@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.68"
+EPMVERSION="3.64.69"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -635,8 +635,13 @@ __get_package_for_command()
     esac
 }
 
+has_tty()
+{
+    ( : </dev/tty ) 2>/dev/null
+}
+
 read_tty() {
-    if [ -c /dev/tty ] ; then
+    if has_tty ; then
         read -r "$@" </dev/tty
     else
         read -r "$@"
@@ -687,9 +692,10 @@ confirm_yes() {
 confirm_info()
 {
     info "$*" >&2
-    if [ -z "$non_interactive" ] ; then
-        confirm "Are you sure? [y/N]" || fatal "Exiting"
-    fi
+    [ -n "$non_interactive" ] && return
+    confirm "Are you sure? [y/N]" && return
+    has_tty || [ -t 0 ] || fatal 'There is no terminal to ask for confirmation. Use --auto to confirm automatically.'
+    fatal "Exiting"
 
 }
 
@@ -1350,8 +1356,8 @@ filter_glob_list()
 is_url()
 {
     echo "$1" | grep -qE "^(file|ftp|http|https|ipfs|rsync):/" && return 0
-    # SSH/rsync URL: host:/path or user@host:/path (but not scheme://)
-    echo "$1" | grep -qE '^[^:]+:/' && ! echo "$1" | grep -q "://"
+    # SSH/rsync URL: host:/path or user@host:/path (but not scheme://, not 'rpm file:/path ...')
+    echo "$1" | grep -qE '^[^:[:space:]]+:/' && ! echo "$1" | grep -q "://"
 }
 
 is_bash()
