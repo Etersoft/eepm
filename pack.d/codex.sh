@@ -14,12 +14,12 @@ erc --here unpack "$TAR" || fatal
 
 # Codex falls back to its regular shell backend; the bundled test zsh lacks
 # modules and is incompatible with ALT Linux's libtinfo.
-rm -r codex-resources/zsh || fatal
+rm -rf codex-resources/zsh || fatal
 
 # The voice host with its bundled GStreamer/GLib libs is linked against glibc,
 # unlike the static musl codex, so it is shipped only in codex-voice.
 if [ "$PRODUCT" != "codex-voice" ] ; then
-    rm -r codex-resources/voice || fatal
+    rm -rf codex-resources/voice || fatal
 fi
 
 # Keep the upstream package layout so Codex can find its bundled tools.
