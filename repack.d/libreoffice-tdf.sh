@@ -14,6 +14,7 @@ ignore_lib_requires libjawt.so
 # The TDF-bundled Python links libxcrypt (libcrypt.so.2); ALT ships glibc libcrypt.so.1,
 # which is ABI-compatible for crypt(). Ship a bundled compat symlink and drop the require.
 ignore_lib_requires libcrypt.so.2
+ignore_lib_requires 'libQt5.*' 'libQt6.*'
 for progdir in "$BUILDROOT"/opt/libreoffice*/program ; do
     [ -d "$progdir" ] || continue
     ln -sf /usr/lib64/libcrypt.so.1 "$progdir/libcrypt.so.2"
