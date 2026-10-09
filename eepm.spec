@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.68
+Version: 3.64.69
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -188,6 +188,116 @@ EOF
 # metapackage, no files
 
 %changelog
+* Sat Oct 10 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.69-alt1
+- epm play codex: move glibc voice host to separate codex-voice variant (eterbug #19633)
+- epm play: add amnezia-vpn (AmneziaVPN client for self-hosted VPN)
+- etc/packrules.list: add amnezia-vpn rule for AmneziaVPN .run installer
+- epm reinstall: pass -y to dnf/yum with --auto and keep backend exit code (eterbug #19572)
+- epm addrepo: write /etc/yum.repos.d/alt-<branch>.repo for dnf on ALT (eterbug #19644)
+- epm removerepo: support 'all' for dnf/yum backends
+- epm repo save/restore: support /etc/yum.repos.d for dnf/yum backends
+- epm repo set/change: do not use apt mirrors for dnf on ALT
+- epm addrepo: check ALT dnf repo via dnf makecache and import ALT keys to rpmdb
+- epm addrepo: support deferred repos for dnf on ALT
+- epm: apply EPM_BACKEND from eepm.conf and export it for nested calls
+- epm-sh-backend: recognize backend names with digits (dnf5:pkg) and set DNFCMD for them
+- epm-sh-backend: allow full backend names with dash (apt-rpm:pkg)
+- epm-sh-altlinux: add __alt_dnf_baseurl/__alt_dnf_archlist and use them in addrepo
+- epm-sh-backend: support branch/named repo syntax for dnf on ALT (--repofrompath/--enablerepo)
+- epm-sh-backend: return exit code from repo/backend argument processing
+- epm-sh-backend: allow dash and dot in repo name for repo/package syntax (deferred-beta/pkg)
+- epm assure: hint to add repos when dnf on ALT has no repos
+- epm addrepo: handle all repo kinds for dnf on ALT (any case branch, .repo, dir, URL, help, --dry-run)
+- epm removerepo: remove dnf repos by file name or repo id, skip apt-only ALT repo kinds
+- epm repolist: support --all/--disabled/patterns for dnf, use repoinfo for --verbose
+- epm-sh-backend: do not refuse copr/owner/project/pkg for dnf on ALT
+- epm repo enable/disable: set enabled= in /etc/yum.repos.d for dnf (by name or repo id, fix swapped dnf4 options)
+- epm repo status: support dnf (check metadata age)
+- epm repo switch/fix/clean: support dnf on ALT (rewrite alt-*.repo, nothing to fix/clean)
+- epm repo addkey/importgpg: import keys to rpm db and /etc/pki/rpm-gpg for dnf on ALT
+- epm repo mirrors: refuse for dnf on ALT
+- epm repo index: fix option parsing for dnf, default to current dir, use createrepo_c
+- epm repo pkgadd/pkgupdate/pkgdel: support flat rpm-md repo for dnf (fixes --put-to-repo)
+- epm update: force metadata refresh for dnf (makecache --refresh)
+- epm whatdepends: use apt-cache on ALT only with apt, support --short for dnf
+- epm conflicts: support dnf
+- epm requires: filter base ALT requires and support --short for dnf on ALT
+- epm print srcpkgname: add newline to dnf repoquery format
+- epm download: remove unreachable dnf branch
+- epm history: handle --help/--list for dnf, refuse apt-only options
+- epm changelog: install dnf changelog plugin if missed
+- epm install: install package files on ALT with dnf via requires and rpm (dnf can't resolve rpmlib() for files)
+- epm install: use local repo for package files on ALT with apt only
+- epm install/upgrade: install ALT task packages as files for dnf (task repos have no rpm-md)
+- epm update-kernel: install kernel and modules via dnf on ALT, keep modules for all kernels (installonly)
+- epm install: install kernel modules via dnf on ALT without update-kernel
+- epm remove-old-kernels: use dnf remove --oldinstallonly on ALT with dnf
+- epm autoremove: use dnf autoremove on ALT with dnf
+- epm autoremove: support --auto and --dry-run for dnf
+- epm autoorphans: use dnf repoquery --extras on ALT with dnf
+- epm dedup: use dnf remove --duplicates for dnf
+- epm mark: use apt hold/apt-mark on ALT only with apt
+- epm mark: use builtin dnf5 versionlock and parse its list format
+- epm upgrade: support --dry-run for dnf, drop duplicated args, keep kernel modules on ALT
+- epm downgrade: use dnf downgrade/distro-sync on ALT with dnf, support --auto for dnf
+- epm release-upgrade/downgrade: refuse on ALT with dnf
+- epm remove: support --dry-run for dnf
+- epm remove: fix apt-dpkg name in --dry-run handling
+- epm check: do not pass --verbose to dnf5
+- epm clean: do not clean dnf cache with --dry-run
+- epm update-kernel/remove-old-kernels: fix check for installed kernels on ALT
+- epm update-kernel: do not fail on --dry-run with dnf
+- epm upgrade/autoremove: do not fail on --dry-run with dnf
+- epm contents_index: check gz files with gzip -t, do not remove valid index when erc has no backend
+- epm update-kernel: port update-kernel logic for dnf on ALT (modules from booted flavour, headers, latest flavour, -A/-D/-H/--fw/--debuginfo/-d/--no-kernel/-l)
+- epm remove-old-kernels: port remove-old-kernels logic for dnf on ALT (keep booted, backup and latest kernels)
+- epm update-kernel: escape $ in sed patterns (checkbashisms)
+- epm-sh-altlinux-kernel: add update-kernel/remove-old-kernels logic for ALT with apt and dnf backends
+- epm update-kernel: use own implementation instead of update-kernel tool on ALT (apt and dnf)
+- epm remove-old-kernels: use own implementation instead of remove-old-kernels tool on ALT (apt and dnf)
+- epm install: install kernel images and modules via common update-kernel logic on ALT
+- epm-sh-altlinux-kernel: compare kernel versions like rpmevrdtcmp (rpmevrcmp, then buildtime)
+- epm sf/filelist: retry contents_index retrieving on ALT if the previous one failed
+- epm mark: pass -y to dnf mark with --auto
+- epm mark: add weak and showweak commands (weak dependency, auto for apt)
+- epm mark showauto/showmanual: list package names by install reason for dnf
+- epm play: add goodbear-browser (Firefox based browser with Russian Ministry of Digital Development certificates support)
+- epm play xnview: install Qt5-based 1.11.7 on CPUs without x86-64-v2 (sse4.2, popcnt)
+- epm play xnview: support installing a specific version from old_versions archive
+- epm-sh-backend: __use_tmp_apt_with_named_repo: skip duplicate sources (apt-get update hangs on them)
+- epm addrepo: add task repos with [vendor] of the task branch (girar signs task repos)
+- epm repo addkey: put vendor keys to /etc/pki/apt-gpg/sources (apt-gpgkeys-pki), not to alt-gpgkeys keyring
+- epm repo: use apt sources.list for dnf5 with libdnf5-plugin-apt on ALT
+- epm addrepo: check repomd.xml signature of Etersoft mirror rpm-md for dnf on ALT
+- epm download: support ALT tasks for dnf backends (download rpm files directly, task repos have no rpm-md)
+- epm install: install package files via dnf on ALT too (dnf5 can install local rpm now)
+- epm: --parallel: select eget backend only for apt-rpm (dnf downloads in parallel itself)
+- epm play open-pdf-studio: get URL via get_github_url (file version 2026.39.0 differs from tag v2026.39)
+- epm repack open-pdf-studio: replace libtesseract.so.4 with libtesseract.so.5 if there is no tesseract 4 (only C API is used)
+- epm play libicu78: install the distro package if available (ALT Sisyphus has libicu78)
+- epm play thinlinc-client: use direct URL with build number (there is no directory listing on the site anymore)
+- epm play codex: add system config /etc/codex/config.toml (disable app-server daemon auto start and update check)
+- epm release-upgrade: allow removing packages when installing release packages (apt-conf-branch- failed with --auto)
+- epm-sh-functions: is_url: do not treat repo line "rpm file:/path ..." as ssh URL
+- epm-sh-functions: confirm_info: fail with a hint to use --auto if there is no terminal (check /dev/tty can be opened)
+- epm repack spravki-bk: remove bundled libgdiplus (alt11 one requires libtiff.so.6 missed on c10f2), use the system one
+- epm repack wazuh-agent: move to /opt/wazuh-agent (logs to /var/log, state to /var/lib), create wazuh user via sysusers.d, set group and vendor modes via tmpfiles.d (eterbug #19660)
+- erc: add DwarFS AppImage extraction support (eterbug #19242)
+- epm play: drop orion browser
+- epm play: added photosuite (eterbug #19655)
+- epm play: added BedrockOnLinux (eterbug #19651)
+- epm play: added blanc web browser (eterbug #19650)
+- epm play zed-i18n: fix version
+- epm pack codex: use rm -rf for bundled resources (voice libs are read-only, rm asks on a terminal)
+- epm play assistant: use YaOrder field to resolve package id from catalog
+- epm repack libreoffice-tdf: ignore bundled Qt library requires
+- epm-sh-backend: use persistent apt cache dir and fix mirror baseurl detection
+- epm play common: support zstd rpm repo metadata
+- epm play: added trivalent (eterbug #19641)
+- epm play: added trivalent-qt6-ui (eterbug #19641)
+- epm play cli-proxy-api: replace cli-proxy-api-plus due upstream repo deletion (eterbug #17865)
+- epm play kompas3d: add v25
+
 * Wed Sep 30 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.68-alt1
 - epm play: add gswitch support
 - epm play: add open-pdf-studio
