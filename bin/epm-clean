@@ -24,6 +24,10 @@ __remove_alt_apt_cache_file()
     sudocmd rm -vf /var/lib/apt/lists/*pkglist*
     sudocmd rm -vf /var/lib/apt/lists/*release*
 
+    # persistent cache of temporary APT indices (branch/task/named-repo installs)
+    load_helper epm-sh-backend
+    sudocmd rm -rf "$(__epm_apt_cache_dir)"
+
     load_helper epm-sh-altlinux-contents-index
     clean_alt_contents_index
 

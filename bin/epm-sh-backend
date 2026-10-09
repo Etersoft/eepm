@@ -137,30 +137,50 @@ __get_alt_mirror_hosts()
     awk '{print $2}' "$f" | sed -nE 's|^[a-z]+://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]"
 }
 
+# Print the canonical mirror URL (from mirrors-alt.list) for a given host.
+# The URL includes the path to the ALTLinux root (e.g. .../pub/ALTLinux).
+__get_alt_mirror_url_by_host()
+{
+    local f="$CONFIGDIR/mirrors-alt.list"
+    local host="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
+    [ -r "$f" ] || return 1
+    awk -v host="$host" '{
+        url=$2
+        sub(/^[a-z]+:\/\//, "", url)
+        sub(/\/.*/, "", url)
+        if (tolower(url) == host) { print $2; exit }
+    }' "$f"
+}
+
 # Generate sources.list content for a given ALT branch
-# Detect the ALT mirror base URL from the enabled repos in the system sources.list,
+# Detect the ALT mirror from the enabled repos in the system sources.list,
 # so branch/task installs reuse the user's configured mirror (e.g. download.etersoft.ru)
 # instead of the default ftp.basealt.ru. The mirror is reused ONLY if its host is one of
 # the known ALT mirrors (listed in mirrors-alt.list); unknown hosts fall back to the
-# default. Optional $1 = repo (sisyphus, p10, ...) to prefer a line for the same branch.
-# Prints base URL; returns non-zero if no known mirror is configured.
+# default. The returned URL is the mirror root (includes the ALTLinux path segment),
+# so callers append only <branch>/<arch>. Optional $1 = repo (sisyphus, p10, ...)
+# to prefer a line for the same branch. Prints base URL; returns non-zero if no
+# known mirror is configured.
 __get_alt_mirror_baseurl()
 {
-    local repolo src alt_lines baseurl host
+    local repolo src alt_lines url host
     repolo="$(echo "${1:-}" | tr "[:upper:]" "[:lower:]")"
     src="$(__get_system_sourceslist)"
-    # enabled ALT repo lines, preferring the ones for the requested branch
+    # enabled rpm lines with http(s) URLs, preferring the ones for the requested branch
+    # the branch is a path component in the DIST field (e.g. .../p10/branch/... or p10/branch/...)
     if [ -n "$repolo" ] ; then
-        alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.* ALTLinux/' | grep -iE "ALTLinux/$repolo/")"
+        alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.*https?://' | grep -iE "(^|[ /])$repolo(/|$)" || true)"
     fi
-    [ -n "$alt_lines" ] || alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.* ALTLinux/')"
-    # the mirror base URL is the http(s) field right before ALTLinux/
-    baseurl="$(echo "$alt_lines" | sed -nE 's|.*[[:space:]](https?://[^[:space:]]*)[[:space:]]+ALTLinux/.*|\1|p' | head -1)"
-    [ -n "$baseurl" ] || return 1
+    [ -n "$alt_lines" ] || alt_lines="$(echo "$src" | grep -E '^[[:space:]]*rpm.*https?://')"
+    [ -n "$alt_lines" ] || return 1
+    # take the first http(s) URL from the selected lines
+    url="$(echo "$alt_lines" | sed -nE 's|.*[[:space:]](https?://[^[:space:]]*).*|\1|p' | head -1)"
+    [ -n "$url" ] || return 1
+    host="$(echo "$url" | sed -nE 's|^https?://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]")"
+    [ -n "$host" ] || return 1
     # reuse the mirror only if its host is one of the known ALT mirrors
-    host="$(echo "$baseurl" | sed -nE 's|^https?://([^/]+).*|\1|p' | tr "[:upper:]" "[:lower:]")"
-    [ -n "$host" ] && __get_alt_mirror_hosts 2>/dev/null | grep -Fxq "$host" || return 1
-    echo "$baseurl"
+    __get_alt_mirror_hosts 2>/dev/null | grep -Fxq "$host" || return 1
+    __get_alt_mirror_url_by_host "$host"
 }
 
 # Usage:
@@ -181,10 +201,10 @@ __generate_alt_sourceslist()
     else
         local repo="$1"
         repolo="$(echo "$repo" | tr "[:upper:]" "[:lower:]")"
+        # reuse the configured known mirror (URL already includes the ALTLinux path)
         baseurl="$(__get_alt_mirror_baseurl "$repo" 2>/dev/null)"
-        [ -n "$baseurl" ] || baseurl="http://ftp.basealt.ru/pub/distributions"
+        [ -n "$baseurl" ] || baseurl="http://ftp.basealt.ru/pub/distributions/ALTLinux"
         [ "$repolo" = "sisyphus" ] && repopart="Sisyphus" || repopart="$repo/branch"
-        repopart="ALTLinux/$repopart"
     fi
 
     # sign logic from __get_sign in epm-addrepo
@@ -208,11 +228,20 @@ __generate_alt_sourceslist()
     esac
 }
 
-# Create a temporary APT directory for isolated repo operations
+# Persistent cache dir for temporary APT indices (shared across runs).
+# Indices for branch/task/named-repo sources.list are kept between epm runs
+# so they are not re-downloaded each time. Removed by epm clean --direct.
+__epm_apt_cache_dir()
+{
+    echo "${BIGTMPDIR:-/var/tmp}/eepm/apt-cache"
+}
+
+# Create a temporary APT directory for isolated repo operations.
+# The directory is persistent (see __epm_apt_cache_dir): lists/ is reused
+# across runs so package indices are not re-downloaded every time.
 __setup_tmp_apt_dir()
 {
-    __EPM_APT_TMPDIR="$(mktemp -d --tmpdir=$BIGTMPDIR)" || fatal
-    remove_on_exit "$__EPM_APT_TMPDIR"
+    __EPM_APT_TMPDIR="$(__epm_apt_cache_dir)"
     mkdir -p "$__EPM_APT_TMPDIR/lists/partial" "$__EPM_APT_TMPDIR/sourceparts"
     cat > "$__EPM_APT_TMPDIR/apt.conf" <<EOF
 Dir::Etc::sourcelist "$__EPM_APT_TMPDIR/sources.list";
@@ -222,16 +251,24 @@ Dir::Cache::pkgcache "$__EPM_APT_TMPDIR/pkgcache.bin";
 Dir::Cache::srcpkgcache "$__EPM_APT_TMPDIR/srcpkgcache.bin";
 EOF
     __EPM_APT_REPO_OPTIONS="-c $__EPM_APT_TMPDIR/apt.conf"
-    # symlink existing apt lists to avoid re-downloading on update
-    ln -s /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
+    # symlink existing system apt lists to avoid re-downloading on update
+    # (refresh: drop dangling links from a previous run, then link current files)
+    find "$__EPM_APT_TMPDIR/lists/" -maxdepth 1 -type l ! -exec test -e {} \; -delete 2>/dev/null
+    ln -sf /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
 }
 
 # Output current system sources.list content to stdout
+# Honors EPM_APT_SOURCES_LIST / EPM_APT_SOURCES_ROOT for test isolation
 __get_system_sourceslist()
 {
-    cat /etc/apt/sources.list 2>/dev/null
+    if [ -n "$EPM_APT_SOURCES_LIST" ] ; then
+        cat "$EPM_APT_SOURCES_LIST" 2>/dev/null
+        return
+    fi
+    local root="${EPM_APT_SOURCES_ROOT:-}"
+    cat "$root/etc/apt/sources.list" 2>/dev/null
     local f
-    for f in /etc/apt/sources.list.d/*.list ; do
+    for f in "$root/etc/apt/sources.list.d"/*.list ; do
         [ -s "$f" ] || continue
         cat "$f"
     done
@@ -324,7 +361,6 @@ __use_tmp_apt_with_named_repo()
     file="$(__find_named_repo_file "$name")" || fatal "Can't find repo '$name' in sources.list.d"
     load_helper epm-update
     __setup_tmp_apt_dir
-    cp -la /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
     # skip duplicates: the same source twice makes apt-get update hang (downloads to the same partial file)
     { __get_system_sourceslist ; __get_named_repo_lines "$file" ; } | awk 'NF { $1=$1 ; if (!seen[$0]++) print }' > "$__EPM_APT_TMPDIR/sources.list"
     __epm_update || warning "Some repos failed to update, but continuing anyway"
