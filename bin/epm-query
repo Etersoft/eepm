@@ -203,11 +203,13 @@ __epm_query_file()
 }
 
 # hack: dpkg -W will print names for removed packages too (until newest Ubuntu)
+# dpkg -s succeeds for removed packages with config files and for a package
+# left in "not-installed" state after a failed install (eterbug #19294), so check the package state
 __epm_query_dpkg_check()
 {
     local i
     for i in $@ ; do
-        a='' dpkg -s $i >/dev/null 2>/dev/null || return
+        a='' dpkg-query -W -f='${Status}\n' -- $i 2>/dev/null | grep -qE " (installed|half-configured|unpacked|triggers-awaited|triggers-pending)$" || return
     done
     return 0
 }
