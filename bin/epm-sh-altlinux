@@ -192,6 +192,191 @@ __alt_dnf_uses_apt_sources()
     ! grep -qsE '^[[:space:]]*sources[[:space:]]*=[[:space:]]*(0|no|false|off)[[:space:]]*$' $conf
 }
 
+# Honors EPM_YUM_REPOS_DIR for test isolation
+__get_yum_repos_dir()
+{
+    echo "${EPM_YUM_REPOS_DIR:-/etc/yum.repos.d}"
+}
+
+# Print "type baseurl" for enabled repos in /etc/yum.repos.d (type is apt-rpm or rpm-md)
+__get_alt_dnf_repos()
+{
+    local f
+    for f in "$(__get_yum_repos_dir)"/*.repo ; do
+        [ -r "$f" ] || continue
+        awk '
+            function flush() { if (url != "" && enabled) print (type == "apt-rpm" ? type : "rpm-md"), url }
+            /^[[:space:]]*\[/ { flush(); url = ""; type = ""; enabled = 1; next }
+            /^[[:space:]]*baseurl[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); url = $1; next }
+            /^[[:space:]]*type[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); type = $1; next }
+            /^[[:space:]]*enabled[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); enabled = ($1 ~ /^(1|yes|true|on)$/); next }
+            END { flush() }
+        ' "$f"
+    done
+}
+
+# print type of repos in /etc/yum.repos.d for dnf on ALT:
+# apt-rpm if APT-RPM repos (type=apt-rpm) are configured, rpm-md otherwise
+# EPM_DNF_REPO_TYPE overrides the detection (to keep the type while repos are recreated)
+__alt_dnf_repo_type()
+{
+    if [ -n "$EPM_DNF_REPO_TYPE" ] ; then
+        echo "$EPM_DNF_REPO_TYPE"
+        return
+    fi
+    if grep -qsE '^[[:space:]]*type[[:space:]]*=[[:space:]]*apt-rpm[[:space:]]*$' "$(__get_yum_repos_dir)"/*.repo ; then
+        echo "apt-rpm"
+        return
+    fi
+    echo "rpm-md"
+}
+
+# check if dnf uses APT-RPM repos (type=apt-rpm) from /etc/yum.repos.d
+__alt_dnf_uses_aptrpm_repos()
+{
+    case "$PMTYPE" in
+        dnf-rpm|dnf5-rpm)
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    [ "$(__alt_dnf_repo_type)" = "apt-rpm" ]
+}
+
+# check if dnf reads APT-RPM repos (from sources.list via libdnf5-plugin-apt or type=apt-rpm repo files)
+__alt_dnf_supports_aptrpm()
+{
+    __alt_dnf_uses_apt_sources || __alt_dnf_uses_aptrpm_repos
+}
+
+# print vendor (from /etc/apt/vendors.list) for ALT repo
+# args: sisyphus|p11|...|deferred*
+__alt_dnf_aptrpm_vendor()
+{
+    local repo="$1"
+    local vendor
+    case "$repo" in
+        sisyphus|deferred*)
+            vendor="alt"
+            ;;
+        c[0-9]*)
+            vendor="cert8"
+            ;;
+        *)
+            vendor="$repo"
+            ;;
+    esac
+    if ! __alt_has_vendor "$vendor" ; then
+        warning 'Vendor $vendor is missed in vendors.list, the signature of $repo repo will not be checked'
+        return
+    fi
+    echo "$vendor"
+}
+
+# print root URL (with ALTLinux path) of the known ALT mirror used by APT-RPM repos of dnf
+# (sources.list for libdnf5-plugin-apt or type=apt-rpm repo files), default ftp.basealt.ru
+# EPM_DNF_APTRPM_MIRROR overrides the detection (to keep the mirror while repos are recreated)
+# args: [repo] to prefer sources.list line for the same branch
+__alt_dnf_aptrpm_mirror()
+{
+    if [ -n "$EPM_DNF_APTRPM_MIRROR" ] ; then
+        echo "$EPM_DNF_APTRPM_MIRROR"
+        return
+    fi
+    load_helper epm-sh-backend
+    local url host mirror
+    if __alt_dnf_uses_apt_sources && __get_alt_mirror_baseurl "$1" 2>/dev/null ; then
+        return
+    fi
+    for url in $(__get_alt_dnf_repos | sed -n 's|^apt-rpm ||p') ; do
+        host="$(echo "$url" | sed -nE 's|^https?://([^/]+).*|\1|p')"
+        [ -n "$host" ] || continue
+        mirror="$(__get_alt_mirror_url_by_host "$host")"
+        [ -n "$mirror" ] && echo "$mirror" && return
+    done
+    echo "http://ftp.basealt.ru/pub/distributions/ALTLinux"
+}
+
+# print base url (without arch) of APT-RPM repo for dnf on ALT
+# args: sisyphus|p11|...|deferred|deferred.org|deferred-devel|deferred-beta
+__alt_dnf_aptrpm_baseurl()
+{
+    case "$1" in
+        sisyphus|Sisyphus)
+            echo "$(__alt_dnf_aptrpm_mirror sisyphus)/Sisyphus"
+            ;;
+        deferred)
+            echo "https://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred"
+            ;;
+        deferred.org)
+            echo "http://mirror.eterfund.org/pub/Etersoft/Sisyphus/Deferred"
+            ;;
+        deferred-devel)
+            echo "https://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred_DEVEL"
+            ;;
+        deferred-beta)
+            echo "https://download.etersoft.ru/pub/Etersoft/Sisyphus/Deferred_BETA"
+            ;;
+        p[0-9]*|c[0-9]*)
+            echo "$(__alt_dnf_aptrpm_mirror "$1")/$1/branch"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+# print "arch component" for APT-RPM repo at URL with arch subdirs (f.i. task repo)
+# args: <url>
+__alt_dnf_aptrpm_probe_url()
+{
+    local url="$1"
+    local arch rd comp
+    for arch in $(__alt_dnf_archlist) ; do
+        eget --check-url "$url/$arch/base/" 2>/dev/null || continue
+        rd="$(eget --list "$url/$arch/RPMS.*" 2>/dev/null)"
+        [ -n "$rd" ] || continue
+        comp="$(echo "$rd" | head -n1 | sed -e 's|/*$||' -e 's|.*\.||')"
+        [ "$comp" = "*" ] && continue
+        echo "$arch $comp"
+    done
+}
+
+# print dnf options to use APT-RPM repo without repo file
+# args: <repo id> <baseurl> <component> [vendor]
+__alt_dnf_aptrpm_repo_options()
+{
+    local id="$1"
+    echo "--repofrompath=$id,$2 --setopt=$id.type=apt-rpm --setopt=$id.apt_component=$3${4:+ --setopt=$id.apt_vendor=$4}"
+}
+
+# export ALT vendor keys from alt-gpgkeys for dnf gpgcheck
+# TODO: use a package with ALT keys in /etc/pki/rpm-gpg when it appears
+__epm_addrepo_alt_dnf_gpgkey()
+{
+    local keyfile="$1"
+    [ -s "$keyfile" ] && return
+
+    local keyring=/usr/lib/alt-gpgkeys
+    local vendors=/etc/apt/vendors.list.d/alt.list
+    [ -d "$keyring" ] || fatal 'Missed $keyring (install alt-gpgkeys package).'
+    assure_exists gpg gnupg2
+
+    # 80EF7625 (ALT Security Team) is not in vendors list, but still signs some old Sisyphus packages
+    local keys="80EF7625"
+    [ -s "$vendors" ] && keys="$keys $(sed -n 's/.*Fingerprint "\([0-9A-F]*\)".*/\1/p' $vendors | sort -u)"
+
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    a='' gpg --homedir $keyring --export --armor $keys >$tmpfile 2>/dev/null
+    [ -s "$tmpfile" ] || fatal 'Can'\''t export ALT keys from $keyring'
+    chmod 644 $tmpfile
+    sudocmd mkdir -p "$(dirname "$keyfile")"
+    sudocmd cp $tmpfile "$keyfile"
+}
+
 # rpm-md metadata for dnf on ALT is generated only on Etersoft mirror
 ALT_DNF_MIRROR="http://download.etersoft.ru/pub"
 # the key of repomd.xml.asc signatures on the mirror

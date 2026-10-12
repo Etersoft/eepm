@@ -372,15 +372,54 @@ __use_tmp_dnf_for_branch()
 {
     local repo="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
     load_helper epm-sh-altlinux
-    local baseurl
-    baseurl="$(__alt_dnf_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
-    local arch ids=''
+    local baseurl arch ids='' vendor=''
     __EPM_DNF_REPO_OPTIONS=''
+    # dnf reads APT-RPM repos: use APT-RPM indexes (available on all mirrors)
+    if __alt_dnf_supports_aptrpm ; then
+        baseurl="$(__alt_dnf_aptrpm_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
+        vendor="$(__alt_dnf_aptrpm_vendor "$repo")"
+        # the vendor key of a branch does not sign old packages: check them by all ALT keys
+        local keyfile="/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-$repo"
+        case "$repo" in
+            sisyphus|deferred*)
+                keyfile="/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-sisyphus"
+                ;;
+        esac
+        __epm_addrepo_alt_dnf_gpgkey "$keyfile"
+        for arch in $(__alt_dnf_archlist) ; do
+            __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS $(__alt_dnf_aptrpm_repo_options "tmp-$repo-$arch" "$baseurl/$arch" classic "$vendor") --setopt=tmp-$repo-$arch.gpgkey=file://$keyfile"
+            ids="$ids${ids:+,}tmp-$repo-$arch"
+        done
+        __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS --repo=$ids"
+        return
+    fi
+    baseurl="$(__alt_dnf_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
     for arch in $(__alt_dnf_archlist) ; do
         __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS --repofrompath=tmp-$repo-$arch,$baseurl/$arch --setopt=tmp-$repo-$arch.gpgcheck=1"
         ids="$ids${ids:+,}tmp-$repo-$arch"
     done
     __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS --repo=$ids"
+}
+
+# Add task repos (APT-RPM) to the system repos for dnf via temporary repos
+# args: task_number [task_number ...]
+__use_tmp_dnf_for_tasks()
+{
+    load_helper epm-sh-altlinux
+    local tn url vendor arch comp
+    __EPM_DNF_REPO_OPTIONS=''
+    for tn in "$@" ; do
+        url="$(eget --get-real-url "https://git.altlinux.org/tasks/$tn/build/repo")" || { warning "Can't access task $tn repo" ; continue ; }
+        url="${url%/}"
+        vendor="$(get_task_sign "$tn" | tr -d '[]')"
+        while read -r arch comp ; do
+            [ -n "$comp" ] || continue
+            __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS $(__alt_dnf_aptrpm_repo_options "tmp-task-$tn-$arch" "$url/$arch" "$comp" "$vendor")"
+        done <<EOF
+$(__alt_dnf_aptrpm_probe_url "$url")
+EOF
+    done
+    [ -n "$__EPM_DNF_REPO_OPTIONS" ]
 }
 
 # Enable named repo (even if disabled) for dnf

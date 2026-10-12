@@ -273,32 +273,6 @@ __epm_addrepo_to_file()
 
 }
 
-# export ALT vendor keys from alt-gpgkeys for dnf gpgcheck
-# TODO: use a package with ALT keys in /etc/pki/rpm-gpg when it appears
-__epm_addrepo_alt_dnf_gpgkey()
-{
-    local keyfile="$1"
-    [ -s "$keyfile" ] && return
-
-    local keyring=/usr/lib/alt-gpgkeys
-    local vendors=/etc/apt/vendors.list.d/alt.list
-    [ -d "$keyring" ] || fatal 'Missed $keyring (install alt-gpgkeys package).'
-    assure_exists gpg gnupg2
-
-    # 80EF7625 (ALT Security Team) is not in vendors list, but still signs some old Sisyphus packages
-    local keys="80EF7625"
-    [ -s "$vendors" ] && keys="$keys $(sed -n 's/.*Fingerprint "\([0-9A-F]*\)".*/\1/p' $vendors | sort -u)"
-
-    local tmpfile
-    tmpfile=$(mktemp) || fatal
-    remove_on_exit $tmpfile
-    a='' gpg --homedir $keyring --export --armor $keys >$tmpfile 2>/dev/null
-    [ -s "$tmpfile" ] || fatal 'Can'\''t export ALT keys from $keyring'
-    chmod 644 $tmpfile
-    sudocmd mkdir -p "$(dirname "$keyfile")"
-    sudocmd cp $tmpfile "$keyfile"
-}
-
 # rpm-md metadata on Etersoft mirror is signed by its own key (repomd.xml.asc)
 __epm_addrepo_alt_dnf_mirror_key()
 {
@@ -368,19 +342,124 @@ EOF
     fi
 }
 
+# create /etc/yum.repos.d/<name>.repo with APT-RPM repos (type=apt-rpm) for dnf on ALT
+# args: <file name> <title> <vendor> <"id-suffix baseurl component" lines> [gpg key file]
+__epm_addrepo_dnf_aptrpm_file()
+{
+    local name="$1"
+    local title="$2"
+    local vendor="$3"
+    local entries="$4"
+    local keyfile="$5"
+
+    local tmpfile
+    tmpfile=$(mktemp) || fatal
+    remove_on_exit $tmpfile
+    local suffix baseurl comp
+    while read -r suffix baseurl comp ; do
+        [ -n "$comp" ] || continue
+        cat >>$tmpfile <<EOF
+[$name-$suffix]
+name=$title $suffix
+type=apt-rpm
+baseurl=$baseurl
+apt_component=$comp
+${vendor:+apt_vendor=$vendor
+}${keyfile:+gpgkey=file://$keyfile
+}enabled=1
+
+EOF
+    done <<EOF
+$entries
+EOF
+    [ -s $tmpfile ] || fatal 'There are no APT-RPM repos for $name'
+    local repoids
+    repoids="$(sed -n 's|^\[\(.*\)\][[:space:]]*$|\1|p' $tmpfile | tr '\n' ',' | sed -e 's|,$||')"
+
+    local target=/etc/yum.repos.d/$name.repo
+    __epm_addrepo_dnf_install_file $tmpfile $target || return 0
+
+    [ -n "$keyfile" ] && __epm_addrepo_alt_dnf_gpgkey "$keyfile"
+
+    # check APT-RPM indexes (base/release is checked by the vendor keys)
+    if ! sudocmd $DNFCMD makecache -y --repo=$repoids ; then
+        sudocmd rm -f $target
+        fatal 'Can'\''t get APT-RPM indexes for $name'
+    fi
+
+    # dnf5 on ALT does not import gpgkey from repo file itself
+    [ -n "$keyfile" ] && { sudocmd rpm --import "$keyfile" || fatal ; }
+    return 0
+}
+
+# print "arch baseurl component" entries for APT-RPM repo with arch subdirs (f.i. task repo)
+# args: <url>
+__epm_addrepo_dnf_aptrpm_url_entries()
+{
+    local url="$1"
+    local arch comp
+    __alt_dnf_aptrpm_probe_url "$url" | while read -r arch comp ; do
+        echo "$arch $url/$arch $comp"
+    done
+}
+
+# add sources.list line "rpm [vendor] URL DIST component..." as APT-RPM repos for dnf on ALT
+# args: the line (as one or several args)
+__epm_addrepo_dnf_aptrpm_line()
+{
+    # shellcheck disable=SC2048,SC2086
+    set -- $*
+    [ "$1" = "rpm" ] || fatal 'Only rpm lines are supported for $PMTYPE on ALT: $*'
+    shift
+    local vendor=''
+    case "$1" in
+        \[*\])
+            vendor="$(echo "$1" | tr -d '[]')"
+            shift
+            ;;
+    esac
+    local url="$1"
+    local dist="$2"
+    [ -n "$url" ] && [ -n "$dist" ] && [ -n "$3" ] || fatal 'Wrong repo line, use: rpm [vendor] URL DIST component'
+    shift 2
+    local name comp entries=''
+    name="$(echo "$url/$dist" | sed -e 's|^[a-z]*:/*||' -e 's|/*$||' -e 's|[^A-Za-z0-9._-]|_|g')"
+    for comp in "$@" ; do
+        entries="$entries$comp $url/$dist $comp
+"
+    done
+    __epm_addrepo_dnf_aptrpm_file "$name" "$url $dist" "$vendor" "$entries"
+}
+
+# add task repo (APT-RPM) for dnf on ALT
+# args: <task number>
+__epm_addrepo_dnf_aptrpm_task()
+{
+    local tn="$1"
+    local url archcomps
+    url="$(eget --get-real-url "https://git.altlinux.org/tasks/$tn/build/repo")" || fatal 'Can'\''t access task $tn repo'
+    url="${url%/}"
+    archcomps="$(__epm_addrepo_dnf_aptrpm_url_entries "$url")"
+    [ -n "$archcomps" ] || fatal 'There are no arch repos in $url'
+    __epm_addrepo_dnf_aptrpm_file "task-$tn" "ALT task $tn" "$(get_task_sign "$tn" | tr -d '[]')" "$archcomps"
+}
+
 __epm_addrepo_altlinux_dnf_help()
 {
     message '
 epm repo add - add repo for $PMTYPE on ALT (to /etc/yum.repos.d).
+The type of the added repos is apt-rpm if there are APT-RPM repos (type=apt-rpm) in /etc/yum.repos.d, rpm-md otherwise.
 Supported:
-    sisyphus, p11, ...       - ALT branch (rpm-md metadata from download.etersoft.ru)
+    sisyphus, p11, ...       - ALT branch (rpm-md metadata from download.etersoft.ru, APT-RPM from any mirror)
     alt, basealt, etersoft   - current ALT branch
     deferred                 - Etersoft Sisyphus Deferred repo
     deferred.org             - Etersoft Sisyphus Deferred repo (at mirror.eterfund.org)
     deferred-devel           - Etersoft Sisyphus Deferred DEVEL repo
     deferred-beta            - Etersoft Sisyphus Deferred BETA repo
     URL/file.repo            - repo file
-    URL or /path/to/repo     - rpm-md repo (f.i. created with epm repo index)
+    URL or /path/to/repo     - rpm-md repo (f.i. created with epm repo index), or APT-RPM repo URL
+    <task number>            - ALT task repo (APT-RPM only)
+    rpm [vendor] URL DIST component... - sources.list line (APT-RPM only)
 '
 }
 
@@ -403,6 +482,23 @@ __epm_addrepo_altlinux_dnf()
             return
             ;;
     esac
+
+    # sources.list line: rpm [vendor] URL DIST component
+    if [ "$1" = "rpm" ] || startwith "$1" "rpm " ; then
+        __alt_dnf_uses_aptrpm_repos || fatal 'Repo line $* is supported for $PMTYPE on ALT only with APT-RPM repos (type=apt-rpm in /etc/yum.repos.d)'
+        __epm_addrepo_dnf_aptrpm_line "$@"
+        return
+    fi
+
+    if is_taskarg "$@" ; then
+        __alt_dnf_uses_aptrpm_repos || fatal 'Task repos are supported for $PMTYPE on ALT only with APT-RPM repos (type=apt-rpm in /etc/yum.repos.d)'
+        local arg
+        for arg in "$@" ; do
+            is_taskarg "$arg" || continue
+            __epm_addrepo_dnf_aptrpm_task "$(get_tasknumber_from_arg "$arg")"
+        done
+        return
+    fi
 
     local name
     case "$1" in
@@ -430,12 +526,21 @@ __epm_addrepo_altlinux_dnf()
 
     if is_url "$1" ; then
         name="$(echo "$1" | sed -e 's|^[a-z]*://||' -e 's|/*$||' -e 's|[^A-Za-z0-9._-]|_|g')"
+        # URL with APT-RPM repos ({noarch,x86_64,...}/RPMS.component)
+        if __alt_dnf_uses_aptrpm_repos ; then
+            local archcomps
+            archcomps="$(__epm_addrepo_dnf_aptrpm_url_entries "$1")"
+            if [ -n "$archcomps" ] ; then
+                __epm_addrepo_dnf_aptrpm_file "$name" "$name" "" "$archcomps"
+                return
+            fi
+        fi
         __epm_addrepo_dnf_baseurl "$name" "$1" 1
         return
     fi
 
     name="$1"
-    fatal 'Repo $name is not supported for $PMTYPE on ALT (there is no rpm-md metadata for it). Use # epm repo add --help'
+    fatal 'Repo $name is not supported for $PMTYPE on ALT. Use # epm repo add --help'
 }
 
 # create /etc/yum.repos.d/alt-<name>.repo for dnf on ALT
@@ -493,8 +598,13 @@ EOF
 __epm_addrepo_alt_dnf()
 {
     local repo="$1"
-    local baseurl
-    baseurl="$(__alt_dnf_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
+    local baseurl aptrpm=''
+    __alt_dnf_uses_aptrpm_repos && aptrpm=1
+    if [ -n "$aptrpm" ] ; then
+        baseurl="$(__alt_dnf_aptrpm_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
+    else
+        baseurl="$(__alt_dnf_baseurl "$repo")" || fatal 'Unsupported ALT repo $repo for $PMTYPE'
+    fi
 
     local name
     local keyname="sisyphus"
@@ -512,6 +622,17 @@ __epm_addrepo_alt_dnf()
             keyname="$repo"
             ;;
     esac
+
+    if [ -n "$aptrpm" ] ; then
+        local arch archcomps=''
+        for arch in $(__alt_dnf_archlist) ; do
+            archcomps="$archcomps$arch $baseurl/$arch classic
+"
+        done
+        # the vendor key of a branch does not sign old packages: check them by all ALT keys
+        __epm_addrepo_dnf_aptrpm_file "alt-$repo" "$name" "$(__alt_dnf_aptrpm_vendor "$repo")" "$archcomps" "/etc/pki/rpm-gpg/RPM-GPG-KEY-alt-$keyname"
+        return
+    fi
 
     __epm_addrepo_alt_dnf_repo "$repo" "$name" "$baseurl" "$keyname"
 }

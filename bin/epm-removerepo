@@ -185,8 +185,24 @@ __epm_removerepo_dnf()
         fi
 
         if [ "$BASEDISTRNAME" = "alt" ] ; then
+            # task repos (APT-RPM) added with epm repo add <task number>
             case "$repo" in
-                tasks|task|archive|cdroms|autoimports|korinf|[0-9]*)
+                tasks|task)
+                    for f in /etc/yum.repos.d/task-[0-9]*.repo ; do
+                        [ -e "$f" ] || continue
+                        sudocmd rm -f "$f"
+                    done
+                    continue
+                    ;;
+                [0-9]*)
+                    if [ -e "/etc/yum.repos.d/task-$repo.repo" ] ; then
+                        sudocmd rm -f "/etc/yum.repos.d/task-$repo.repo"
+                        continue
+                    fi
+                    ;;
+            esac
+            case "$repo" in
+                archive|cdroms|autoimports|korinf|[0-9]*)
                     info 'Skipping $repo: it is not supported for $PMTYPE'
                     continue
                     ;;

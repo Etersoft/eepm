@@ -351,6 +351,16 @@ epm_install_alt_tasks()
     fi
 
     if [ "$PMTYPE" != "apt-rpm" ] ; then
+        # dnf reads APT-RPM repos: install from the task repos with dependencies from the system repos
+        if __alt_dnf_supports_aptrpm ; then
+            local res
+            load_helper epm-sh-backend
+            __use_tmp_dnf_for_tasks $unique_tasks || return 1
+            (pkg_names="$installlist" epm_install)
+            res=$?
+            __EPM_DNF_REPO_OPTIONS=''
+            return $res
+        fi
         __epm_install_alt_task_files "$installlist" $unique_tasks
         return
     fi

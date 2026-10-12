@@ -186,6 +186,10 @@ __epm_reposwitch_alt_dnf()
 {
     local TO="$1"
     load_helper epm-reposave
+    # keep the type of repos (apt-rpm or rpm-md) for the recreated repos
+    export EPM_DNF_REPO_TYPE="$(__alt_dnf_repo_type)"
+    # keep the mirror of APT-RPM repos
+    [ "$EPM_DNF_REPO_TYPE" = "apt-rpm" ] && export EPM_DNF_APTRPM_MIRROR="$(__alt_dnf_aptrpm_mirror)"
     try_change_alt_repo
     local f
     for f in /etc/yum.repos.d/alt-*.repo ; do

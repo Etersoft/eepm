@@ -19,29 +19,6 @@
 
 load_helper epm-sh-altlinux
 
-# Honors EPM_YUM_REPOS_DIR for test isolation
-__get_yum_repos_dir()
-{
-    echo "${EPM_YUM_REPOS_DIR:-/etc/yum.repos.d}"
-}
-
-# Print "type baseurl" for enabled repos in /etc/yum.repos.d (type is apt-rpm or rpm-md)
-__get_alt_dnf_repos()
-{
-    local f
-    for f in "$(__get_yum_repos_dir)"/*.repo ; do
-        [ -r "$f" ] || continue
-        awk '
-            function flush() { if (url != "" && enabled) print (type == "apt-rpm" ? type : "rpm-md"), url }
-            /^[[:space:]]*\[/ { flush(); url = ""; type = ""; enabled = 1; next }
-            /^[[:space:]]*baseurl[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); url = $1; next }
-            /^[[:space:]]*type[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); type = $1; next }
-            /^[[:space:]]*enabled[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); enabled = ($1 ~ /^(1|yes|true|on)$/); next }
-            END { flush() }
-        ' "$f"
-    done
-}
-
 # Check if dnf uses rpm-md repos from a mirror (rpm-md metadata is not available on all mirrors)
 __alt_dnf_has_rpmmd_repos()
 {

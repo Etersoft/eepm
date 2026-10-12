@@ -322,7 +322,8 @@ remove_on_exit
 
 case $BASEDISTRNAME in
     "alt")
-        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] && ! __alt_dnf_uses_apt_sources ; then
+        # APT-RPM repos of dnf check signatures by the vendor keys from vendors.list (as apt does)
+        if [ "$PMTYPE" = "dnf-rpm" ] || [ "$PMTYPE" = "dnf5-rpm" ] && ! __alt_dnf_supports_aptrpm ; then
             __epm_addkey_alt_dnf "$@"
             return
         fi
