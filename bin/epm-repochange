@@ -47,15 +47,72 @@ EOF
 }
 
 
-__change_repo()
+# Replace apt sources.list lines from stdin with lines for the new mirror
+__change_repo_lines()
 {
     local REPLTO="$1"
     local NN
-    epm --quiet repo list | grep -v "file:/" | while read nn ; do
+    grep -v "file:/" | while read nn ; do
         NN="$(__subst_with_repo_url "$nn" "$REPLTO")"
         [ "$NN" = "$nn" ] && continue
         epm addrepo "$NN" && epm removerepo "$nn" || return 1
     done
+}
+
+# Replace mirror in baseurl of /etc/yum.repos.d/*.repo (dnf on ALT)
+__change_repo_dnf()
+{
+    local REPLTO="$1"
+    local type url newurl
+
+    # rpm-md metadata is not available on all mirrors: check before changing anything
+    __get_alt_dnf_repos | while read -r type url ; do
+        [ "$type" = "rpm-md" ] || continue
+        newurl="$(__subst_with_repo_url "$url" "$REPLTO")"
+        [ "$newurl" = "$url" ] && continue
+        eget --check-url "$newurl/repodata/repomd.xml" && continue
+        warning 'There is no rpm-md metadata at $newurl'
+        return 1
+    done || return
+
+    local f line newline tmpfile
+    for f in "$(__get_yum_repos_dir)"/*.repo ; do
+        [ -r "$f" ] || continue
+        grep -q "^[[:space:]]*baseurl[[:space:]]*=" "$f" || continue
+        tmpfile=$(mktemp) || fatal
+        remove_on_exit $tmpfile
+        while IFS= read -r line ; do
+            case "$line" in
+                baseurl*|[[:space:]]*baseurl*)
+                    newline="$(__subst_with_repo_url "$line" "$REPLTO")"
+                    ;;
+                *)
+                    newline="$line"
+                    ;;
+            esac
+            printf "%s\n" "$newline"
+        done < "$f" > $tmpfile
+        cmp -s "$f" $tmpfile && continue
+        chmod 644 $tmpfile
+        sudocmd cp $tmpfile "$f" || return
+    done
+}
+
+__change_repo()
+{
+    local REPLTO="$1"
+    case $PMTYPE in
+        dnf-rpm|dnf5-rpm)
+            __change_repo_dnf "$REPLTO" || return
+            # dnf5 takes repos from sources.list (libdnf5-plugin-apt)
+            __alt_dnf_uses_apt_sources || return 0
+            load_helper epm-repolist
+            ( quiet=1 ; print_apt_sources_list ) | __change_repo_lines "$REPLTO"
+            ;;
+        *)
+            epm --quiet repo list | __change_repo_lines "$REPLTO"
+            ;;
+    esac
 }
 
 
@@ -85,11 +142,6 @@ __epm_repochange_alt()
 epm_repochange()
 {
     [ "$1" = "--help" ] && message "Use --list to get all possible targets" && return
-    case $PMTYPE in
-        dnf-rpm|dnf5-rpm)
-            [ "$BASEDISTRNAME" = "alt" ] && ! __alt_dnf_uses_apt_sources && fatal 'Repo change is not supported for $PMTYPE: rpm-md metadata is available only on download.etersoft.ru mirror'
-            ;;
-    esac
     if [ "$1" != "--list" ] ; then
         load_helper epm-repofix
         epm_repofix

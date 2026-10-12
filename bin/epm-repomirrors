@@ -17,10 +17,67 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+load_helper epm-sh-altlinux
+
+# Honors EPM_YUM_REPOS_DIR for test isolation
+__get_yum_repos_dir()
+{
+    echo "${EPM_YUM_REPOS_DIR:-/etc/yum.repos.d}"
+}
+
+# Print "type baseurl" for enabled repos in /etc/yum.repos.d (type is apt-rpm or rpm-md)
+__get_alt_dnf_repos()
+{
+    local f
+    for f in "$(__get_yum_repos_dir)"/*.repo ; do
+        [ -r "$f" ] || continue
+        awk '
+            function flush() { if (url != "" && enabled) print (type == "apt-rpm" ? type : "rpm-md"), url }
+            /^[[:space:]]*\[/ { flush(); url = ""; type = ""; enabled = 1; next }
+            /^[[:space:]]*baseurl[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); url = $1; next }
+            /^[[:space:]]*type[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); type = $1; next }
+            /^[[:space:]]*enabled[[:space:]]*=/ { sub(/^[^=]*=[[:space:]]*/, ""); enabled = ($1 ~ /^(1|yes|true|on)$/); next }
+            END { flush() }
+        ' "$f"
+    done
+}
+
+# Check if dnf uses rpm-md repos from a mirror (rpm-md metadata is not available on all mirrors)
+__alt_dnf_has_rpmmd_repos()
+{
+    case $PMTYPE in
+        dnf-rpm|dnf5-rpm)
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+    __get_alt_dnf_repos | grep -q "^rpm-md https\?://"
+}
+
+# Print repo lines of the system (apt sources.list lines or dnf baseurl)
+__get_alt_repo_urls()
+{
+    case $PMTYPE in
+        dnf-rpm|dnf5-rpm)
+            # dnf5 takes repos from sources.list (libdnf5-plugin-apt)
+            if __alt_dnf_uses_apt_sources ; then
+                load_helper epm-repolist
+                ( quiet=1 ; print_apt_sources_list )
+            fi
+            # repos from /etc/yum.repos.d (type apt-rpm or rpm-md)
+            __get_alt_dnf_repos | cut -d" " -f2
+            ;;
+        *)
+            epm --quiet repo list 2>/dev/null
+            ;;
+    esac
+}
+
 # Check if current repos use Deferred
 __is_deferred_repo()
 {
-    epm --quiet repo list 2>/dev/null | grep -q "Etersoft/Sisyphus/Deferred/"
+    __get_alt_repo_urls | grep -q "Etersoft/Sisyphus/Deferred/"
 }
 
 # Load ALT Linux mirror database from config file
@@ -84,7 +141,7 @@ __get_current_mirror()
 {
     __load_alt_mirror_db
     local repo_url
-    repo_url="$(epm --quiet repo list 2>/dev/null | head -1)"
+    repo_url="$(__get_alt_repo_urls | grep -v "file:/" | head -1)"
     [ -z "$repo_url" ] && return
 
     local name url domain
@@ -160,10 +217,13 @@ __measure_speed()
 }
 
 # Format speed in human-readable form (speed is already in MB/s from eget)
+# Args: speed [note]
 __format_speed()
 {
     local speed="$1"
-    if [ "$speed" = "0" ] || [ -z "$speed" ] ; then
+    if [ -n "$2" ] ; then
+        echo "$2"
+    elif [ "$speed" = "0" ] || [ -z "$speed" ] ; then
         echo "error"
     else
         echo "${speed} MB/s"
@@ -185,12 +245,15 @@ __test_single_mirror()
 
 # Test all mirrors and collect results
 # Outputs results in real-time to stderr, returns sorted results to stdout
+# in "speed|name|url|note" format
 # Uses __ALT_MIRROR_DB_VISIBLE (excludes legacy mirrors)
 __test_all_mirrors()
 {
     __load_alt_mirror_db
-    local current_mirror="$1"
     local results=""
+    # dnf with rpm-md repos can use only mirrors with rpm-md metadata
+    local rpmmd_path=""
+    __alt_dnf_has_rpmmd_repos && rpmmd_path="${__MIRROR_TEST_PATH%base/*}repodata/repomd.xml"
 
     # Test each mirror sequentially with live output
     local name url
@@ -201,29 +264,42 @@ __test_all_mirrors()
         # Show testing status (skip in tsv mode)
         [ -z "$tsv" ] && printf "%-15s testing...  %s" "$name" "$url" >&2
 
-        local speed
-        speed=$(__measure_speed "$test_url")
+        local speed note=""
+        if [ -n "$rpmmd_path" ] && ! eget --check-url "${url}/${rpmmd_path}" ; then
+            speed=0
+            note="no rpm-md"
+        else
+            speed=$(__measure_speed "$test_url")
+        fi
         local formatted
-        formatted=$(__format_speed "$speed")
+        formatted=$(__format_speed "$speed" "$note")
 
         # Clear line and show result (skip in tsv mode)
         [ -z "$tsv" ] && printf "\r%-15s %12s     %s\n" "$name" "$formatted" "$url" >&2
 
-        results="${results}${speed}|${name}|${url}
+        results="${results}${speed}|${name}|${url}|${note}
 "
     done <<EOF
 $__ALT_MIRROR_DB_VISIBLE
 EOF
 
-    # Sort by speed (descending) and format output
-    echo "$results" | sort -t'|' -k1 -rg | while IFS='|' read -r speed name url ; do
+    # Sort by speed (descending)
+    echo "$results" | sort -t'|' -k1 -rg | grep -v "^$"
+}
+
+# Format sorted results of __test_all_mirrors
+# Args: results current_mirror
+__format_mirror_results()
+{
+    local current_mirror="$2"
+    echo "$1" | while IFS='|' read -r speed name url note ; do
         [ -z "$name" ] && continue
         local formatted
-        formatted=$(__format_speed "$speed")
+        formatted=$(__format_speed "$speed" "$note")
         local status=""
         [ "$name" = "$current_mirror" ] && status="*"
         if [ -n "$tsv" ] ; then
-            printf "%s\t%s\t%s\t%s\n" "$name" "$speed" "$url" "$status"
+            printf "%s\t%s\t%s\t%s\t%s\n" "$name" "$speed" "$url" "$status" "$note"
         else
             printf "%-15s %12s  %-1s  %s\n" "$name" "$formatted" "$status" "$url"
         fi
@@ -296,18 +372,7 @@ epm_repomirrors()
 
 __epm_repomirrors_check_alt()
 {
-    case $BASEDISTRNAME in
-        "alt")
-            case $PMTYPE in
-                dnf-rpm|dnf5-rpm)
-                    fatal 'epm repo mirrors is not supported for $PMTYPE: rpm-md metadata is available only on download.etersoft.ru mirror'
-                    ;;
-            esac
-            ;;
-        *)
-            fatal "epm repo mirrors is only supported for ALT Linux"
-            ;;
-    esac
+    [ "$BASEDISTRNAME" = "alt" ] || fatal "epm repo mirrors is only supported for ALT Linux"
 }
 
 __epm_repomirrors_speedtest()
@@ -322,15 +387,19 @@ __epm_repomirrors_speedtest()
     [ -z "$tsv" ] && info "Testing mirrors speed (3 measurements × 5 sec per mirror)..."
 
     [ -z "$tsv" ] && echo "" >&2
-    local results
-    results=$(__test_all_mirrors "$current_mirror")
+    local raw results
+    raw=$(__test_all_mirrors)
+    results=$(__format_mirror_results "$raw" "$current_mirror")
     [ -z "$tsv" ] && echo "" >&2
 
     # --auto mode: switch to fastest
     if [ -n "$opt_auto" ] ; then
         local fastest
-        fastest=$(echo "$results" | head -1 | awk '{print $1}')
-        if [ -n "$fastest" ] && [ "$fastest" != "$current_mirror" ] ; then
+        # skip unavailable mirrors (zero speed)
+        fastest=$(echo "$raw" | awk -F'|' '$1 + 0 > 0 { print $2 ; exit }')
+        if [ -z "$fastest" ] ; then
+            warning 'No available mirrors found'
+        elif [ "$fastest" != "$current_mirror" ] ; then
             info "Switching to fastest mirror: $fastest"
             docmd epm repo change "$fastest"
         else
