@@ -152,6 +152,9 @@ get_rpm_repo_latest_file()
     primary="$(fetch_url "$base/repodata/repomd.xml" \
         | sed -nE 's#.*href="([^"]*primary\.xml\.(gz|zst))".*#\1#p' | head -n1)"
     [ -n "$primary" ] || return
+    case "$primary" in
+        *.zst) epm assure zstdcat zstd </dev/null >&2 || return ;;
+    esac
     fetch_url "$base/$primary" | ercat - \
         | sed -n "s|.*<location href=\"\($mask\)\".*|\1|p" | sort -V | tail -n1
 }
