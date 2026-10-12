@@ -37,6 +37,16 @@ has_failure_markers() {
     grep -Eq '(^|[[:space:]])ERROR: |^FATAL: |There was some error during (install|run)|^X .+: FAIL$|^make: \*\*\* .* Error [0-9]+|^dh_[^:]+: error: |^dpkg-[^:]+: error: |^WARNING: Can'\''t find converted (deb|rpm)'
 }
 
+get_package_name() {
+  local app="$1"
+
+  if [[ "$app" == *=* ]]; then
+    ./epm play --package-name "${app%%=*}" "${app#*=}"
+  else
+    ./epm play --package-name "$app"
+  fi
+}
+
 # IPFS
 PLAY_OPTS="--latest"
 SPLIT_DOWNLOAD_MODE=0
@@ -96,14 +106,17 @@ fi
 if [ "$rc" -eq 0 ]; then
   echo "V $APP: PASS"
 
-  package_name="$(./epm play --package-name "$APP")"
+  # Result metadata is best-effort and must not turn a successful test into a failure.
+  if package_name="$(get_package_name "$APP")" && [[ -n "$package_name" ]]; then
+    ./epm print version for package "$package_name" \
+      >"$PLAY_DIR/$package_name" \
+      2>"$ERR_DIR/$package_name" || true
 
-  ./epm print version for package "$package_name" \
-    >"$PLAY_DIR/$package_name" \
-    2>"$ERR_DIR/$package_name" || true
-
-  ./epm req "$package_name" >"$REQ_DIR/$package_name" 2>&1 || true
-  ./epm ql "$package_name" >"$FILES_DIR/$package_name" 2>&1 || true
+    ./epm req "$package_name" >"$REQ_DIR/$package_name" 2>&1 || true
+    ./epm ql "$package_name" >"$FILES_DIR/$package_name" 2>&1 || true
+  else
+    echo "WARNING: Can't determine package name for $APP; skipping result metadata"
+  fi
 else
   echo "X $APP: FAIL"
   mv -vf "$LOG_FILE" "$ERR_DIR/$APP.log"

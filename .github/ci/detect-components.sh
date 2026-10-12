@@ -6,6 +6,7 @@ set -euo pipefail
 BASE="${BASE_SHA:-}"
 HEAD="${HEAD_SHA:-}"
 MAP_FILE=".github/ci/components.map"
+PLAY_DEPENDENCIES_FILE=".github/ci/play-dependencies.map"
 
 trim() {
   local s="$1"
@@ -107,6 +108,25 @@ extract_static_product_alternatives() {
   extract_static_values "$file" "PRODUCTALT" "^([[:alnum:]_.+-]+|\047\047|[[:space:]])+$"
 }
 
+get_ci_dependencies() {
+  local app="$1"
+
+  [[ -f "$PLAY_DEPENDENCIES_FILE" ]] || return 0
+
+  awk -F '|' -v app="$app" '
+    /^[[:space:]]*#/ { next }
+    {
+      name = $1
+      dependencies = $2
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", dependencies)
+      if (tolower(name) == tolower(app)) {
+        print tolower(dependencies)
+      }
+    }
+  ' "$PLAY_DEPENDENCIES_FILE"
+}
+
 normalize_name() {
   tr '[:upper:]' '[:lower:]'
 }
@@ -198,6 +218,120 @@ collect_play_apps() {
     fi
 
   done <<< "$CHANGED_FILES" | sort -u
+}
+
+append_target_with_dependencies() {
+  local target="$1"
+  local app="${target%%=*}"
+  local dependency
+
+  if [[ -n "${group_seen["$target"]:-}" ]]; then
+    return 0
+  fi
+
+  if [[ -n "${group_visiting["$app"]:-}" ]]; then
+    echo "Warning: cyclic CI dependency involving '$app'" >&2
+    return 0
+  fi
+
+  group_visiting["$app"]=1
+  while IFS= read -r dependency; do
+    for dependency in $dependency; do
+      if is_play_app "${dependency%%=*}"; then
+        append_target_with_dependencies "$dependency"
+      else
+        echo "Warning: CI dependency '$dependency' of '$app' is not an epm play app" >&2
+      fi
+    done
+  done < <(get_ci_dependencies "$app")
+  unset 'group_visiting[$app]'
+
+  group_seen["$target"]=1
+  if [[ -n "$group_apps" ]]; then
+    group_apps+=$'\n'
+  fi
+  group_apps+="$target"
+}
+
+build_play_test_groups() {
+  local apps_text="$1"
+  local root group_apps label target candidate i j skip is_subset
+  local -a raw_targets=()
+  local -a raw_apps=()
+
+  PLAY_GROUP_TARGETS=()
+  PLAY_GROUP_APPS=()
+
+  while IFS= read -r root; do
+    [[ -n "$root" ]] || continue
+
+    local -A group_seen=()
+    local -A group_visiting=()
+    group_apps=''
+    append_target_with_dependencies "$root"
+
+    label=''
+    while IFS= read -r target; do
+      [[ -n "$target" ]] || continue
+      if [[ -n "$label" ]]; then
+        label+=' + '
+      fi
+      label+="$target"
+    done <<< "$group_apps"
+
+    raw_targets+=("$label")
+    raw_apps+=("$group_apps")
+  done <<< "$apps_text"
+
+  # A dependency group is already exercised by a larger dependent group.
+  for ((i = 0; i < ${#raw_apps[@]}; i++)); do
+    skip=0
+    for ((j = 0; j < ${#raw_apps[@]}; j++)); do
+      [[ "$i" -ne "$j" ]] || continue
+      [[ "${raw_apps[$i]}" != "${raw_apps[$j]}" ]] || continue
+
+      is_subset=1
+      while IFS= read -r candidate; do
+        if ! grep -Fxq "$candidate" <<< "${raw_apps[$j]}"; then
+          is_subset=0
+          break
+        fi
+      done <<< "${raw_apps[$i]}"
+
+      if [[ "$is_subset" -eq 1 ]]; then
+        skip=1
+        break
+      fi
+    done
+
+    [[ "$skip" -eq 0 ]] || continue
+    PLAY_GROUP_TARGETS+=("${raw_targets[$i]}")
+    PLAY_GROUP_APPS+=("${raw_apps[$i]}")
+  done
+}
+
+report_play_dependency_groups() {
+  local i message
+
+  for ((i = 0; i < ${#PLAY_GROUP_APPS[@]}; i++)); do
+    [[ "${PLAY_GROUP_APPS[$i]}" == *$'\n'* ]] || continue
+    message="${PLAY_GROUP_TARGETS[$i]}: dependent apps detected; running sequentially in one container"
+    echo "$message"
+    echo "::notice title=Dependent apps detected::$message"
+
+    if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+      printf -- '- %s\n' "$message" >> "$GITHUB_STEP_SUMMARY"
+    fi
+  done
+}
+
+json_escape() {
+  local value="$1"
+
+  value="${value//\\/\\\\}"
+  value="${value//\"/\\\"}"
+  value="${value//$'\n'/\\n}"
+  printf '%s' "$value"
 }
 
 report_multiple_editions() {
@@ -296,21 +430,23 @@ while IFS='|' read -r component path_list systems; do
     fi
 
     report_multiple_editions "$play_apps"
+    build_play_test_groups "$play_apps"
+    report_play_dependency_groups
   fi
 
   components+=("$component")
   IFS=',' read -r -a system_list <<< "$systems"
 
   if [[ "$component" == "play" ]]; then
-    while IFS= read -r app; do
-      [[ -z "$app" ]] && continue
-
+    for ((i = 0; i < ${#PLAY_GROUP_APPS[@]}; i++)); do
+      app="${PLAY_GROUP_APPS[$i]}"
+      target="${PLAY_GROUP_TARGETS[$i]}"
       for system in "${system_list[@]}"; do
         system="$(trim "$system")"
         [[ -z "$system" ]] && continue
-        entries+=("{\"component\":\"$component\",\"system\":\"$system\",\"target\":\"$app\",\"app\":\"$app\"}")
+        entries+=("{\"component\":\"$component\",\"system\":\"$system\",\"target\":\"$(json_escape "$target")\",\"app\":\"$(json_escape "$app")\"}")
       done
-    done <<< "$play_apps"
+    done
   else
     for system in "${system_list[@]}"; do
       system="$(trim "$system")"
