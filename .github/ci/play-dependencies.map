@@ -1,0 +1,2 @@
+# app | dependencies (space-separated, installed before app in the same container)
+trivalent-qt6-ui | trivalent

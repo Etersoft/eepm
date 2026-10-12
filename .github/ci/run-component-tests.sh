@@ -75,6 +75,36 @@ validate_components_map() {
   return "$rc"
 }
 
+validate_play_dependencies_map() {
+  local map=".github/ci/play-dependencies.map"
+  local lineno=0 app dependencies line rc=0
+
+  [[ -r "$map" ]] || { echo "play-dependencies.map is not readable: $map"; return 1; }
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    lineno=$((lineno + 1))
+    [[ -z "${line// }" ]] && continue
+    [[ "${line#"${line%%[![:space:]]*}"}" == \#* ]] && continue
+
+    if [[ "${line//[^|]}" != "|" ]]; then
+      echo "play-dependencies.map:$lineno: expected one '|' separator: $line"
+      rc=1
+      continue
+    fi
+
+    IFS='|' read -r app dependencies <<< "$line"
+    app="${app## }"; app="${app%% }"
+    dependencies="${dependencies## }"; dependencies="${dependencies%% }"
+
+    if [[ ! "$app" =~ ^[[:alnum:]_.+-]+$ || ! "$dependencies" =~ ^[[:alnum:]_.+=\ -]+$ ]]; then
+      echo "play-dependencies.map:$lineno: invalid app or dependencies: $line"
+      rc=1
+    fi
+  done < "$map"
+
+  return "$rc"
+}
+
 run_ci() {
   echo "CI checks"
   check_shell_syntax .github/ci/get-apps-to-test.sh
@@ -86,6 +116,9 @@ run_ci() {
 
   echo "components.map format"
   validate_components_map
+
+  echo "play-dependencies.map format"
+  validate_play_dependencies_map
 }
 
 case "$COMPONENT" in
