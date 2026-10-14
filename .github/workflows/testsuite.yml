@@ -18,7 +18,10 @@ jobs:
     steps:
       - name: install packages
         run: |
-            apt-get update && apt-get -y install eepm
+            sed -i 's|http://ftp.altlinux.org/pub/distributions/ALTLinux|http://download.etersoft.ru/pub/ALTLinux|g' \
+              /etc/apt/sources.list.d/alt.list
+            apt-get update
+            apt-get -y install eepm
             epm update
             epm --auto install etersoft-build-utils rpm-build-intro su sudo gear glibc-pthread
 
