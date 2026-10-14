@@ -2,3 +2,4 @@
 .gigaide
 .idea
 tests/test.spec
+.env
