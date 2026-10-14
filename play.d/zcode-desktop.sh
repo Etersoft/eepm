@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=zcode-desktop
+PKGNAME=zcode
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION='ZCode — official desktop harness for GLM-5.2 from z.ai'
