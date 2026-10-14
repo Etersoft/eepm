@@ -65,8 +65,10 @@ jobs:
 
           case "$os_id" in
             altlinux|alt)
+              sed -i 's|http://ftp.altlinux.org/pub/distributions/ALTLinux|http://download.etersoft.ru/pub/ALTLinux|g' \
+                /etc/apt/sources.list.d/alt.list
               apt-get update
-              apt-get install -y git-core glibc-pthread wget file 
+              apt-get install -y git-core glibc-pthread wget file
               ;;
             debian|ubuntu)
               apt-get update
