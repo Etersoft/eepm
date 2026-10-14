@@ -21,3 +21,5 @@ kyodialog Linux_Universal_Driver.zip
 kodak-i11xx LinuxSoftware_i11xx_*.x86_64.deb.tar.gz
 kodak-i2000 LinuxSoftware_i2000_v*.x86_64.deb.tar.gz
 scanner-driver-avision scanner-driver-avision_rpm64_*.tar.gz
+cisco-secure-client-vpn cisco-secure-client-linux64-*-predeploy-deb-k9.tgz
+cisco-secure-client-vpn cisco-secure-client-linux64-*-predeploy-deb-k9.tar.gz
