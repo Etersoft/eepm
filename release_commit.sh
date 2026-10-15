@@ -66,7 +66,7 @@ check_release_ready()
         require_remote "$remote"
     done
 
-    gita ls >/dev/null 2>&1 || fatal "ALT task server is not accessible via gita."
+    gita ls || fatal "ALT task server is not accessible via gita."
 
     for host in epm-update epm-sisyphus ; do
         ssh -o BatchMode=yes -o ConnectTimeout=10 "epm@$host" true >/dev/null 2>&1 || fatal "Update host '$host' is not accessible."
