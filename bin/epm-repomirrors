@@ -193,6 +193,16 @@ __measure_speed()
     [ -n "$speed" ] && echo "$speed" || echo "0"
 }
 
+# Get mirror date (Last-Modified of the test file) as "YYYY-MM-DD HH:MM"
+__get_mirror_date()
+{
+    local url="$1"
+    local modified
+    modified=$(eget --timeout 5 --get-response "$url" 2>/dev/null | grep -i "^Last-Modified:" | tail -n1 | sed -e 's|^[^:]*: *||' -e 's|\r$||')
+    [ -n "$modified" ] || return
+    date -d "$modified" +"%Y-%m-%d %H:%M" 2>/dev/null || echo "$modified"
+}
+
 # Format speed in human-readable form (speed is already in MB/s from eget)
 # Args: speed [note]
 __format_speed()
@@ -222,7 +232,7 @@ __test_single_mirror()
 
 # Test all mirrors and collect results
 # Outputs results in real-time to stderr, returns sorted results to stdout
-# in "speed|name|url|note" format
+# in "speed|name|url|note|date" format
 # Uses __ALT_MIRROR_DB_VISIBLE (excludes legacy mirrors)
 __test_all_mirrors()
 {
@@ -241,20 +251,21 @@ __test_all_mirrors()
         # Show testing status (skip in tsv mode)
         [ -z "$tsv" ] && printf "%-15s testing...  %s" "$name" "$url" >&2
 
-        local speed note=""
+        local speed note="" mdate=""
         if [ -n "$rpmmd_path" ] && ! eget --check-url "${url}/${rpmmd_path}" ; then
             speed=0
             note="no rpm-md"
         else
             speed=$(__measure_speed "$test_url")
+            [ "$speed" = "0" ] || mdate=$(__get_mirror_date "$test_url")
         fi
         local formatted
         formatted=$(__format_speed "$speed" "$note")
 
         # Clear line and show result (skip in tsv mode)
-        [ -z "$tsv" ] && printf "\r%-15s %12s     %s\n" "$name" "$formatted" "$url" >&2
+        [ -z "$tsv" ] && printf "\r%-15s %12s  %-16s  %s\n" "$name" "$formatted" "$mdate" "$url" >&2
 
-        results="${results}${speed}|${name}|${url}|${note}
+        results="${results}${speed}|${name}|${url}|${note}|${mdate}
 "
     done <<EOF
 $__ALT_MIRROR_DB_VISIBLE
@@ -269,16 +280,16 @@ EOF
 __format_mirror_results()
 {
     local current_mirror="$2"
-    echo "$1" | while IFS='|' read -r speed name url note ; do
+    echo "$1" | while IFS='|' read -r speed name url note mdate ; do
         [ -z "$name" ] && continue
         local formatted
         formatted=$(__format_speed "$speed" "$note")
         local status=""
         [ "$name" = "$current_mirror" ] && status="*"
         if [ -n "$tsv" ] ; then
-            printf "%s\t%s\t%s\t%s\t%s\n" "$name" "$speed" "$url" "$status" "$note"
+            printf "%s\t%s\t%s\t%s\t%s\t%s\n" "$name" "$speed" "$url" "$status" "$note" "$mdate"
         else
-            printf "%-15s %12s  %-1s  %s\n" "$name" "$formatted" "$status" "$url"
+            printf "%-15s %12s  %-1s  %-16s  %s\n" "$name" "$formatted" "$status" "$mdate" "$url"
         fi
     done
 }
