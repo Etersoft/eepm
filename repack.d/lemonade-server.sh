@@ -1,32 +1,31 @@
 #!/bin/sh -x
 # Repack lemonade-server.
 #
-# The upstream RPM keeps its whole payload directly under /opt (/opt/bin,
-# /opt/lib, /opt/share) and exposes it at the standard /usr locations through
-# symlinks (e.g. /usr/lib/systemd/system/lemond.service -> /opt/lib/...,
-# /usr/bin/lemonade -> /opt/bin/lemonade). That works, but pollutes /opt.
-#
-# Consolidate the payload under /opt/lemonade and repoint the existing /usr
-# symlinks (and the unit's ExecStart) at it. The DEB already installs to /usr,
-# so this only touches the RPM build.
+# Keep the application payload under /opt/lemonade and expose its commands and
+# integration files at the standard /usr locations. Non-Fedora packages keep
+# the complete RPM payload, but use the portable embeddable server binaries.
 
 BUILDROOT="$1"
 SPEC="$2"
 
-. $(dirname $0)/common.sh
-
 PRODUCTDIR=/opt/lemonade
 
-# DEB layout — already FHS-compliant.
-[ -d "$BUILDROOT/opt/bin" ] || exit 0
+. $(dirname $0)/common.sh
 
-# 1. Move the payload /opt/{bin,lib,share} -> /opt/lemonade/
+# Make the library available to dh_shlibdeps so converted DEB packages get
+# the matching libdrm-amdgpu1 dependency.
+if [ "$(epm print info -p)" = "deb" ] ; then
+    epm install --skip-installed libdrm-amdgpu1
+fi
+add_unirequires libdrm_amdgpu.so.1
+
+# 1. Consolidate the application payload under /opt/lemonade.
 mkdir -p "$BUILDROOT$PRODUCTDIR"
-mv "$BUILDROOT/opt/bin"   "$BUILDROOT$PRODUCTDIR/bin"
-mv "$BUILDROOT/opt/lib"   "$BUILDROOT$PRODUCTDIR/lib"
+mv "$BUILDROOT/opt/bin" "$BUILDROOT$PRODUCTDIR/bin"
+mv "$BUILDROOT/opt/lib" "$BUILDROOT$PRODUCTDIR/lib"
 mv "$BUILDROOT/opt/share" "$BUILDROOT$PRODUCTDIR/share"
 
-# 2. Repoint the /usr/* symlinks the package ships at /opt/lemonade/*
+# 2. Repoint the upstream integration symlinks to the consolidated payload.
 for l in \
     "$BUILDROOT/usr/bin/lemonade" \
     "$BUILDROOT/usr/bin/lemonade-web-app" \
@@ -41,15 +40,21 @@ for l in \
     esac
 done
 
-# 3. lemond resolves its resources relative to the binary (<exe>/resources);
-#    point bin/resources at the shared resource tree.
+# The upstream RPM registers this file from its install scripts. Repacking
+# drops those scripts, so expose it at the standard path for the RPM trigger.
+mkdir -p "$BUILDROOT/usr/lib/sysusers.d"
+ln -snf "$PRODUCTDIR/lib/sysusers.d/lemonade.conf" \
+    "$BUILDROOT/usr/lib/sysusers.d/lemonade.conf"
+pack_file /usr/lib/sysusers.d/lemonade.conf
+
+# 3. Keep resources next to the server binaries where Lemonade looks for them.
 ln -snf ../share/lemonade-server/resources "$BUILDROOT$PRODUCTDIR/bin/resources"
 pack_file $PRODUCTDIR/bin/resources
 
-# 4. Patch ExecStart in the system unit (now under /opt/lemonade/lib).
+# 4. Repoint the system service to the consolidated payload.
 u="$BUILDROOT$PRODUCTDIR/lib/systemd/system/lemond.service"
 [ -f "$u" ] && subst "s|^ExecStart=/opt/bin/lemond|ExecStart=$PRODUCTDIR/bin/lemond|" "$u"
 
-# 5. Rewrite %files: every quoted /opt/ path becomes /opt/lemonade/.
+# 5. Rewrite generated package paths to the consolidated payload.
 subst 's|"/opt/|"/opt/lemonade/|g' $SPEC
 pack_dir $PRODUCTDIR
