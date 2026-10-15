@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.69
+Version: 3.64.70
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -188,6 +188,55 @@ EOF
 # metapackage, no files
 
 %changelog
+* Thu Oct 15 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.70-alt1
+- epm repo mirrors/change: support dnf on ALT in all repo modes
+- epm: support APT-RPM repos (type=apt-rpm) for dnf on ALT
+- epm query: check dpkg package state for installed check (eterbug #19294)
+- epm play mssql-tools: fix reinstall after removal (eterbug #19294)
+- epm play: added procdump (Sysinternals process dump utility)
+- epm play: added filmcraft (eterbug #19678)
+- epm play: added vectorcraft (eterbug #19678)
+- epm play: added lightcraft (eterbug #19678)
+- epm play: added designcraft (eterbug #19678)
+- epm play: added effectcraft (eterbug #19678)
+- epm play: added photocraft (eterbug #19678)
+- epm play: added pdfcraft (eterbug #19678)
+- epm play: added gridcraft (eterbug #19678)
+- epm play: added cadcraft (eterbug #19678)
+- epm play: added deckcraft (eterbug #19678)
+- epm play: added soundcraft (eterbug #19678)
+- epm play: added wordcraft (eterbug #19678)
+- epm play: added figcraft (eterbug #19678)
+- epm play: added artcraft-launcher (eterbug #19678)
+- epm play stacer: fix requires (eterbug #17865)
+- epm play bitdesk: fix repack (eterbug #17865)
+- github ci: test app editions and dependent plays (eterbug #18828)
+- epm play common.sh: install zstd for rpm repository metadata (eterbug #17865)
+- epm list: honor --short for installed packages
+- epm play: added session-desktop (Session private messenger)
+- epm repack: add shared runtime dependencies for Rust winit applications
+- epm repack designcraft: add runtime dependencies
+- epm repack effectcraft: add runtime dependencies
+- epm repack lightcraft: add runtime dependencies
+- epm repack vectorcraft: add runtime dependencies
+- epm repack filmcraft: add runtime dependencies
+- epm repack photocraft: add runtime dependencies
+- epm play pdfcraft: add runtime dependencies and printcraft alias
+- epm repack wordcraft: add runtime dependencies
+- epm repack gridcraft: add runtime dependencies
+- epm repack deckcraft: add runtime dependencies
+- epm repack cadcraft: add runtime dependencies
+- epm repack soundcraft: add runtime dependencies
+- epm play: add Open CAD Studio
+- epm play: add Penguin Mail
+- epm play: add MultiTool
+- github ci: use Etersoft mirror for ALT jobs (eterbug #18828)
+- epm pack hytale-launcher: support update container format (eterbug #17865)
+- release_commit.sh: automate release workflow (eterbug #17829)
+- epm play: add cisco secure client (anyconnect vpn)
+- epm repo mirrors: show mirror date (Last-Modified of pkglist) in speedtest
+- release_commit.sh: fix gita preflight (eterbug #17829)
+
 * Sat Oct 10 2026 Vitaly Lipatov <lav@altlinux.ru> 3.64.69-alt1
 - epm play codex: move glibc voice host to separate codex-voice variant (eterbug #19633)
 - epm play: add amnezia-vpn (AmneziaVPN client for self-hosted VPN)
