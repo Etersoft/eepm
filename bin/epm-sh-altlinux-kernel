@@ -682,7 +682,7 @@ __ak_backup_kernel_release()
 epm_alt_remove_old_kernels_help()
 {
     message 'epm remove-old-kernels - remove old kernels (the same as remove-old-kernels)
-Usage: epm remove-old-kernels [options]
+Usage: epm remove-old-kernels [options] [kernel...]
 
 Options:
   -f, -y, --force   do not ask for removal confirmation
@@ -691,6 +691,9 @@ Options:
   -a, --all         remove old kernels for all flavours (keep latest for each one)
   -A, --purge       purge other flavours
   --no-backup       do not keep the backup kernel
+
+Kernels can be listed as kernel-image-6.12-6.12.111-alt1 or 6.12.111-6.12-alt1 (uname -r format),
+then only these kernels will be removed.
 
 Note: currently booted and backup kernels will not be removed.
 The backup kernel is the latest kernel with uptime of more than a day.
@@ -703,7 +706,7 @@ All numeric kernels (x.y) are considered to be a single flavour.
 # options are the same as for remove-old-kernels
 epm_alt_remove_old_kernels()
 {
-    local kernel_flavour='' all='' nobackup='' opt
+    local kernel_flavour='' all='' nobackup='' kernels='' opt
     while [ -n "$1" ] ; do
         opt="$1"
         case "$opt" in
@@ -730,8 +733,11 @@ epm_alt_remove_old_kernels()
             -f|-y|--force)
                 force="--force"
                 ;;
-            *)
+            -*)
                 fatal 'Unknown option $opt for remove-old-kernels'
+                ;;
+            *)
+                kernels="$kernels $opt"
                 ;;
         esac
         shift
@@ -750,6 +756,24 @@ epm_alt_remove_old_kernels()
     # installed kernels as "flavour version buildtime" lines
     local all_kernels
     all_kernels="$(a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||')"
+
+    # remove the listed kernels only (ALT bug 55852)
+    if [ -n "$kernels" ] ; then
+        local k ak_flavour ak_release ak_user_flavour package remove='' remove_items=''
+        for k in $kernels ; do
+            ak_flavour='' ak_release=''
+            __ak_parse_release "$k"
+            [ -n "$ak_flavour" ] || fatal 'Can'"'"'t get kernel flavour from $k. Use kernel-image-FLAVOUR-VERSION-RELEASE format.'
+            package="kernel-image-$ak_flavour-$ak_release"
+            echo "$all_kernels" | grep -q "^$ak_flavour $ak_release\( \|\$\)" || fatal 'Kernel $package is not installed.'
+            [ "$package" = "$current_kernel_package" ] && fatal 'Kernel $package is currently booted, it can'"'"'t be removed.'
+            remove="$remove $package"
+            remove_items="$remove_items kernel-image-$ak_flavour=$ak_release"
+        done
+        message "Will be removing kernels:" $remove
+        __ak_remove $remove_items
+        return
+    fi
 
     if [ -z "$kernel_flavour" ] && echo "$current_flavour" | grep -q -E '^[0-9]+\.[0-9]+$' ; then
         # booted into one of x.y flavours
