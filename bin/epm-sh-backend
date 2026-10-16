@@ -278,11 +278,11 @@ __get_system_sourceslist()
 # args: task_number [task_number ...]
 __generate_task_sourceslist()
 {
-    local tn
+    local tn res=0
     for tn in "$@" ; do
         local url="https://git.altlinux.org/tasks/$tn/build/repo"
-        url="$(eget --get-real-url "$url")" || { warning "Can't access task $tn repo" ; continue ; }
-        local arch
+        url="$(eget --get-real-url "$url")" || { warning "Can't access task $tn repo" ; res=1 ; continue ; }
+        local arch found=''
         for arch in noarch $DISTRARCH $([ "$DISTRARCH" = "x86_64" ] && echo "x86_64-i586") ; do
             eget --check-url "$url/$arch/base/" 2>/dev/null || continue
             local rd="$(eget --list "$url/$arch/RPMS.*" 2>/dev/null)"
@@ -290,8 +290,12 @@ __generate_task_sourceslist()
             local comp="$(echo "$rd" | sed -e 's|/*$||' -e 's|.*\.||')"
             [ "$comp" = "*" ] && continue
             echo "rpm $url $arch $comp"
+            found=1
         done
+        # without the task repo apt silently takes the same named packages from the system repos
+        [ -n "$found" ] || { warning 'Task $tn repo is not available.' ; res=1 ; }
     done
+    return $res
 }
 
 # Setup temporary APT directory with branch repo and run update
@@ -310,7 +314,9 @@ __use_tmp_apt_for_tasks()
 {
     load_helper epm-update
     __setup_tmp_apt_dir
-    { __get_system_sourceslist ; echo ; __generate_task_sourceslist "$@" ; } > "$__EPM_APT_TMPDIR/sources.list"
+    local tasklist
+    tasklist="$(__generate_task_sourceslist "$@")" || return
+    { __get_system_sourceslist ; echo ; echo "$tasklist" ; } > "$__EPM_APT_TMPDIR/sources.list"
     # tolerate partial failures (some system repos may have broken GPG keys etc.)
     __epm_update || warning "Some repos failed to update, but continuing anyway"
 }
@@ -409,17 +415,20 @@ __use_tmp_dnf_for_tasks()
     local tn url vendor arch comp
     __EPM_DNF_REPO_OPTIONS=''
     for tn in "$@" ; do
-        url="$(eget --get-real-url "https://git.altlinux.org/tasks/$tn/build/repo")" || { warning "Can't access task $tn repo" ; continue ; }
+        url="$(eget --get-real-url "https://git.altlinux.org/tasks/$tn/build/repo")" || { warning "Can't access task $tn repo" ; return 1 ; }
         url="${url%/}"
         vendor="$(get_task_sign "$tn" | tr -d '[]')"
+        local found=''
         while read -r arch comp ; do
             [ -n "$comp" ] || continue
             __EPM_DNF_REPO_OPTIONS="$__EPM_DNF_REPO_OPTIONS $(__alt_dnf_aptrpm_repo_options "tmp-task-$tn-$arch" "$url/$arch" "$comp" "$vendor")"
+            found=1
         done <<EOF
 $(__alt_dnf_aptrpm_probe_url "$url")
 EOF
+        # without the task repo dnf silently takes the same named packages from the system repos
+        [ -n "$found" ] || { warning 'Task $tn repo is not available.' ; return 1 ; }
     done
-    [ -n "$__EPM_DNF_REPO_OPTIONS" ]
 }
 
 # Enable named repo (even if disabled) for dnf

@@ -176,6 +176,7 @@ get_task_packages()
             fi
             continue
         fi
+        [ "$(get_task_state "$tn")" = "FAILED" ] && warning 'Task $tn state is FAILED, its packages may be broken or incomplete.'
         get_task_packages_list "$tn"
         [ "$DISTRARCH" = "x86_64" ] || continue
         get_task_arepo_status "$tn" || continue
