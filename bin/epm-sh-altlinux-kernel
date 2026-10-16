@@ -376,6 +376,8 @@ Options:
   -n, --dry-run        simulate install
   -d, --download-only  download packages, but do not install
   --no-kernel          exclude the kernel-image from install
+  --set-default KERNEL make the installed kernel default for boot (flavour for its latest kernel,
+                       6.12.10-6.12-alt1 or kernel-image-6.12-6.12.10-alt1)
 
 Run epm remove-old-kernels to uninstall unused kernels.
 '
@@ -387,7 +389,7 @@ epm_alt_update_kernel()
 {
     local ak_flavour='' ak_release='' ak_user_flavour=''
     local all='' list='' headers='' debuginfo='' firmware='' nokernel='' update=''
-    local addmodules='' delmodules='' opt
+    local addmodules='' delmodules='' set_default='' opt
     local interactive_select=''
     while [ -n "$1" ] ; do
         opt="$1"
@@ -430,6 +432,11 @@ epm_alt_update_kernel()
             --no-kernel)
                 nokernel=1
                 ;;
+            --set-default)
+                set_default="$2"
+                [ -n "$set_default" ] || fatal 'Kernel is not specified for --set-default'
+                shift
+                ;;
             -u|--update)
                 update=1
                 ;;
@@ -459,6 +466,11 @@ epm_alt_update_kernel()
         shift
     done
     [ -n "$release_arg" ] && __ak_parse_release "$release_arg"
+
+    if [ -n "$set_default" ] ; then
+        __ak_set_default_kernel "$set_default"
+        return
+    fi
 
     if [ -n "$update" ] ; then
         docmd epm update || return
@@ -665,6 +677,62 @@ __ak_check_initrd()
     return 1
 }
 
+# print installed kernels as "flavour version buildtime" lines
+__ak_installed_kernels()
+{
+    a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||'
+}
+
+# print "flavour version" of the installed kernel, installed kernels are on stdin ("flavour version buildtime" lines)
+# args: kernel (kernel-image-6.12-6.12.10-alt1[.x86_64], 6.12.10-6.12-alt1 or flavour) [release]
+# a flavour selects its latest installed kernel, unless the second arg is release
+__ak_resolve_installed_kernel()
+{
+    local k="$1" mode="$2" installed ver ak_flavour='' ak_release='' ak_user_flavour=''
+    installed="$(cat)"
+    if [ "$mode" != "release" ] && echo "$installed" | grep -q "^${k#kernel-image-} " ; then
+        ak_flavour="${k#kernel-image-}"
+        ver="$(echo "$installed" | grep "^$ak_flavour " | cut -d' ' -f2,3 | __ak_max_line | cut -d' ' -f1)"
+        echo "$ak_flavour $ver"
+        return
+    fi
+    # strip arch from rpm -q output
+    k="$(echo "$k" | sed -E -e 's/\.(x86_64|i586|aarch64|armh|ppc64le|riscv64|loongarch64|e2k(v[0-9]+)?|noarch)$//')"
+    __ak_parse_release "$k"
+    [ -n "$ak_flavour" ] || fatal 'Kernel $k is not installed. Use an installed flavour or kernel-image-FLAVOUR-VERSION-RELEASE format.'
+    echo "$installed" | grep -q "^$ak_flavour $ak_release\( \|\$\)" || fatal 'Kernel kernel-image-$ak_flavour-$ak_release is not installed.'
+    echo "$ak_flavour $ak_release"
+}
+
+# make the installed kernel default: installkernel switches /boot/vmlinuz and /boot/initrd.img links
+# (the first boot menu entry uses them) without rebuilding initrd (ALT bug 38888)
+# Honors EPM_BOOT_DIR and EPM_INSTALLKERNEL for test isolation
+__ak_set_default_kernel()
+{
+    local fr kpkg vmlinuz kr saved
+    local bootdir="${EPM_BOOT_DIR:-/boot}" installkernel="${EPM_INSTALLKERNEL:-/sbin/installkernel}"
+    fr="$(__ak_installed_kernels | __ak_resolve_installed_kernel "$1")" || return
+    kpkg="kernel-image-${fr% *}-${fr#* }"
+    vmlinuz="$(a='' rpm -ql "$kpkg" 2>/dev/null | grep -m1 '^/boot/vmlinuz-')" || fatal 'Can'"'"'t find kernel image in $kpkg package.'
+    kr="${vmlinuz#/boot/vmlinuz-}"
+    [ -x "$installkernel" ] || fatal 'There is no $installkernel, install bootloader-utils package.'
+    sudocmd "$installkernel" --keep-initrd "$kr" || fatal 'Failed to set $kpkg as default kernel.'
+
+    # GRUB_DEFAULT=saved: the remembered entry overrides the first one
+    if [ -s "$bootdir/grub/grubenv" ] && is_command grub-editenv ; then
+        saved="$(a='' grub-editenv "$bootdir/grub/grubenv" list 2>/dev/null | sed -n -e 's|^saved_entry=||p')"
+        case "$saved" in
+            ''|0|gnulinux-simple-*)
+                ;;
+            *)
+                info 'Resetting saved GRUB entry $saved to boot the first menu entry'
+                sudocmd grub-editenv "$bootdir/grub/grubenv" unset saved_entry
+                ;;
+        esac
+    fi
+    info 'Default kernel is $kpkg ($kr).'
+}
+
 # print kernel release (as uname -r) of the latest kernel with uptime >= 1 day except the booted one $1
 __ak_backup_kernel_release()
 {
@@ -748,22 +816,17 @@ epm_alt_remove_old_kernels()
 
     # installed kernels as "flavour version buildtime" lines
     local all_kernels
-    all_kernels="$(a='' rpm -qa --qf '%{NAME} %{VERSION}-%{RELEASE} %{BUILDTIME}\n' 'kernel-image-*' 2>/dev/null | grep -v -- "-debuginfo " | sed -e 's|^kernel-image-||')"
+    all_kernels="$(__ak_installed_kernels)"
 
     # remove the listed kernels only (ALT bug 55852)
     if [ -n "$kernels" ] ; then
-        local k ak_flavour ak_release ak_user_flavour package remove='' remove_items=''
+        local k fr package remove='' remove_items=''
         for k in $kernels ; do
-            ak_flavour='' ak_release=''
-            # strip arch from rpm -q output
-            k="$(echo "$k" | sed -E -e 's/\.(x86_64|i586|aarch64|armh|ppc64le|riscv64|loongarch64|e2k(v[0-9]+)?|noarch)$//')"
-            __ak_parse_release "$k"
-            [ -n "$ak_flavour" ] || fatal 'Can'"'"'t get kernel flavour from $k. Use kernel-image-FLAVOUR-VERSION-RELEASE format.'
-            package="kernel-image-$ak_flavour-$ak_release"
-            echo "$all_kernels" | grep -q "^$ak_flavour $ak_release\( \|\$\)" || fatal 'Kernel $package is not installed.'
+            fr="$(echo "$all_kernels" | __ak_resolve_installed_kernel "$k" release)" || return
+            package="kernel-image-${fr% *}-${fr#* }"
             [ "$package" = "$current_kernel_package" ] && fatal 'Kernel $package is currently booted, it can'"'"'t be removed.'
             remove="$remove $package"
-            remove_items="$remove_items kernel-image-$ak_flavour=$ak_release"
+            remove_items="$remove_items kernel-image-${fr% *}=${fr#* }"
         done
         message "Will be removing kernels:" $remove
         __ak_remove $remove_items

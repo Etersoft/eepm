@@ -79,9 +79,15 @@ esac
 
     warmup_bases
 
-    update_repo_if_needed
-
-    info "Updating system kernel to the latest version..."
+    # change default kernel only, without update
+    case " $* " in
+        *" --set-default "*)
+            ;;
+        *)
+            update_repo_if_needed
+            info "Updating system kernel to the latest version..."
+            ;;
+    esac
 
     case $BASEDISTRNAME in
     "alt")
