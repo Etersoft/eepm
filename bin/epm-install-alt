@@ -138,14 +138,6 @@ epm_install_files_alt()
     sudocmd rpm -Uvh $replacepkgs $(subst_option dryrun --test) $force $noscripts $nodeps $files && save_installed_packages $files
 }
 
-get_current_kernel_flavour()
-{
-    rrel=$(uname -r)
-    rflv=${rrel#*-}
-    rflv=${rflv%-*}
-    echo "$rflv"
-}
-
 # print "module flavour" for kernel-modules-<module>[-<flavour>]
 __epm_alt_kernel_module_flavour()
 {
@@ -157,7 +149,8 @@ __epm_alt_kernel_module_flavour()
             return
         fi
     done
-    echo "$n $(get_current_kernel_flavour)"
+    load_helper epm-sh-altlinux-kernel
+    echo "$n $(__ak_flavour_from_release "$(__ak_uname_r)")"
 }
 
 # install kernel-modules-<module>[-<flavour>] with the latest kernel via update-kernel logic
