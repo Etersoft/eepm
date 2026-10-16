@@ -9,6 +9,8 @@ DISPLAY_URL="https://github.com/waywallen/waywallen-display"
 
 . $(dirname $0)/common.sh
 
+epm assure unsquashfs squashfs-tools || fatal
+
 if [ "$VERSION" = "*" ] ; then
     PKGURL=$(get_github_url "$URL" "$PKGNAME-*-x86_64.AppImage")
 else
