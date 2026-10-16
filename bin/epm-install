@@ -224,10 +224,10 @@ epm_install_names()
             sudocmd aura -A $force $nodeps $@
             return ;;
         yum-rpm)
-            sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+            sudocmd yum $YUMOPTIONS install $(echo "$*" | exp_with_rpm_version | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd $DNFCMD $__EPM_DNF_REPO_OPTIONS install $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
+            sudocmd $DNFCMD $__EPM_DNF_REPO_OPTIONS install $YUMOPTIONS $(echo "$*" | exp_with_rpm_version | exp_with_arch_suffix)
             return ;;
         snappy)
             sudocmd snappy install $@
@@ -327,10 +327,10 @@ epm_ni_install_names()
             sudocmd env ACCEPT_EULA=y DEBIAN_FRONTEND=noninteractive aptitude -y install $@
             return ;;
         yum-rpm)
-            sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_arch_suffix)
+            sudocmd yum -y $YUMOPTIONS install $(echo "$*" | exp_with_rpm_version | exp_with_arch_suffix)
             return ;;
         dnf-rpm|dnf5-rpm)
-            sudocmd $DNFCMD $__EPM_DNF_REPO_OPTIONS install -y $(subst_option noremove '' --allowerasing) $YUMOPTIONS $(echo "$*" | exp_with_arch_suffix)
+            sudocmd $DNFCMD $__EPM_DNF_REPO_OPTIONS install -y $(subst_option noremove '' --allowerasing) $YUMOPTIONS $(echo "$*" | exp_with_rpm_version | exp_with_arch_suffix)
             return ;;
         urpm-rpm)
             sudocmd urpmi --auto $URPMOPTIONS $@

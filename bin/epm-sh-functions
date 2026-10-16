@@ -351,6 +351,13 @@ subst_option()
     eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
 }
 
+# convert package specs name=version to name-version (yum/dnf syntax)
+# usage: echo "$*" | exp_with_rpm_version
+exp_with_rpm_version()
+{
+    sed -e 's|\([^ =]\)=\([^ ]\)|\1-\2|g'
+}
+
 store_output()
 {
     # use make_temp_file from etersoft-build-utils

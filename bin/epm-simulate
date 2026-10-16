@@ -69,10 +69,10 @@ _epm_do_simulate()
         yum-rpm)
             set_sudo
             if __use_yum_assumeno ; then
-                store_output sudocmd yum --assumeno install $filenames
+                store_output sudocmd yum --assumeno install $(echo "$filenames" | exp_with_rpm_version)
                 __check_yum_result $RC_STDOUT $?
             else
-                store_output sudocmd yum install $filenames <<EOF
+                store_output sudocmd yum install $(echo "$filenames" | exp_with_rpm_version) <<EOF
 n
 EOF
                 __check_yum_result $RC_STDOUT $?
@@ -82,7 +82,7 @@ EOF
             return $RES ;;
         dnf-rpm|dnf5-rpm)
             set_sudo
-            store_output sudocmd $DNFCMD --assumeno install $filenames
+            store_output sudocmd $DNFCMD --assumeno install $(echo "$filenames" | exp_with_rpm_version)
             __check_yum_result $RC_STDOUT $?
             RES=$?
             clean_store_output
