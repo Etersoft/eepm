@@ -53,6 +53,11 @@ epm_installed()
             is_installed_real "$pkg_names"
             return
             ;;
+        --resolve)          # HELPOPT: print installed package names for package names, virtual names or files
+            [ -n "$pkg_filenames" ] || fatal "Package name is missed"
+            resolve_installed_packages $pkg_filenames
+            return
+            ;;
     esac
     [ -n "$pkg_names" ] || fatal "is_installed: package name is missed"
     is_installed "$pkg_names"
