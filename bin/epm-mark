@@ -17,14 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-__epm_mark_resolve()
-{
-    local i pkg
-    for i in "$@" ; do
-        pkg="$(epm query --short "$i" 2>/dev/null)" || { warning "Package '$i' is not installed" ; continue ; }
-        echo "$pkg"
-    done
-}
+load_helper epm-query
 
 __alt_mark_hold_package()
 {
@@ -41,20 +34,22 @@ __alt_test_glob()
 __alt_mark_hold()
 {
     # TODO: do more long checking via apt
-    local pkg
+    local pkg pkglist names=''
     local i
     __alt_test_glob "$*"
     for i in "$@" ; do
         if is_wildcard "$i" ; then
-            local pkglist
             pkglist="$(epm qp --short "^$i")" || continue
             for pkg in $pkglist ; do
                 __alt_mark_hold_package $pkg
             done
-            return
-        else
-            pkg="$(epm query --short "$i")" || continue
+            continue
         fi
+        names="$names $i"
+    done
+    [ -n "$names" ] || return 0
+    pkglist="$(resolve_installed_packages $names)" || return 1
+    for pkg in $pkglist ; do
         __alt_mark_hold_package $pkg
     done
 }
@@ -62,12 +57,16 @@ __alt_mark_hold()
 __alt_mark_unhold()
 {
     # TODO: do more long checking via apt
-    local pkg
+    local pkg pkglist
     local i
     __alt_test_glob "$*"
     for i in "$@" ; do
-        pkg="$(epm query --short "$i")" || pkg="$i"
-        sudocmd rm -fv /etc/apt/apt.conf.d/hold-$pkg.conf
+        # unhold all providers of a virtual name, or the name itself for removed packages
+        pkglist="$(__get_installed_packages "$i")"
+        [ -n "$pkglist" ] || pkglist="$i"
+        for pkg in $pkglist ; do
+            sudocmd rm -fv /etc/apt/apt.conf.d/hold-$pkg.conf
+        done
     done
 }
 
@@ -112,7 +111,7 @@ case "$BASEDISTRNAME:$PMTYPE" in
 esac
 
 local resolved
-resolved="$(__epm_mark_resolve "$@")" || return 1
+resolved="$(resolve_installed_packages "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
@@ -152,7 +151,7 @@ case "$BASEDISTRNAME:$PMTYPE" in
 esac
 
 local resolved
-resolved="$(__epm_mark_resolve "$@")" || return 1
+resolved="$(resolve_installed_packages "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
@@ -245,7 +244,7 @@ epm_mark_auto()
 {
 
 local resolved
-resolved="$(__epm_mark_resolve "$@")" || return 1
+resolved="$(resolve_installed_packages "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
@@ -284,7 +283,7 @@ epm_mark_manual()
 {
 
 local resolved
-resolved="$(__epm_mark_resolve "$@")" || return 1
+resolved="$(resolve_installed_packages "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
@@ -324,7 +323,7 @@ epm_mark_weak()
 {
 
 local resolved
-resolved="$(__epm_mark_resolve "$@")" || return 1
+resolved="$(resolve_installed_packages "$@")" || return 1
 [ -n "$resolved" ] || return 1
 set -- $resolved
 
