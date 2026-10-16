@@ -51,7 +51,7 @@ epm_dedup()
 {
 case $PMTYPE in
     dnf-rpm|dnf5-rpm)
-        sudocmd $DNFCMD $(subst_option non_interactive -y) $(subst_option dryrun --assumeno) remove --duplicates
+        sudocmd_dnf $(subst_option non_interactive -y) remove --duplicates
         return
         ;;
 esac

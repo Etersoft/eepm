@@ -207,15 +207,14 @@ __epm_upgrade_do()
         CMD="yum $OPTIONS upgrade $*"
         ;;
     dnf-rpm|dnf5-rpm)
-        local OPTIONS="$(subst_option non_interactive -y) $(subst_option dryrun --assumeno) $__EPM_DNF_REPO_OPTIONS"
+        local OPTIONS="$(subst_option non_interactive -y) $__EPM_DNF_REPO_OPTIONS"
         # keep kernel modules for all installed kernels
         if [ "$BASEDISTRNAME" = "alt" ] ; then
             load_helper epm-sh-altlinux
             OPTIONS="$OPTIONS $(__alt_dnf_installonly_opt)"
         fi
-        CMD="$DNFCMD $OPTIONS upgrade"
-        # dnf returns error on --assumeno
-        local ignore_dryrun_error="$dryrun"
+        sudocmd_dnf $OPTIONS upgrade "$@"
+        return
         ;;
     snappy)
         CMD="snappy update"
@@ -306,9 +305,6 @@ __epm_upgrade_do()
         ;;
     esac
 
-    sudocmd $CMD "$@" && return
-    local RES=$?
-    [ -n "$ignore_dryrun_error" ] && return 0
-    return $RES
+    sudocmd $CMD "$@"
 
 }

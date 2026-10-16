@@ -210,6 +210,16 @@ sudocmd()
     sudorun "$@"
 }
 
+# run $DNFCMD with sudo, add --assumeno in dry run mode
+# dnf returns error on --assumeno, so ignore the error in dry run mode
+sudocmd_dnf()
+{
+    sudocmd $DNFCMD $(subst_option dryrun --assumeno) "$@"
+    local RES=$?
+    [ -n "$dryrun" ] && return 0
+    return $RES
+}
+
 # Run every arg with sudocmd
 # Returns on any error
 sudocmd_foreach()

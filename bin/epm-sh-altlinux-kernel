@@ -121,11 +121,8 @@ __ak_install()
                     ;;
             esac
         done
-        sudocmd $DNFCMD $yes $(subst_option dryrun --assumeno) $(subst_option download_only --downloadonly) $(__alt_dnf_installonly_opt $modules) install $(echo "$*" | exp_with_rpm_version)
-        local RES=$?
-        # dnf returns error on --assumeno
-        [ -n "$dryrun" ] && return 0
-        return $RES
+        sudocmd_dnf $yes $(subst_option download_only --downloadonly) $(__alt_dnf_installonly_opt $modules) install $(echo "$*" | exp_with_rpm_version)
+        return
     fi
     sudocmd apt-get $__EPM_APT_REPO_OPTIONS install -o APT::Install::Virtual=true $yes $reinstall $(subst_option dryrun --simulate) $(subst_option download_only -d) "$@"
 }
@@ -137,10 +134,8 @@ __ak_remove()
     [ -n "$non_interactive" ] || [ -n "$force" ] && yes='-y'
     if __ak_is_dnf ; then
         # dnf removes kernel modules for removed kernels as dependent packages
-        sudocmd $DNFCMD $yes $(subst_option dryrun --assumeno) remove $(echo "$*" | exp_with_rpm_version)
-        local RES=$?
-        [ -n "$dryrun" ] && return 0
-        return $RES
+        sudocmd_dnf $yes remove $(echo "$*" | exp_with_rpm_version)
+        return
     fi
     sudocmd apt-get $yes $(subst_option dryrun --simulate) remove "$@"
 }
