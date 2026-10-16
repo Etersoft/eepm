@@ -39,17 +39,14 @@ __check_upgrade_conditions()
 
 epm_upgrade_alt_tasks()
 {
-    load_helper epm-sh-backend
     load_helper epm-install
+    load_helper epm-install-alt
 
-    local installlist="$(get_task_packages "$@")"
+    prepare_task_packages "$@"
 
     [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
-    if [ -z "$full" ] ; then
-        # hack: drop -devel packages to avoid package provided by multiple packages
-        installlist="$(estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$installlist")"
-    fi
+    [ -n "$full" ] || installlist="$(__epm_alt_task_drop_devel "$installlist")"
 
     # install only installed packages (simulate upgrade packages)
     installlist="$(get_only_installed_packages "$installlist")"
@@ -61,24 +58,7 @@ epm_upgrade_alt_tasks()
         return 22
     fi
 
-    local task_numbers=""
-    local arg
-    for arg in "$@" ; do
-        local tn="$(get_tasknumber_from_arg "$arg")"
-        [ -n "$tn" ] && task_numbers="$task_numbers $tn"
-    done
-
-    if [ "$PMTYPE" != "apt-rpm" ] ; then
-        load_helper epm-install-alt
-        __epm_install_alt_task_files "$installlist" $task_numbers
-        return
-    fi
-
-    local res
-    __use_tmp_apt_for_tasks $task_numbers || return 1
-    (pkg_names="$installlist" epm_install)
-    res=$?
-    return $res
+    __epm_install_alt_task_list "$installlist" $unique_tasks
 }
 
 epm_upgrade()
