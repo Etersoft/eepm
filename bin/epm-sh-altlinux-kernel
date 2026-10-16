@@ -772,6 +772,8 @@ epm_alt_remove_old_kernels()
         local k ak_flavour ak_release ak_user_flavour package remove='' remove_items=''
         for k in $kernels ; do
             ak_flavour='' ak_release=''
+            # strip arch from rpm -q output
+            k="$(echo "$k" | sed -E -e 's/\.(x86_64|i586|aarch64|armh|ppc64le|riscv64|loongarch64|e2k(v[0-9]+)?|noarch)$//')"
             __ak_parse_release "$k"
             [ -n "$ak_flavour" ] || fatal 'Can'"'"'t get kernel flavour from $k. Use kernel-image-FLAVOUR-VERSION-RELEASE format.'
             package="kernel-image-$ak_flavour-$ak_release"
