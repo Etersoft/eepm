@@ -84,10 +84,21 @@ get_latest_version()
     echo "$var" | head -n1 | cut -d" " -f1
 }
 
+# print version of eepm package in Korinf for the current distro (the same as epm ei installs)
+__get_korinf_epm_version()
+{
+    load_helper epm-epm_install
+    local url
+    url="$(__epm_korinf_site_mask eepm 2>/dev/null)" || return
+    basename "$url" | sed -n -e 's|^eepm[-_]\([0-9][0-9.]*\)[-_].*|\1|p'
+}
+
 __check_for_epm_version()
 {
     info 'Checking for latest EPM version in Korinf repository...'
-    local latest="$(get_latest_version eepm)"
+    local latest="$(__get_korinf_epm_version)"
+    # fallback: app-versions is updated by the bot with a delay up to a day
+    [ -n "$latest" ] || latest="$(get_latest_version eepm)"
     if [ -z "$latest" ] ; then
         warning "Can't retrieve latest EPM version info."
         return 1
