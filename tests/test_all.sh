@@ -19,6 +19,10 @@ restore_epm()
 set -e -x
 set -o pipefail
 
+# removing $TESTPKG2 (erc) also removes etersoft-build-utils installed by CI,
+# install packages needed by epm explicitly so autoremove keeps them
+epm --auto install curl gettext
+
 # Section 1: Basic info commands (never break the system)
 epm --version
 epm print info
