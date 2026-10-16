@@ -521,7 +521,9 @@ epm_alt_update_kernel()
     if [ -z "$kernels" ] ; then
         info 'There are no available kernels with flavour $kernel_flavour'
         [ -z "$ak_user_flavour" ] || fatal 'Remove $ak_user_flavour to attempt an automatic upgrade.'
-        local current_kver="$uname_r"
+        # compare kernel versions only: 6.6.58-un-def-alt1 is newer than 6.6.58-alt1 for rpm (ALT bug 51945)
+        local current_kver
+        current_kver="$(__ak_version_from_release "$uname_r")"
         echo "$kernel_flavour" | grep -q -E '^[0-9]+\.[0-9]+$' && current_kver="$kernel_flavour"
         info 'Searching for a newer flavour (>= $current_kver) ...'
         kernel_flavour="$(__ak_next_flavours "$current_kver" | tail -n1)"
