@@ -641,8 +641,33 @@ epm_alt_update_kernel()
 
     __ak_install $kernel_to_install $modules $extra || fatal 'Failed to install kernel $kernel_flavour-$kmaxver packages'
     [ -n "$dryrun" ] || [ -n "$download_only" ] && return 0
+    [ -n "$kernel_to_install" ] && { __ak_check_initrd "kernel-image-$kernel_flavour-$kmaxver" || return ; }
     sync
     __ak_x11_setup_drv $selected
+}
+
+# the boot filetrigger (bootloader-utils) does nothing without /proc and /sys (chroot, image build)
+__ak_initrd_trigger_works()
+{
+    [ -d /proc/sys ] && [ -d /sys/class ] && [ -x /sbin/installkernel ]
+}
+
+# initrd is created by rpm filetrigger (installkernel), its failure does not change apt/dnf exit code
+# (ALT bug 61092, 31027): check initrd for the installed kernel is really created
+# arg: kernel package name (kernel-image-FLAVOUR-VERSION-RELEASE)
+# Honors EPM_BOOT_DIR for test isolation
+__ak_check_initrd()
+{
+    local kpkg="$1" vmlinuz kr
+    local bootdir="${EPM_BOOT_DIR:-/boot}"
+    __ak_initrd_trigger_works || return 0
+    vmlinuz="$(a='' rpm -ql "$kpkg" 2>/dev/null | grep -m1 '^/boot/vmlinuz-')" || return 0
+    kr="${vmlinuz#/boot/vmlinuz-}"
+    [ -s "$bootdir/initrd-$kr.img" ] && return 0
+    warning 'initrd $bootdir/initrd-$kr.img for the new kernel $kpkg was not created (see make-initrd errors above).'
+    warning 'Do not reboot: the boot menu entry for the new kernel has no initrd.'
+    info 'Fix the errors and run # /sbin/installkernel $kr (or remove the kernel: # epm remove $kpkg)'
+    return 1
 }
 
 # print kernel release (as uname -r) of the latest kernel with uptime >= 1 day
