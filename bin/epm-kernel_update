@@ -86,8 +86,9 @@ esac
     case $BASEDISTRNAME in
     "alt")
         # list kernels even without installed ones
+        # install the explicitly requested kernel (epm install kernel-image-6.12)
         case " $* " in
-            *" -l "*|*" --list "*|*" -h "*|*" --help "*)
+            *" -l "*|*" --list "*|*" -h "*|*" --help "*|*" -t "*|*" --type "*|*" -r "*|*" --release "*)
                 ;;
             *)
                 if ! a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q . ; then
