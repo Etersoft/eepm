@@ -305,13 +305,27 @@ get_next_release()
     esac
 }
 
+# rpm rounds every file up to the filesystem block size when checks disk space,
+# so on ZFS (128K records) it requires much more space than really used
+__warn_about_big_fs_block()
+{
+    local bsize fstype
+    bsize="$(stat -f -c %s / 2>/dev/null)" || return
+    [ "$bsize" -gt 65536 ] 2>/dev/null || return
+    fstype="$(stat -f -c %T / 2>/dev/null)"
+    warning 'The block size of / filesystem ($fstype) is $bsize bytes: rpm overestimates required disk space (error "needs NNNMB on the / filesystem").'
+    info 'Free more space on / or run the upgrade with skipped disk space check:'
+    info '    # apt-get dist-upgrade -o RPM::Install-Options::=--ignoresize'
+}
+
 __do_upgrade()
 {
     docmd epm $non_interactive $force_yes upgrade && return
     docmd epm $non_interactive $force_yes fix
     docmd epm $non_interactive $force_yes upgrade && return
-    local cmd="$0"
-    fatal 'Check the errors and run "# $cmd" after fix.'
+    __warn_about_big_fs_block
+    # repos are switched already, release-upgrade continues from this point
+    fatal 'Check the errors and run "# epm release-upgrade $TO" after fix.'
 }
 
 # TODO: install new conf without signs?
