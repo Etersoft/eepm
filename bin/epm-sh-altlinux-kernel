@@ -246,9 +246,12 @@ __ak_max_version()
 }
 
 # print short names of installed external modules for the flavour (kernel-modules-<name>-<flavour>)
+# if kernel version $2 is set, only modules built for this kernel (they require kernel-image-<flavour> = version)
 __ak_installed_modules()
 {
-    a='' rpm -qa --qf '%{NAME}\n' "kernel-modules-*-$1" 2>/dev/null | sed -e "s|^kernel-modules-||" -e "s|-$1\$||" | sort -u
+    a='' rpm -qa --qf '[%{NAME} %{REQUIRENAME} %{REQUIREVERSION}\n]' "kernel-modules-*-$1" 2>/dev/null | \
+        awk -v k="kernel-image-$1" -v v="$2" '{ sub(/^[0-9]+:/, "", $3) } v == "" || ($2 == k && ($3 == v || index($3, v ":") == 1)) { print $1 }' | \
+        sed -e "s|^kernel-modules-||" -e "s|-$1\$||" | sort -u
 }
 
 # print stable flavours (x.y, std-def, un-def) with versions >= $1 from repo, the newest first
@@ -592,9 +595,13 @@ epm_alt_update_kernel()
         allnames="$(estrlist exclude "$delmodules" "$allnames")"
     fi
 
+    # modules installed for the booted kernel, not for older kernels of the flavour (ALT bug 29408)
+    local booted_modules
+    booted_modules="$(__ak_installed_modules "$current_flavour" "$(__ak_version_from_release "$uname_r")")"
+
     # check if selected kernel has all external modules installed for the booted kernel
     local lost
-    lost="$(estrlist exclude "$allnames" "$(__ak_installed_modules "$current_flavour")")"
+    lost="$(estrlist exclude "$allnames" "$booted_modules")"
     lost="$(estrlist exclude "$delmodules" "$lost")"
     if [ -n "$lost" ] ; then
         warning 'Selected kernel does not have the following external module(s) which you have installed for your booted $current_flavour kernel:' $lost
@@ -606,7 +613,10 @@ epm_alt_update_kernel()
     if [ -n "$all" ] ; then
         selected="$allnames"
     else
-        selected="$(estrlist union "$(__ak_installed_modules "$kernel_flavour") $(__ak_installed_modules "$current_flavour") $addmodules")"
+        # all modules of another flavour we switch to (we can't boot it to update)
+        local flavour_modules=''
+        [ "$kernel_flavour" = "$current_flavour" ] || flavour_modules="$(__ak_installed_modules "$kernel_flavour")"
+        selected="$(estrlist union "$flavour_modules $booted_modules $addmodules")"
         if [ -n "$interactive_select" ] ; then
             assure_exists fzf
             local chosen
