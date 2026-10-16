@@ -91,7 +91,8 @@ esac
             *" -l "*|*" --list "*|*" -h "*|*" --help "*|*" -t "*|*" --type "*|*" -r "*|*" --release "*)
                 ;;
             *)
-                if ! a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q . ; then
+                load_helper epm-sh-altlinux
+                if ! __alt_has_installed_kernels ; then
                     info "No installed kernel packages, skipping update"
                     return
                 fi

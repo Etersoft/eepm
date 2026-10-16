@@ -26,7 +26,8 @@ epm_remove_old_kernels()
 
     case $BASEDISTRNAME in
     "alt")
-        if ! a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q . && [ "$1" != "-h" ] && [ "$1" != "--help" ] ; then
+        load_helper epm-sh-altlinux
+        if ! __alt_has_installed_kernels && [ "$1" != "-h" ] && [ "$1" != "--help" ] ; then
             info "No installed kernel packages, skipping cleaning"
             return
         fi

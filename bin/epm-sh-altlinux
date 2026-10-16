@@ -446,3 +446,9 @@ __alt_dnf_installonly_opt()
     [ -n "$modules" ] || return 0
     echo "--setopt=installonlypkgs=$cur,$(echo $modules | tr ' ' ',')"
 }
+
+# check if any kernel package is installed (there are no kernels in containers)
+__alt_has_installed_kernels()
+{
+    a='' rpm -qa 'kernel-image-*' 2>/dev/null | grep -q .
+}
