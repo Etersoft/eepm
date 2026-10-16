@@ -65,7 +65,7 @@ $(cmd_list):
 
 $(installd_list):
 	mkdir -p $(DESTDIR)$(sysconfdir)/eepm/$@/
-	cp $@/* $(DESTDIR)$(sysconfdir)/eepm/$@/
+	cp -P $@/* $(DESTDIR)$(sysconfdir)/eepm/$@/
 	chmod 0755 $(DESTDIR)$(sysconfdir)/eepm/$@/*.sh 2>/dev/null || :
 
 
