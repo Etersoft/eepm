@@ -370,24 +370,55 @@ is_installed_virtual()
 }
 
 
+# print short names of installed packages for a package name, a virtual name or a file
+__get_installed_packages()
+{
+    if is_installed_real "$1" ; then
+        (quiet=1 __epm_query_shortname "$1") 2>/dev/null | uniq
+        return
+    fi
+    (quiet=1 short=1 __epm_whatprovides_installed "$1") 2>/dev/null | sort -u
+}
+
 # resolve virtual package names to real installed package names (single provider only)
 resolve_virtual_packages()
 {
-    local i
+    local i providers
     for i in "$@" ; do
-        if ! is_installed_virtual "$i" ; then
+        if is_installed_real "$i" ; then
             echo "$i"
             continue
         fi
-        local providers
-        providers="$(short=1 __epm_whatprovides_installed "$i" 2>/dev/null)"
-        if [ "$(echo "$providers" | wc -l)" = "1" ] ; then
+        providers="$(__get_installed_packages "$i")"
+        if [ -n "$providers" ] && [ "$(echo "$providers" | wc -l)" = "1" ] ; then
             info 'Resolved virtual package $i to $providers'
             echo "$providers"
         else
             echo "$i"
         fi
     done
+}
+
+# resolve package names, virtual names and files to short names of installed packages
+# (like dnf, all providers of a virtual name are used after confirmation)
+# returns 1 if some name is not installed
+resolve_installed_packages()
+{
+    local i pkgs providers res=0
+    for i in "$@" ; do
+        pkgs="$(__get_installed_packages "$i")"
+        if [ -z "$pkgs" ] ; then
+            warning 'Package $i is not installed'
+            res=1
+            continue
+        fi
+        if [ "$(echo "$pkgs" | wc -l)" -gt 1 ] ; then
+            providers="$(echo "$pkgs" | xargs)"
+            confirm_info '$i is provided by several installed packages: $providers. All of them will be used.' || return
+        fi
+        echo "$pkgs"
+    done
+    return $res
 }
 
 filter_pkgnames_to_short()
