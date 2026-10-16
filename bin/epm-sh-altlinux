@@ -232,6 +232,17 @@ __alt_dnf_repo_type()
     echo "rpm-md"
 }
 
+# eget needs wget or curl (to download the mirror key for dnf)
+# dnf has no repos yet when ALT is switching to dnf, so install curl via apt then
+__alt_assure_downloader()
+{
+    is_command curl && return
+    is_command wget && return
+    try_assure_exists curl && return
+    is_command apt-get && PMTYPE=apt-rpm try_assure_exists curl && return
+    fatal 'There are no wget nor curl in the system. Install something with $ epm install curl'
+}
+
 # check if dnf uses APT-RPM repos (type=apt-rpm) from /etc/yum.repos.d
 __alt_dnf_uses_aptrpm_repos()
 {

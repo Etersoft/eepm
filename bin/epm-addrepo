@@ -280,6 +280,7 @@ __epm_addrepo_alt_dnf_mirror_key()
     local tmpfile
     tmpfile=$(mktemp) || fatal
     remove_on_exit $tmpfile
+    __alt_assure_downloader
     eget -q -O- "$ALT_DNF_MIRROR_KEYURL" >$tmpfile && [ -s $tmpfile ] || fatal 'Can'\''t download $ALT_DNF_MIRROR_KEYURL'
     assure_exists gpg gnupg2
     a='' gpg --with-colons --with-fingerprint $tmpfile 2>/dev/null | grep -q "^fpr:.*:$ALT_DNF_MIRROR_KEYFPR:" || fatal 'Wrong key in $ALT_DNF_MIRROR_KEYURL (expected fingerprint $ALT_DNF_MIRROR_KEYFPR)'

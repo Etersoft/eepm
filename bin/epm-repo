@@ -82,6 +82,8 @@ epm_repo()
         # keep the type of dnf repos (apt-rpm or rpm-md) for the recreated repos
         __alt_dnf_uses_aptrpm_repos && export EPM_DNF_REPO_TYPE="apt-rpm"
         try_change_alt_repo
+        # install a downloader while the current repos are still available
+        [ "$BASEDISTRNAME" = "alt" ] && [ "$PMTYPE" != "apt-rpm" ] && __alt_assure_downloader
         epm repo rm all
         epm addrepo "$@" || fatal 'Cannot add repo "'$@'", restoring...'
         # Restore mirror if it was detected
