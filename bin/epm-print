@@ -180,13 +180,15 @@ print_pkg_name()
 # algorithm: list all files in PKGDIR, print packages with our source pkg name
 print_binpkgfilelist()
 {
-    local PKGDIR=$1
-    local PKGNAME=$(basename $2)
-    find "$PKGDIR" ! -name '*\.src\.rpm' -name '*\.rpm' -execdir \
-        rpmquery -p --qf='%{sourcerpm}\t%{name}-%{version}-%{release}.%{arch}.rpm\n' "{}" \; \
-        | grep "^$PKGNAME[[:space:]].*" \
-        | cut -f2 \
-        | xargs -n1 -I "{}" echo -n "$PKGDIR/{} "
+    local PKGDIR="$1"
+    local PKGNAME="$(basename "$2")"
+    local f
+    # use real file names: the name built from NVRA misses disttag (ROSA: -alt1rosa-rosa2021.1)
+    find "$PKGDIR" ! -name '*.src.rpm' -name '*.rpm' | while read -r f ; do
+        if [ "$(a= rpmquery -p --qf='%{sourcerpm}' "$f" 2>/dev/null)" = "$PKGNAME" ] ; then
+            printf '%s ' "$f"
+        fi
+    done
 }
 
 # TODO: need try detect more strict
