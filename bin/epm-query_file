@@ -33,6 +33,21 @@ __abs_filename()
     echo "$1"
 }
 
+# work against usrmerge: print the path with resolved dir (/bin/bash -> /usr/bin/bash)
+__usrmerge_path()
+{
+    echo "$(realpath "$(dirname "$1")")/$(basename "$1")"
+}
+
+__do_query_file_owner()
+{
+    if [ -n "$short" ] ; then
+        __do_short_query "$1"
+    else
+        __do_query "$1"
+    fi
+}
+
 __do_query_real_file()
 {
     local TOFILE
@@ -46,12 +61,7 @@ __do_query_real_file()
         if [ "$TOFILE" = "$file" ] ; then
             fatal 'File $TOFILE is missing in $PATH'
         else
-            # work against usrmerge
-            local t="$(realpath "$(dirname "$TOFILE")")/$(basename "$TOFILE")" #"
-            if [ "$TOFILE" != "$t" ] ; then
-                #info " > $TOFILE is placed as $t"
-                TOFILE="$t"
-            fi
+            TOFILE="$(__usrmerge_path "$TOFILE")"
             info ' > $file is placed as $TOFILE'
         fi
     fi
@@ -59,12 +69,18 @@ __do_query_real_file()
     [ -n "$TOFILE" ] || return
 
     local RES
-    if [ -n "$short" ] ; then
-        __do_short_query "$TOFILE"
-        RES=$?
-    else
-        __do_query "$TOFILE"
-        RES=$?
+    __do_query_file_owner "$TOFILE"
+    RES=$?
+
+    # dpkg knows only /usr/bin/bash, not /bin/bash
+    if [ "$RES" != "0" ] ; then
+        local t="$(__usrmerge_path "$TOFILE")"
+        if [ "$t" != "$TOFILE" ] ; then
+            info ' > $TOFILE is placed as $t'
+            TOFILE="$t"
+            __do_query_file_owner "$TOFILE"
+            RES=$?
+        fi
     fi
 
     # get value of symbolic link
@@ -98,13 +114,24 @@ dpkg_print_name_version()
 }
 
 
+# print names of packages owning the file from dpkg -S output
+# (skip diversions, split "pkg1, pkg2: /path", drop :arch)
+__dpkg_file_owners()
+{
+    local out
+    out="$(a='' dpkg -S "$1")" || return
+    echo "$out" | grep -v "^diversion by" | sed -e "s|: /.*||" | tr ',' '\n' | sed -e "s|^ *||" -e "s|:.*||"
+}
+
 __do_query()
 {
     local CMD
     case $PMTYPE in
         *-dpkg)
             showcmd dpkg -S "$1"
-            dpkg_print_name_version "$(a='' dpkg -S "$1" | grep -v "^diversion by" | sed -e "s|:.*||")"
+            local owners
+            owners="$(__dpkg_file_owners "$1")" || return
+            dpkg_print_name_version $owners
             return ;;
         *-rpm)
             CMD="rpm -qf"
@@ -161,8 +188,9 @@ __do_short_query()
         *-rpm)
             CMD="rpm -qf --queryformat %{NAME}\n"
             ;;
-        apt-dpkg)
-            docmd dpkg -S "$1" | sed -e "s|:.*||"
+        *-dpkg)
+            showcmd dpkg -S "$1"
+            __dpkg_file_owners "$1"
             return ;;
         NOemerge)
             assure_exists equery
@@ -184,6 +212,24 @@ __do_short_query()
     docmd $CMD $@
 }
 
+
+# print short names of packages owning the file,
+# or owning the symlink target if the file itself is not owned (f.i., alternatives)
+get_file_owner_packages()
+{
+    local file="$1" owners t
+    owners="$(short=1 __do_short_query "$file" 2>/dev/null)"
+    if [ -z "$owners" ] ; then
+        t="$(__usrmerge_path "$file")"
+        [ "$t" = "$file" ] || owners="$(short=1 __do_short_query "$t" 2>/dev/null)"
+    fi
+    if [ -z "$owners" ] && [ -L "$file" ] ; then
+        t="$(readlink -f -- "$file")"
+        [ -e "$t" ] && owners="$(short=1 __do_short_query "$t" 2>/dev/null)"
+    fi
+    [ -n "$owners" ] || return
+    echo "$owners" | sort -u
+}
 
 epm_query_file()
 {
