@@ -250,10 +250,12 @@ prepare_task_packages()
     #   installlist             — final list of packages to install
     #   requested_task_packages — packages explicitly requested from a task
     #   unique_tasks            — unique task names from args
+    #   plain_packages          — package names given without a task (from the repos)
 
     installlist=""
     requested_task_packages=""
     unique_tasks=""
+    plain_packages=""
     local seen_tasks=""
     local task_packages=""
 
@@ -262,7 +264,10 @@ prepare_task_packages()
         local task="$(get_tasknumber_from_arg "$arg")"
         local pkg="$(get_pkgname_from_taskarg "$arg")"
 
-        [ -n "$task" ] || continue
+        if [ -z "$task" ] ; then
+            plain_packages="$plain_packages $arg"
+            continue
+        fi
 
         # Fetch task packages once per unique task
         if ! echo " $seen_tasks " | grep -q " $task "; then
@@ -307,9 +312,16 @@ __epm_download_alt_task_files()
 
 __epm_install_alt_task_files()
 {
+    local names="$1" f task_names=''
     load_helper epm-install
     __epm_download_alt_task_files "$@"
-    epm_install_files $task_files
+    epm_install_files $task_files || return
+    # install packages missed in the task(s) (f.i., plain names from the repos) by names
+    for f in $task_files ; do
+        task_names="$task_names $(epm print name for package "$f")"
+    done
+    names="$(estrlist exclude "$task_names" "$names")"
+    [ -z "$names" ] || epm_install_names $names
 }
 
 # hack: drop -devel packages from the task package list to avoid package provided by multiple packages
@@ -363,6 +375,9 @@ epm_install_alt_tasks()
     #    # skip i586- on install
     installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
     #fi
+
+    # plain package names (without a task) are installed from the repos as is
+    installlist="$(estrlist union "$installlist $plain_packages")"
 
     [ -n "$verbose" ] && info "Packages to install: $installlist"
 

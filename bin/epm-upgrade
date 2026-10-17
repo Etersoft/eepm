@@ -48,6 +48,9 @@ epm_upgrade_alt_tasks()
 
     [ -n "$full" ] || installlist="$(__epm_alt_task_drop_devel "$installlist")"
 
+    # plain package names (without a task) are upgraded from the repos too
+    installlist="$(estrlist union "$installlist $plain_packages")"
+
     # install only installed packages (simulate upgrade packages)
     installlist="$(get_only_installed_packages "$installlist")"
 
