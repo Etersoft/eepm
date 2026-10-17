@@ -294,7 +294,7 @@ pkgtype()
         android) echo "apk" ;;
         alpine) echo "apk" ;;
         tinycorelinux) echo "tcz" ;;
-        voidlinux) echo "xbps" ;;
+        void|voidlinux) echo "xbps" ;;
         openwrt) echo "ipk" ;;
         cygwin) echo "tar.xz" ;;
         solus) echo "eopkg" ;;
@@ -379,6 +379,9 @@ normalize_name()
             ;;
         "uos")
             echo "UOS"
+            ;;
+        "Void")
+            echo "VoidLinux"
             ;;
         *)
             #echo "${1// /}"
