@@ -373,6 +373,13 @@ is_installed_virtual()
 # print short names of installed packages for a package name, a virtual name or a file
 __get_installed_packages()
 {
+    case "$1" in
+        /*)
+            load_helper epm-query_file
+            (quiet=1 get_file_owner_packages "$1") 2>/dev/null
+            return
+            ;;
+    esac
     if is_installed_real "$1" ; then
         (quiet=1 __epm_query_shortname "$1") 2>/dev/null | uniq
         return
@@ -408,7 +415,10 @@ resolve_installed_packages()
     for i in "$@" ; do
         pkgs="$(__get_installed_packages "$i")"
         if [ -z "$pkgs" ] ; then
-            warning 'Package $i is not installed'
+            case "$i" in
+                /*) warning 'File $i does not belong to any installed package' ;;
+                *) warning 'Package $i is not installed' ;;
+            esac
             res=1
             continue
         fi
