@@ -30,6 +30,13 @@ else
     APT_ALL_SOURCES_LIST="$APT_SOURCES_LIST_D/*.list $APT_SOURCES_LIST_D/*.sources $APT_SOURCES_LIST"
 fi
 
+# root is not needed to change sources outside of the system (EPM_APT_SOURCES_ROOT, EPM_APT_SOURCES_LIST)
+__assure_root_for_apt_sources()
+{
+    [ -n "$EPM_APT_SOURCES_ROOT$EPM_APT_SOURCES_LIST" ] && return
+    assure_root
+}
+
 # Convert deb822 .sources file to one-line deb format
 __convert_deb822_to_oneline()
 {

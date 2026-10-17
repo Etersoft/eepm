@@ -23,7 +23,7 @@ load_helper epm-sh-repo
 
 __epm_repoenable_alt()
 {
-    assure_root
+    __assure_root_for_apt_sources
     local rl
     # ^rpm means full string
     if rhas "$1" "\^rpm" ; then
@@ -57,7 +57,7 @@ case $PMTYPE in
         local files
         files="$(__find_deb822_files_by_pattern "$1")"
         if [ -n "$files" ] ; then
-            assure_root
+            __assure_root_for_apt_sources
             echo "$files" | while read f ; do
                 info "Enabling $f ..."
                 __deb822_enable "$f"

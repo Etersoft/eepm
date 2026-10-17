@@ -23,7 +23,7 @@ load_helper epm-sh-repo
 
 __epm_repodisable_alt()
 {
-    assure_root
+    __assure_root_for_apt_sources
     case "$1" in
         --regex|--regexp)
             regexp="--regexp"
@@ -59,7 +59,7 @@ case $PMTYPE in
         local files
         files="$(__find_deb822_files_by_pattern "$1")"
         if [ -n "$files" ] ; then
-            assure_root
+            __assure_root_for_apt_sources
             echo "$files" | while read f ; do
                 info "Disabling $f ..."
                 __deb822_disable "$f"
