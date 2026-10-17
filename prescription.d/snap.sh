@@ -2,6 +2,7 @@
 
 SUPPORTEDARCHES=''
 DESCRIPTION="Add snap support to system"
+DESCRIPTION_ru="Добавить поддержку Snap в систему"
 
 CONFINEMENT="$2"
 
