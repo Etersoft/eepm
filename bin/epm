@@ -715,14 +715,6 @@ check_filenames()
         # hack for abs path: TODO: reasons
         elif { [ -f "$opt" ] && rhas "$opt" "[/\.]" ; } || { is_abs_path "$opt" && ! rhas "$opt" "[()]" ; } ; then
             has_space "$opt" && warning 'There are space(s) in filename $opt, it is not supported. Skipped' && continue
-            # resolve symlinks for correct access check by root
-            local resolved
-            resolved="$(realpath "$opt" 2>/dev/null)" || continue
-            if has_space "$resolved" ; then
-                warning "Resolved path of $opt has space(s), using symlink path"
-            else
-                opt="$resolved"
-            fi
             [ -n "$pkg_files" ] && pkg_files="$pkg_files $opt" || pkg_files="$opt"
         else
             has_space "$opt" && warning 'There are space(s) in package name $opt, it is not supported. Skipped.' && continue
