@@ -31,12 +31,13 @@ __epm_korinf_site_mask() {
     # set arch for Korinf compatibility
     [ "$SYSTEMARCH" = "x86_64" ] && archprefix="x86_64/"
     local URL="$EPM_KORINF_REPO_URL/$archprefix$DISTRNAME/$DISTRVERSION"
-    if ! eget --check-url "$URL" ; then
+    if ! docmd eget --check-url "$URL" ; then
         tURL="$EPM_KORINF_REPO_URL/$archprefix$BASEDISTRNAME/$DISTRREPONAME"
         info "Can't access to $URL, trying get by base distro name ..."
         docmd eget --check-url "$tURL" && URL="$tURL"
     fi
-    eget --list --latest "$URL/$MASK*.$PKGFORMAT"
+    # do not hang forever on a stalled connection
+    docmd eget --timeout 20 --read-timeout 60 --list --latest "$URL/$MASK*.$PKGFORMAT"
 }
 
 __epm_korinf_list() {

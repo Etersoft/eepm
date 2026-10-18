@@ -80,7 +80,8 @@ get_latest_version()
     URL="https://eepm.ru/app-versions"
     #update_url_if_need_mirrored
     local var
-    var="$(fetch_url "$URL/$1")" || return
+    # do not hang forever on a stalled connection
+    var="$(docmd eget -q --timeout 20 --read-timeout 60 -O- "$URL/$1")" || return
     echo "$var" | head -n1 | cut -d" " -f1
 }
 
@@ -89,7 +90,7 @@ __get_korinf_epm_version()
 {
     load_helper epm-epm_install
     local url
-    url="$(__epm_korinf_site_mask eepm 2>/dev/null)" || return
+    url="$(__epm_korinf_site_mask eepm)" || return
     basename "$url" | sed -n -e 's|^eepm[-_]\([0-9][0-9.]*\)[-_].*|\1|p'
 }
 
