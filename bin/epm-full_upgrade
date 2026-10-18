@@ -96,7 +96,7 @@ confirm_action()
         if [ "$BASEDISTRNAME" = "alt" ] && epm status --original eepm ; then
             info "Checking for new eepm package in the repo..."
             epm_version_before=$(epmq eepm 2>/dev/null)
-            docmd epm $dryrun install eepm &>/dev/null
+            docmd epm $dryrun install eepm
             epm_version_after=$(epmq eepm 2>/dev/null)
             if [ "$epm_version_before" != "$epm_version_after" ] ; then
                 info "An update for epm has been found, restarting epm full-upgrade..."
