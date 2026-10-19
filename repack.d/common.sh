@@ -582,10 +582,28 @@ __get_binary_requires()
     # *.musl.node: Node native addons built for musl carry NEEDED libc.so (musl
     # SONAME), unsatisfiable on glibc; never loaded anyway (Node uses *.glibc.node).
     info "  Getting executable requires ..."
-    epm req --short $(find "$fdir" $findex -type f -executable ! -name "*.musl.node") </dev/null 2>/dev/null
+    find "$fdir" $findex -type f -executable ! -name "*.musl.node" -print | __get_files_requires
 
     info "  Getting libs requires ..."
-    epm req --short $(find "$fdir" $findex -type f -name "lib*.so*" ! -name "*.musl.node") </dev/null 2>/dev/null
+    find "$fdir" $findex -type f -name "lib*.so*" ! -name "*.musl.node" -print | __get_files_requires
+}
+
+# get requires for file list from stdin
+# epm skips filenames with spaces (/opt/SMART Technologies), so pass them via symlinks
+__get_files_requires()
+{
+    local f files='' n=0
+    local linkdir="$(mktemp -d)"
+    while IFS= read -r f ; do
+        if has_space "$f" ; then
+            n=$((n+1))
+            ln -s "$f" "$linkdir/$n" || continue
+            f="$linkdir/$n"
+        fi
+        files="$files $f"
+    done
+    [ -n "$files" ] && epm req --short $files </dev/null 2>/dev/null
+    rm -rf "$linkdir"
 }
 
 __get_library_provides()
@@ -595,7 +613,7 @@ __get_library_provides()
     epm assure objdump binutils >&2 || fatal "Can't install needed binutils package"
 
     info "  Getting internal provides ..."
-    for libso in $(find "$fdir" -name "lib*.so*") ; do
+    find "$fdir" -name "lib*.so*" | while IFS= read -r libso ; do
         a="" objdump -p "$libso" | grep "SONAME" | sed -e 's|.* ||'
         basename "$libso"
     done
