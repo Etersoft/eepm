@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PKGNAME=activinspire
+PKGNAME="activinspire activinspire-help-ru activresources-core-ru"
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Promethean ActivInspire - software for ActivBoard and ActivPanel interactive whiteboards"
@@ -19,4 +19,5 @@ else
     PKGURL="$REPO/pool/focal/a/ac/activinspire_2004-$VERSION-1-amd64.deb"
 fi
 
-install_pkgurl
+# Russian help and shared resources (lesson backgrounds, grids, sounds)
+install_pkgurl "$REPO/pool/focal/a/ac/activinspire-help-ru_1.0.2-14_all.deb" "$REPO/pool/focal/a/ac/activresources-core-ru_2.0.0-150_all.deb"
