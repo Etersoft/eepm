@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.70
+Version: 3.64.71
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -188,6 +188,54 @@ EOF
 # metapackage, no files
 
 %changelog
+* Wed Oct 21 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.71-alt1
+- epm play whatsie: add missing Qt WebChannel dependency (eterbug #17865)
+- epm play openshot: fix repack (eterbug #17865)
+- epm install: fail if task repo is not available instead of installing packages from system repos
+- epm print binpkgfilelist: return real file names and compare sourcerpm exactly (eterbug #19698)
+- epm repo set: install curl before removing repos for dnf on ALT (needed to download mirror key)
+- epm update: check latest EPM version in Korinf directly, app-versions as fallback
+- epm release-upgrade: suggest 'epm release-upgrade TO' after failed upgrade, explain rpm disk space overestimation on big block fs (ZFS)
+- epm update-kernel: fail if initrd for the new kernel is not created (ALT bug 61092)
+- epm update-kernel: install explicitly requested kernel (-t/-r) even if no kernels are installed
+- epm update-kernel: compare kernel versions without flavour when searching the next flavour (ALT bug 51945)
+- epm remove-old-kernels: do not take the booted kernel as backup, keep the previous kernel if backup is not determined (ALT bug 53849)
+- epm remove-old-kernels: remove only the kernels listed in the command line (ALT bug 55852)
+- epm update-kernel: install modules installed for the booted kernel, not for older kernels of the flavour (ALT bug 29408)
+- epm remove-old-kernels: accept listed kernels with arch suffix (rpm -q output)
+- epm upgrade: use common task install code with epm install (task repos for dnf, TASK/pkg syntax)
+- epm install: support name=version for yum and dnf (exp_with_rpm_version, shared with update-kernel)
+- epm-sh-functions: add sudocmd_dnf (--assumeno in dry run mode, ignore its error), use it in install/upgrade/remove/autoremove/dedup
+- epm-sh-altlinux: add __alt_has_installed_kernels, use it in update-kernel and remove-old-kernels
+- epm install: drop get_current_kernel_flavour, use __ak_flavour_from_release for kernel module flavour
+- epm update-kernel: add --set-default to make an installed kernel default for boot (ALT bug 38888)
+- makefile: keep symlinks (play.d aliases) on install instead of copying targets
+- epm play: add epic-games-launcher (Epic Games Launcher, official AppImage)
+- tests: install curl and gettext explicitly in test_all.sh
+- epm-query: add resolve_installed_packages (names, virtual names, files; several providers after confirmation like dnf)
+- epm installed: add --resolve to print installed package names for package names, virtual names or files
+- epm mark: use resolve_installed_packages, ask before marking all providers of a virtual name (marked all silently before)
+- epm qf: retry usrmerged path for explicit file (dpkg knows only /usr/bin/bash), return dpkg -S error, skip diversions and split several owners
+- epm-query: resolve file paths to their owner packages via epm qf code (works on deb, uses link target for unowned symlinks)
+- epm: do not resolve file arguments with realpath (changed the owner of /bin/sh in queries, partially reverts 7b7b2f444)
+- epm install/upgrade: do not drop plain package names given together with task packages (installed from the repos)
+- distr_info: detect Void Linux by os-release (NAME=Void, vendor void)
+- epm repo enable/disable: do not require root when EPM_APT_SOURCES_ROOT or EPM_APT_SOURCES_LIST is set
+- epm full-upgrade: do not hide output of eepm package update
+- epm update: show commands and set timeouts for network requests when checking for the latest epm version
+- epm play orca-slicer: switch to OrcaSlicer/OrcaSlicer repo and new AppImage names (was stuck on old release), add aarch64
+- epm play: add qidistudio (QIDI Studio, slicer for QIDI 3D printers)
+- epm play photosuite: remove unavailable application (eterbug #17865)
+- epm play zcode-desktop: fix package name (eterbug #17865)
+- epm play waywallen: fix repack (eterbug #17865)
+- epm play: add Millennium
+- epm play orca-slicer: support old AppImage names for versions up to 2.2.0 (app-versions still has 2.2.0)
+- epm play: add vtcode (VT Code, Rust terminal coding agent)
+- epm play: add activinspire (Promethean ActivInspire for interactive whiteboards)
+- epm play activinspire: install Russian help and shared resources
+- repack: scan lib requires of files with spaces in path (/opt/SMART Technologies)
+- epm play: add smart-product-drivers (SMART Board drivers, eterbug #19724)
+
 * Thu Oct 15 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.70-alt1
 - epm repo mirrors/change: support dnf on ALT in all repo modes
 - epm: support APT-RPM repos (type=apt-rpm) for dnf on ALT
