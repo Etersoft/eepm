@@ -51,6 +51,30 @@ load_builder_key()
     [ -n "$EPM_BUILDER_API_KEY" ] || fatal "EPM_BUILDER_API_KEY is not set in $ENV_FILE."
 }
 
+check_srpm_for_sisyphus()
+(
+    topdir=$(mktemp -d) || fatal "Can't create temporary RPM build directory."
+    trap 'rm -rf "$topdir"' EXIT HUP INT TERM
+
+    mkdir -p "$topdir/BUILD" "$topdir/RPMS" "$topdir/SOURCES" \
+        "$topdir/SPECS" "$topdir/SRPMS" || fatal "Can't prepare temporary RPM build directory."
+
+    docmd gear --rpmbuild -- rpmbuild --quiet --define "_topdir $topdir" \
+        --define "_tmppath $topdir" -bs --nodeps --target x86_64 || \
+        fatal "Can't build temporary SRPM."
+
+    srpm=
+    for i in "$topdir"/SRPMS/*.src.rpm ; do
+        [ -f "$i" ] || continue
+        [ -z "$srpm" ] || fatal "More than one temporary SRPM was built."
+        srpm="$i"
+    done
+    [ -n "$srpm" ] || fatal "Temporary SRPM was not built."
+
+    docmd sisyphus_check --no-check=gpg,buildtime --files "$srpm" || \
+        fatal "Temporary SRPM failed Sisyphus checks."
+)
+
 check_release_ready()
 {
     [ "$(git branch --show-current)" = "$RELEASE_BRANCH" ] || fatal "Release must be run from the $RELEASE_BRANCH branch."
@@ -58,7 +82,7 @@ check_release_ready()
         fatal "Tracked files contain uncommitted changes."
     fi
 
-    for cmd in curl git gita rpmbs rpmlog rpmpub ssh ; do
+    for cmd in curl gear git gita gpush rpmbs rpmbuild rpmlog rpmpub sisyphus_check ssh ; do
         require_command "$cmd"
     done
 
@@ -66,7 +90,7 @@ check_release_ready()
         require_remote "$remote"
     done
 
-    gita ls || fatal "ALT task server is not accessible via gita."
+    gita quota || fatal "ALT task server is not accessible via gita."
 
     for host in epm-update epm-sisyphus ; do
         ssh -o BatchMode=yes -o ConnectTimeout=10 "epm@$host" true >/dev/null 2>&1 || fatal "Update host '$host' is not accessible."
@@ -282,17 +306,37 @@ esac
 [ "$(get_version "$SPECNAME")-$(get_release "$SPECNAME")" = "$altversion" ] || fatal "Prepared ALT version does not match $altversion."
 
 head_subject=$(git log -1 --format=%s)
-if [ "$MODE" = no-bump ] && [ "$head_subject" != "$altversion" ] ; then
-    fatal "HEAD is not the rpmlog commit '$altversion'."
+case "$head_subject" in
+    "$altversion")
+        altcommit=$(git rev-parse HEAD)
+        packed_commit=no
+        ;;
+    "commit packed $version")
+        [ "$MODE" = resume ] || fatal "HEAD is not the rpmlog commit '$altversion'."
+        altcommit=$(git rev-parse HEAD^)
+        [ "$(git log -1 --format=%s "$altcommit")" = "$altversion" ] || \
+            fatal "The parent of the packed commit is not '$altversion'."
+        packed_commit=yes
+        ;;
+    *)
+        fatal "HEAD is neither the rpmlog nor the packed commit for $altversion."
+        ;;
+esac
+
+check_srpm_for_sisyphus || exit
+
+gitery_tag_commit=$(remote_tag_commit gitery "$altversion")
+if [ -n "$gitery_tag_commit" ] ; then
+    [ "$gitery_tag_commit" = "$altcommit" ] || \
+        fatal "Tag '$altversion' in gitery does not point to the rpmlog commit."
+    info "ALT task for '$altversion' was already submitted."
+else
+    [ "$packed_commit" = no ] || \
+        fatal "ALT tag '$altversion' is missing; resume from the rpmlog commit."
+    docmd rpmbs gitery -u -f "$SPECNAME" || exit
 fi
 
-
-if [ "$MODE" = resume ] && [ "$head_subject" != "$altversion" ] && [ "$head_subject" != "commit packed $version" ] ; then
-    fatal "HEAD is neither the rpmlog nor the packed commit for $altversion."
-fi
-
-
-if [ "$MODE" = resume ] && [ "$head_subject" = "commit packed $version" ] ; then
+if [ "$packed_commit" = yes ] ; then
     info "Packed files are already committed."
 else
     docmd ./pack_in_onefile.sh || exit
@@ -312,22 +356,8 @@ if [ "$publish_public_tag" = yes ] ; then
 fi
 docmd gpush pub.github || exit
 
-gitery_tag_commit=$(remote_tag_commit gitery "$altversion")
-
-if [ -n "$gitery_tag_commit" ] && [ "$gitery_tag_commit" != "$(git rev-parse HEAD)" ] ; then
-    fatal "Tag '$altversion' in gitery does not point to HEAD."
-fi
-
 docmd rpmpub /var/ftp/pub/Korinf/sources || exit
 docmd trigger_korinf_build || exit
-
-# Force rpmbs to create the Version-Release gear tag even though the public
-# version-only tag already points to the same commit.
-if [ -n "$gitery_tag_commit" ] ; then
-    info "ALT task for '$altversion' was already submitted."
-else
-    docmd rpmbs gitery -u -f "$SPECNAME" || exit
-fi
 
 docmd ssh epm@epm-update /home/epm/bin/update.sh || exit
 docmd ssh epm@epm-sisyphus /home/epm/bin/update.sh || exit
