@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.70"
+EPMVERSION="3.64.71"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -245,6 +245,14 @@ sudocmd()
     sudorun "$@"
 }
 
+sudocmd_dnf()
+{
+    sudocmd $DNFCMD $(subst_option dryrun --assumeno) "$@"
+    local RES=$?
+    [ -n "$dryrun" ] && return 0
+    return $RES
+}
+
 sudocmd_foreach()
 {
     local cmd pkg
@@ -370,6 +378,11 @@ sed_escape_relaxed()
 subst_option()
 {
     eval "[ -n \"\$$1\" ]" && echo "$2" || echo "$3"
+}
+
+exp_with_rpm_version()
+{
+    sed -e 's|\([^ =]\)=\([^ ]\)|\1-\2|g'
 }
 
 store_output()
@@ -2515,7 +2528,7 @@ pkgtype()
         android) echo "apk" ;;
         alpine) echo "apk" ;;
         tinycorelinux) echo "tcz" ;;
-        voidlinux) echo "xbps" ;;
+        void|voidlinux) echo "xbps" ;;
         openwrt) echo "ipk" ;;
         cygwin) echo "tar.xz" ;;
         solus) echo "eopkg" ;;
@@ -2600,6 +2613,9 @@ normalize_name()
             ;;
         "uos")
             echo "UOS"
+            ;;
+        "Void")
+            echo "VoidLinux"
             ;;
         *)
             #echo "${1// /}"
