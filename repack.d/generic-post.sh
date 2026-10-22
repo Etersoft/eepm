@@ -10,6 +10,15 @@ PKG="$4"
 
 . $(dirname $0)/common.sh
 
+# Do not ship upstream repositories and their signing keys.
+for i in /etc/yum.repos.d /etc/zypp/repos.d \
+        /etc/apt/sources.list.d /etc/apt/trusted.gpg.d /etc/apt/keyrings \
+        /etc/pki/rpm-gpg /usr/share/keyrings ; do
+    remove_dir "$i"
+done
+remove_file /etc/apt/sources.list
+remove_file /etc/apt/trusted.gpg
+
 # warn early if any binary is UPX-packed (defeats the soname autodetection below)
 warn_upx_binaries
 
