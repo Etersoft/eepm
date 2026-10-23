@@ -7,9 +7,9 @@ RETURNTARNAME="$2"
 
 echo "$TAR" | grep -q "SMART_software_deb_archive.*\.tar\.gz" || fatal "Unknown file $TAR"
 
-SMARTDIR="opt/SMART Technologies"
-DRVDIR="$SMARTDIR/SMART Product Drivers"
-LANGDIR="$SMARTDIR/Language Setup"
+SMARTDIR="opt/smart-technologies"
+DRVDIR="$SMARTDIR/product-drivers"
+LANGDIR="$SMARTDIR/language-setup"
 
 erc -C archive unpack "$TAR" || fatal
 
@@ -23,6 +23,21 @@ done
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
 cd root || fatal
+
+# Keep executable and library paths usable by dependency scanners.
+mv "opt/SMART Technologies" "$SMARTDIR" || fatal
+mv "$SMARTDIR/SMART Product Drivers" "$DRVDIR" || fatal
+mv "$SMARTDIR/Language Setup" "$LANGDIR" || fatal
+for name in 'Control Panel' 'SMART Board Tools' ; do
+    newname="$(echo "$name" | tr -d ' ')"
+    mv "$DRVDIR/bin/.$name"_elf "$DRVDIR/bin/.$newname"_elf || fatal
+    sed -i "s|/\.${name}_elf|/.${newname}_elf|" "$DRVDIR/bin/$name" || fatal
+done
+# Vendor launchers escape the space in the absolute Qt plugin path.
+for i in "$DRVDIR/bin/"* "$LANGDIR/bin/"* ; do
+    [ "$(head -c 2 "$i")" = '#!' ] || continue
+    sed -i 's|/opt/SMART\\ Technologies|/opt/smart-technologies|g' "$i" || fatal
+done
 
 # done by smart-common postinst
 for i in "$SMARTDIR/common/lib.common"/* ; do
@@ -105,6 +120,11 @@ for i in "$STORE/smart-product-drivers/xdg/menu-desktop"/*.desktop "$STORE/smart
         -e 's|^\(Icon=.*\)\.png$|\1|' \
         -e 's|^Categories=.*|Categories=Settings;HardwareSettings;|' "$i" > "usr/share/applications/$(basename "$i")" || fatal
 done
+
+# The firmware updater supplies a separate desktop file with escaped paths.
+sed -i -e 's|/opt/SMART\\ Technologies/SMART\\ Product\\ Drivers|/opt/smart-technologies/product-drivers|g' \
+    -e 's|/opt/SMART Technologies/SMART Product Drivers|/opt/smart-technologies/product-drivers|g' \
+    usr/share/applications/FWUpdateSmart.desktop || fatal
 
 rm -rf "$STORE" "$DRVDIR/xconfig" usr/share/pixmaps
 

@@ -7,7 +7,7 @@ SPEC="$2"
 . $(dirname $0)/common.sh
 
 # see pack.d/smart-product-drivers.sh
-SMARTDIR="/opt/SMART Technologies"
+SMARTDIR="/opt/smart-technologies"
 
 # Ubuntu renamed libpcre16.so.0 (pcre 8.x) to libpcre16.so.3
 a='' patchelf --replace-needed libpcre16.so.3 libpcre16.so.0 "$BUILDROOT$SMARTDIR/common/lib/libQt5Core.so.5" || fatal
@@ -20,8 +20,7 @@ for i in "$BUILDROOT$SMARTDIR/common/lib"/libicu*.so.66* "$BUILDROOT$SMARTDIR/co
 done
 
 # Qt SQL plugin for MySQL (libmysqlclient.so.21), not used by the drivers
-# (remove_file splits the pattern by spaces, so match the space with ?)
-remove_file "/opt/SMART?Technologies/common/plugins/sqldrivers/libqsqlmysql.so"
+remove_file "/opt/smart-technologies/common/plugins/sqldrivers/libqsqlmysql.so"
 
 # the tools write their settings there
 for i in "/etc/xdg/SMART Technologies Drivers.conf" "/etc/xdg/SMART Technologies/SMART Notebook.conf" ; do
