@@ -61,13 +61,13 @@ create_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		tar)
-			#docmd $HAVE_7Z a -l $arc "$@"
+			#run_7z a -l $arc "$@"
 			docmd tar cvf "$arc" "$@"
 			;;
 		*)
 			# https://bugzilla.altlinux.org/49852
 			# FIXME: creating .tar.* (.tar.gz) is not supported
-			docmd $HAVE_7Z a -snl "$arc" "$@"
+			run_7z a -snl "$arc" "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
@@ -83,7 +83,7 @@ get_7z_snld()
 	if [ -z "$__7z_snld_checked" ] ; then
 		__7z_snld_checked=1
 		local ver
-		ver=$($HAVE_7Z 2>&1 | sed -n 's/.*[Zz]ip.*[[:space:]]\([0-9]*\)\.\([0-9]*\).*/\1\2/p' | head -1)
+		ver=$(run_7z 2>&1 | sed -n 's/.*[Zz]ip.*[[:space:]]\([0-9]*\)\.\([0-9]*\).*/\1\2/p' | head -1)
 		[ "${ver:-0}" -ge 2501 ] && __7z_snld_flag="-snld"
 	fi
 	echo $__7z_snld_flag
@@ -93,9 +93,8 @@ extract_7z_to_subdir()
 {
 	local arc="$1"
 	local subdir="$2"
-	assure_7z
 	mkdir -p "$subdir" && cd "$subdir" || fatal
-	docmd $HAVE_7Z x -y $(get_7z_snld) "$arc"
+	run_7z x -y $(get_7z_snld) "$arc"
 }
 
 # Extract squashfs-based archives (squashfs, snap)
@@ -364,7 +363,7 @@ extract_by_type()
 			extract_command "tar -xhf" "$arc"
 			;;
 		*)
-			docmd $HAVE_7Z x -y "$arc" "$@"
+			run_7z x -y "$arc" "$@"
 			#fatal "Not yet supported extracting of $type archives"
 			;;
 	esac
@@ -519,8 +518,7 @@ list_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
-		assure_7z
-		docmd $HAVE_7Z l "$arc" || fatal
+		run_7z l "$arc" || fatal
 		return
 	fi
 
@@ -539,7 +537,7 @@ list_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z l "$arc" "$@"
+			run_7z l "$arc" "$@"
 			#fatal "Not yet supported listing of $type archives"
 			;;
 	esac
@@ -553,8 +551,7 @@ test_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
-		assure_7z
-		docmd $HAVE_7Z t "$arc" || fatal
+		run_7z t "$arc" || fatal
 		return
 	fi
 
@@ -573,7 +570,7 @@ test_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z t "$arc" "$@"
+			run_7z t "$arc" "$@"
 			#fatal "Not yet supported test of $type archives"
 			;;
 	esac
@@ -625,13 +622,13 @@ repack_archive()
 	local ttype="$(get_archive_type "$2")"
 	case "$ftype-$ttype" in
 		tar.*-tar|tgz-tar)
-			docmd $HAVE_7Z x -so "$1" > "$2"
+			run_7z x -so "$1" > "$2"
 			;;
 		tar-tar.*)
-			docmd $HAVE_7Z a -si "$2" < "$1"
+			run_7z a -si "$2" < "$1"
 			;;
 		tar.*-tar.*)
-			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
+			run_7z x -so "$1" | run_7z a -si "$2"
 			;;
 		*)
 			__repack_via_tmp "$1" "$2"
@@ -841,7 +838,7 @@ case $cmd in
     b|-b|bench|benchmark)    # HELPCMD: do CPU benchmark
         #assure_cmd $HAVE_7Z
         # TODO: can be $HAVE_7Za?
-        docmd $HAVE_7Z b
+        run_7z b
         ;;
     search|grep)               # HELPCMD: search in files from archive
         docmd patool $verbose search "$@"

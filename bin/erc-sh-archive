@@ -37,11 +37,11 @@ resolve_7z()
 	return 1
 }
 
-# Ensure a 7-zip backend is available. Used by operations patool can't handle
-# (exe/dll/squashfs/...): with patool backend HAVE_7Z is not validated upfront.
-assure_7z()
+# Check availability at the point of use, allowing native tools without 7-Zip.
+run_7z()
 {
 	[ -n "$HAVE_7Z" ] || fatal "Could not find 7-zip backend, required for this archive type. Please install p7zip package and retry."
+	docmd $HAVE_7Z "$@"
 }
 
 set_backend()
@@ -55,13 +55,9 @@ set_backend()
 	[ -n "$use_patool" ] && [ -n "$use_7z" ] && fatal "Don't use --use-7z and --use-patool simulateously."
 
 	# Resolve HAVE_7Z to a real binary (empty if none). Needed even with patool
-	# backend, since some types are handled only by 7z (see assure_7z).
+	# backend, since some types are handled only by 7z (see run_7z).
 	resolve_7z || HAVE_7Z=''
 
-	if [ -n "$use_7z" ] || ! have_patool ; then
-		# TODO: try install patool and p7zip
-		[ -n "$HAVE_7Z" ] || fatal "Could not find any patool or 7-zip backend. Please install p7zip package and retry."
-	fi
 	# note: -y is passed explicitly in extract commands, not here
 	[ -n "$quiet" ] && [ -n "$HAVE_7Z" ] && HAVE_7Z="$HAVE_7Z -bb0 -bd -bso0"
 }
@@ -176,7 +172,7 @@ extract_tar_stdin() {
     if is_command tar ; then
         docmd tar -xhf -
     else
-        docmd $HAVE_7Z x -y -si -ttar
+        run_7z x -y -si -ttar
     fi
 }
 
@@ -184,7 +180,7 @@ extract_tar_stdin() {
 # Used as a fallback when the native (de)compressor is not installed.
 extract_7z_stream() {
     local archive="$1"
-    docmd $HAVE_7Z x -so "$archive" | extract_tar_stdin
+    run_7z x -so "$archive" | extract_tar_stdin
 }
 
 extract_command() {
