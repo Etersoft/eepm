@@ -49,7 +49,8 @@ __use_url_install()
         #    pkg_names="$pkg_names $pkg_urls"
         #    ;;
         pacman)
-            true
+            [ -n "$pkg_files" ] && pkg_files="$pkg_files $pkg_urls" || pkg_files="$pkg_urls"
+            return 0
             ;;
         yum-rpm|dnf-rpm|dnf5-rpm)
             true
