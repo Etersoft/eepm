@@ -246,6 +246,59 @@ extract_flatpak()
 	rm -rf "$checkout_root" "$FLATPAK_REPO_DIR"
 }
 
+# Extract the filesystem payload only, without running package scripts.
+extract_deb()
+{
+	local arc="$1"
+	local subdir="$2"
+	if [ -n "$HAVE_7Z" ] ; then
+		local listing member tdir ret
+		# Some reduced 7-Zip builds cannot read ar/DEB archives.
+		if listing=$(run_7z l -tAr -slt -ba "$arc" 2>/dev/null) ; then
+			member=$(printf '%s\n' "$listing" | sed -n 's/^Path = //p' | grep -E '^data\.tar(\.(gz|xz|zst|bz2|lzma))?$')
+			[ -n "$member" ] && [ "$(printf '%s\n' "$member" | wc -l)" = 1 ] \
+				|| fatal "Can't find a unique supported data.tar member in $arc"
+			tdir=$(mktemp -d "${TMPDIR:-/tmp}/erc-deb.XXXXXXXX") || return 1
+			if run_7z x -tAr -so "$arc" "$member" > "$tdir/$member" ; then
+				mkdir -p "$subdir" || { rm -rf "$tdir"; return 1; }
+				# Use tar for the payload to preserve Unix permissions and links.
+				if [ "$member" = data.tar ] ; then
+					docmd tar -xpf "$tdir/$member" -C "$subdir"
+				else
+					( set -o pipefail; run_7z x -so "$tdir/$member" | tar -xp -C "$subdir" )
+				fi
+				ret=$?
+			else
+				ret=$?
+			fi
+			rm -rf "$tdir"
+			return "$ret"
+		fi
+	fi
+	if is_command dpkg-deb ; then
+		docmd dpkg-deb --extract "$arc" "$subdir"
+		return
+	fi
+
+	is_command ar || fatal "ar is required to extract DEB packages without dpkg-deb"
+	local members member
+	members=$(ar t "$arc") || return 1
+	member=$(printf '%s\n' "$members" | grep -E '^data\.tar(\.(gz|xz|zst|bz2|lzma))?$')
+	[ -n "$member" ] && [ "$(printf '%s\n' "$member" | wc -l)" = 1 ] \
+		|| fatal "Can't find a unique supported data.tar member in $arc"
+	local decomp
+	case "$member" in
+		*.gz) decomp="gzip -dc" ;;
+		*.xz|*.lzma) decomp="xz -dc" ;;
+		*.zst) decomp="zstd -dc" ;;
+		*.bz2) decomp="bzip2 -dc" ;;
+		*.tar) decomp="cat" ;;
+	esac
+	mkdir -p "$subdir" || return 1
+	# Propagate ar and decompressor errors, including a truncated stream.
+	( set -o pipefail; ar p "$arc" "$member" | $decomp | tar -xp -C "$subdir" )
+}
+
 # TODO: move to patool
 # Extract special archive types that are not supported by patool
 extract_special_archive()
@@ -272,6 +325,9 @@ extract_special_archive()
 	fi
 
 	case "$type" in
+		deb)
+			extract_deb "$arc" "$subdir" || fatal "Could not extract DEB package $arc"
+			;;
 		exe|dll)
 			extract_7z_to_subdir "$arc" "$subdir"
 			;;

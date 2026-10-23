@@ -95,6 +95,7 @@ appimage
 squashfs
 snap
 flatpak
+deb
 EOF
 }
 
