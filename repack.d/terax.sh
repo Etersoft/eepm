@@ -11,5 +11,5 @@ subst "s|^License:.*|License: Apache-2.0|" $SPEC
 
 # workaround for Nvidia
 # Gdk-Message: 18:22:11.766: Error 71 (Ошибка протокола) dispatching to Wayland display.
-fix_desktop_file "Exec=terax" "Exec=WEBKIT_DISABLE_DMABUF_RENDERER=1 terax"
+fix_desktop_file "Exec=terax" "Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 terax"
 
