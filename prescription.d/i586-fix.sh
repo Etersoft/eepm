@@ -16,7 +16,6 @@ repo="$(epm print info -r)"
 for i in glibc-nss glibc-gconv-modules \
          libnm \
          sssd-client \
-         primus \
          libvulkan1 \
          libd3d \
          libgamemodeauto0 \
