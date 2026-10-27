@@ -326,7 +326,10 @@ __epm_repack()
 {
     local pkg
     repacked_pkgs=''
-    local packversion="${EPM_REPACK_VERSION:-}"
+    # hyphen is not allowed in rpm version and means revision in deb:
+    # numeric build suffix to plus (like -4 -> +4), pre-release suffix to tilde (like -b1 -> ~b1)
+    # keep in sync with repack.d/generic.sh
+    local packversion="$(echo "${EPM_REPACK_VERSION:-}" | sed -e 's/-\([0-9]\)/+\1/g' -e 's/-/~/g')"
     local packrelease="${EPM_REPACK_RELEASE:-}"
     [ -n "$pkg_urls_downloaded" ] || pkg_urls_downloaded="${EPM_REPACK_URL:-}"
 

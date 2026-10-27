@@ -175,11 +175,13 @@ if [ -z "$SUBGENERIC" ] ; then
     subst "s|^\((Converted from a\) \(.*\) \(package.*\)|(Repacked from binary \2 package with EPM $(epm --short --version))\n\1 \2 \3|" $SPEC
 fi
 
-# for appimage/tar: replace dash with tilde in version suffix (like -b1 -> ~b1) for correct version comparison
+# for appimage/tar: replace dashes in version (not allowed in rpm version) for correct version comparison:
+# numeric build suffix to plus (like -4 -> +4), pre-release suffix to tilde (like -b1 -> ~b1)
+# keep in sync with __epm_repack() in bin/epm-repack
 # for rpm/deb: suffix is already in Release field
 version=$(grep "^Version:" $SPEC | sed 's/Version: //')
 if [ -n "$SUBGENERIC" ] && echo "$version" | grep -q '-' ; then
-    new_version=$(echo "$version" | sed 's/-/~/')
+    new_version=$(echo "$version" | sed -e 's/-\([0-9]\)/+\1/g' -e 's/-/~/g')
     subst "s|^Version: $version|Version: $new_version|" $SPEC
 fi
 # add our prefix to release (preserves original release for rpm/deb)
