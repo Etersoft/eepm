@@ -62,9 +62,11 @@ DESKTOPFILE="$(echo $BASEDIR/*.desktop | head -n1)"
 
 # try get version from X-AppImage-Version
 if [ -z "$VERSION" ] ; then
-    str="$(grep '^X-AppImage-Version=[0-9]' $DESKTOPFILE)"
-    if [ -n "$str" ] ; then
-        VERSION="$(echo $str | sed -e 's|.*X-AppImage-Version=||')"
+    str="$(grep -m1 '^X-AppImage-Version=' $DESKTOPFILE | sed -e 's|^X-AppImage-Version=||')"
+    if rhas "$str" "^[0-9]" ; then
+        VERSION="$str"
+    else
+        bad_appimage_version="$str"
     fi
 fi
 
@@ -72,6 +74,10 @@ fi
 # https://github.com/neovide/neovide/releases/download/0.12.2/neovide.AppImage
 if [ -z "$VERSION" ] && rhas "$URL" "github.com.*/releases/download" ; then
     VERSION="$(echo "$URL" | sed -e 's|.*/releases/download/||' -e "s|/$alpkg||")"
+fi
+
+if [ -z "$VERSION" ] && [ -n "$bad_appimage_version" ] ; then
+    fatal "X-AppImage-Version=$bad_appimage_version from $(basename $DESKTOPFILE) does not start with a digit. Set the package version explicitly: EPM_REPACK_VERSION=<version> epm repack $alpkg"
 fi
 
 [ -n "$VERSION" ] || fatal "Can't get version from $TAR. You can rename the file like name-version.AppImage. Please, inform upstream about https://docs.appimage.org/reference/desktop-integration.html (X-AppImage-Version field)"
