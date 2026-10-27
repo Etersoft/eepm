@@ -330,6 +330,22 @@ __epm_alt_task_drop_devel()
     estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$1"
 }
 
+# drop i586-NAME packages from the task package list if NAME is in the list too
+# (keep packages built for i586 only)
+__epm_alt_task_drop_i586_dups()
+{
+    local i res=''
+    for i in $1 ; do
+        case "$i" in
+            i586-*)
+                estrlist contains "${i#i586-}" "$1" && continue
+                ;;
+        esac
+        res="$res $i"
+    done
+    echo $res
+}
+
 # install packages from the list $1 from task(s) $2... with dependencies from the system repos
 __epm_install_alt_task_list()
 {
@@ -361,20 +377,17 @@ epm_install_alt_tasks()
 
     [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
+    # skip i586- packages duplicating 64 bit ones on install
+    installlist="$(__epm_alt_task_drop_i586_dups "$installlist")"
+
     if [ -n "$full" ] ; then
         installlist="$(estrlist reg_exclude ".*-checkinstall .*-debuginfo" "$installlist")"
     else
         installlist="$(__epm_alt_task_drop_devel "$installlist")"
-        # Keep packages explicitly requested as task/PACKAGE.  In particular,
-        # a task may be used to install a -devel subpackage.
-        installlist="$(estrlist union "$installlist $requested_task_packages")"
     fi
-
-    # TODO: need we this option?
-    #if [ -z "$force" ] ; then
-    #    # skip i586- on install
-    installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
-    #fi
+    # Keep packages explicitly requested as task/PACKAGE.  In particular,
+    # a task may be used to install a -devel or i586- subpackage.
+    installlist="$(estrlist union "$installlist $requested_task_packages")"
 
     # plain package names (without a task) are installed from the repos as is
     installlist="$(estrlist union "$installlist $plain_packages")"
