@@ -45,8 +45,9 @@ PRODUCT="${PRODUCT/_linux/}"
 
 # try separate VERSION from PRODUCT
 if [ -z "$VERSION" ] ; then
-    # match version with optional v/V prefix and pre-release suffix like -b1, -rc1, -beta
-    vermatch="$(echo "$PRODUCT" | grep -o -P "[-_.][vV]?[0-9]+(?:\.[0-9]+)*(?:-(?:alpha|beta|rc|b|a|pre|dev|nightly)[0-9]*)?" | head -n1)"
+    # match version with optional v/V prefix, pre-release suffix like -b1, -rc1, -beta, ~beta (but not -amd64)
+    # and numeric build suffixes like -4, -2.3.14, +2.3.14
+    vermatch="$(echo "$PRODUCT" | grep -o -P "[-_.][vV]?[0-9]+(?:\.[0-9]+)*(?:[-~](?:alpha|beta|rc|b|a|pre|dev|nightly)[0-9]*(?![A-Za-z]))?(?:[-+][0-9]+(?:\.[0-9]+)*)*" | head -n1)"
     # strip the whole matched part (separator and v prefix included) from PRODUCT
     [ -n "$vermatch" ] && PRODUCT="$(echo "$PRODUCT" | sed -e "s|$vermatch.*||")"
     [ -n "$vermatch" ] && VERSION="$(echo "$vermatch" | sed -e 's|^[-_.]||' -e 's|^[vV]||')"
