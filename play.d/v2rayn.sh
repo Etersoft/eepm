@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PKGNAME=v2rayn
-SUPPORTEDARCHES="x86_64 arm64"
+SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="A GUI client for Windows, Linux and macOS, support Xray core and sing-box-core and others"
 URL="https://github.com/2dust/v2rayN"
