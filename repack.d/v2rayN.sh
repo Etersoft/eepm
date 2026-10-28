@@ -7,6 +7,10 @@ PRODUCTDIR=/opt/$PRODUCT
 
 . $(dirname $0)/common.sh
 
+# The package was previously published by epm play as v2rayN.
+add_obsoletes v2rayN
+add_provides v2rayN
+
 add_bin_link_command
 
 # .NET runtime may probe for lttng tracing support even where the exact soname is unavailable.
