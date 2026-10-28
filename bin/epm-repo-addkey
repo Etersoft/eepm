@@ -262,18 +262,17 @@ __epm_addkey_deb()
     [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
 
     if [ -z "$fingerprint" ] ; then
-        local tmpfile=$(__epm_get_file_from_url $url) || fatal
-        if cat $tmpfile | head -n3 | grep -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
+        local tmpfile
+        tmpfile=$(__epm_get_file_from_url $url) || fatal
+        if head -n3 $tmpfile | grep -q -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
             # This is a GnuPG extension to OpenPGP
-            cat $tmpfile | a= gpg --dearmor >$tmpfile
+            assure_exists gpg gnupg
+            remove_on_exit $tmpfile.gpg
+            a= gpg --dearmor <$tmpfile >$tmpfile.gpg || fatal
+            tmpfile=$tmpfile.gpg
         fi
-        sudocmd apt-key add $tmpfile
-#
-#        if [ ! -f /etc/apt/trusted.gpg.d/$name.gpg ]; then
-#                epm tool eget -q -O /etc/apt/trusted.gpg.d/$name.gpg https://example.com/$name.gpg > /dev/null
-#                chmod 0644 /etc/apt/trusted.gpg.d/$name.gpg
-#        fi
-
+        # put the key where [signed-by=/etc/apt/trusted.gpg.d/$name.gpg] expects it (apt-key is deprecated)
+        sudocmd install -m 0644 $tmpfile /etc/apt/trusted.gpg.d/$name.gpg
         return
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
