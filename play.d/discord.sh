@@ -4,15 +4,18 @@ PKGNAME=discord
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Discord from the official site"
-URL="https://discord.com/api/download?platform=linux"
+URL="https://discord.com"
+# allow to replace the official deb (installed by the previous epm play discord on deb systems)
+SKIPREPACK=1
 
 . $(dirname $0)/common.sh
 
 if [ "$VERSION" = "*" ] ; then
-    # workaround against curl can't get filename: https://github.com/curl/curl/issues/8461
-    PKGURL="$(eget --get-real-url "https://discord.com/api/download?platform=linux&format=deb")"
-else
-    PKGURL="https://stable.dl2.discordapp.net/apps/linux/$VERSION/discord-$VERSION.deb"
+    VERSION="$(fetch_url "https://updates.discord.com/distributions/app/manifests/latest?channel=stable&platform=linux&arch=x64" | grep -o -m1 'linux/x64/[0-9.]*/full\.distro' | head -n1 | cut -d/ -f3)"
+    [ -n "$VERSION" ] || fatal "Can't get latest Discord version"
 fi
 
-install_pkgurl
+# the complete app (host) and its modules are downloaded in pack.d/discord.sh
+PKGURL="https://stable.dl2.discordapp.net/distro/app/stable/linux/x64/$VERSION/full.distro"
+
+install_pack_pkgurl "$VERSION"
