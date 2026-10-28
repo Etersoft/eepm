@@ -255,6 +255,14 @@ EOF
     # (refresh: drop dangling links from a previous run, then link current files)
     find "$__EPM_APT_TMPDIR/lists/" -maxdepth 1 -type l ! -exec test -e {} \; -delete 2>/dev/null
     ln -sf /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
+    # deb822 system sources (Debian 12+, Ubuntu 24.04+) are missed in __get_system_sourceslist output: use them as is
+    find "$__EPM_APT_TMPDIR/sourceparts/" -maxdepth 1 -name "*.sources" -delete 2>/dev/null
+    [ -n "$EPM_APT_SOURCES_LIST" ] && return
+    local f
+    for f in "${EPM_APT_SOURCES_ROOT:-}/etc/apt/sources.list.d"/*.sources ; do
+        [ -s "$f" ] || continue
+        ln -s "$f" "$__EPM_APT_TMPDIR/sourceparts/"
+    done
 }
 
 # Output current system sources.list content to stdout
