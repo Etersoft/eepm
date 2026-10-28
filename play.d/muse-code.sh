@@ -30,7 +30,9 @@ fi
 
 [ -n "$VERSION" ] || fatal "Got empty Muse Code version"
 
-MANIFEST_URL="https://lookaside.facebook.com/lookaside/muse/download/?channel=muse&version=$VERSION&file=manifest.json"
+# app-versions stores the RPM-safe 1.4.12.R6909.1 form, while Meta expects 1.4.12-R6909.1.
+download_version="$(printf '%s\n' "$VERSION" | sed -E 's|^([0-9]+\.[0-9]+\.[0-9]+)\.R|\1-R|')"
+MANIFEST_URL="https://lookaside.facebook.com/lookaside/muse/download/?channel=muse&version=$download_version&file=manifest.json"
 PKGURL="$(get_json_value "$MANIFEST_URL" '["artifacts","'$platform'","url"]' | sed 's|\\/|/|g')"
 checksum="$(get_json_value "$MANIFEST_URL" '["artifacts","'$platform'","checksum"]')"
 
