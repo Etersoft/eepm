@@ -242,6 +242,12 @@ update_alt_contents_index()
                 __add_to_contents_index_list "$MIRRORURL" "$LOCALPATH/contents_index.gz"
                 continue
             fi
+            # the same compressed index via https (rsync can be blocked or fail occasionally)
+            local HTTPSMIRRORURL="$(echo "$MIRRORURL" | sed -e "s|^rsync://|https://|")"
+            if eget_alt_contents_index "$HTTPSMIRRORURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" ; then
+                __add_to_contents_index_list "$HTTPSMIRRORURL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
         fi
 
         if rhas "$URL" "archive/" ; then
