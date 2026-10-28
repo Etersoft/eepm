@@ -8,17 +8,15 @@ URL="https://github.com/crynta/terax-ai"
 
 . $(dirname $0)/common.sh
 
+# Terax-0.6.1-1.x86_64.rpm
 case $(epm print info -p) in
     rpm)
-        mask="Terax-${VERSION}.x86_64.rpm"
+        mask="Terax-${VERSION}-1.x86_64.rpm"
         ;;
     *)
         mask="Terax_${VERSION}_amd64.deb"
         ;;
 esac
-
-
-Terax-0.6.1-1.x86_64.rpm
 
 if [ "$VERSION" = "*" ] ; then
     PKGURL=$(get_github_url "https://github.com/crynta/terax-ai" "$mask")
