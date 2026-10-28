@@ -48,10 +48,8 @@ __use_url_install()
         #urpm-rpm)
         #    pkg_names="$pkg_names $pkg_urls"
         #    ;;
-        pacman)
-            [ -n "$pkg_files" ] && pkg_files="$pkg_files $pkg_urls" || pkg_files="$pkg_urls"
-            return 0
-            ;;
+        # pacman: download via eget (IPFS support), pacman -U <URL> downloads .sig
+        # and requires the vendor key (SigLevel = Required for remote files)
         yum-rpm|dnf-rpm|dnf5-rpm)
             true
             ;;
