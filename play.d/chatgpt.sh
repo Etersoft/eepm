@@ -3,8 +3,8 @@
 PKGNAME=chatgpt
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
-DESCRIPTION='Official OpenAI Codex desktop app'
-URL="https://openai.com/codex/"
+DESCRIPTION='Official OpenAI ChatGPT desktop app'
+URL="https://learn.chatgpt.com/docs/linux/linux-app"
 
 . $(dirname $0)/common.sh
 
@@ -25,6 +25,15 @@ case "$pkgtype" in
         ;;
     rpm)
         PKGURL="https://persistent.oaistatic.com/codex-app-prod/linux/rpm/latest/chatgpt.$arch.rpm"
+        ;;
+    pkg.tar.zst)
+        BASEURL="https://persistent.oaistatic.com/codex-app-prod/linux/arch/$arch"
+        filename="$(eget -O- "$BASEURL/openai-chatgpt.db" | tar -xzO --wildcards 'chatgpt-bin-*/desc' | sed -n '/^%FILENAME%$/{n;p;}')"
+        case "$filename" in
+            chatgpt-bin-*-"$arch".pkg.tar.zst) ;;
+            *) fatal "Can't get ChatGPT $arch package filename" ;;
+        esac
+        PKGURL="$BASEURL/$filename"
         ;;
     *)
         fatal "$pkgtype package type is not supported"
