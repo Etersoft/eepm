@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.71
+Version: 3.64.72
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -184,6 +184,42 @@ EOF
 # metapackage, no files
 
 %changelog
+* Thu Oct 29 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.72-alt1
+- release_commit: check SRPM before publishing tags
+- fix: avoid restarting full-upgrade after a no-op EPM update
+- repack: remove upstream repositories and signing keys
+- docs: keep agent instructions on the claude branch
+- erc: check backend availability only when needed
+- erc: extract deb payloads via 7-zip with dpkg-deb and ar fallbacks
+- epm repack smart-product-drivers: relocate binaries and libraries to paths without spaces
+- epm install: route pacman package urls to file installation
+- tests: cover remote package installation routing for pacman
+- epm play: added xodus-nexus (eterbug #19729)
+- epm play: added lumine-capture (eterbug #19728)
+- epm update-kernel: check initrd for the new kernel with sudo if /boot is inaccessible for a user
+- epm update-kernel: run installkernel again if initrd for the new kernel is not created
+- epm play: add koharu (ml-powered manga translator)
+- epm repack: convert all hyphens in version to plus before digit and to tilde otherwise, apply to EPM_REPACK_VERSION too
+- epm pack.d/generic-appimage.sh: take numeric build suffix into version, do not treat -amd64 as -a pre-release suffix
+- epm pack.d/generic-appimage.sh: report X-AppImage-Version not starting with a digit
+- eepm.spec: drop dead _vendor == arch check for 7zip require (Korinf maps 7-zip via pkgrepl)
+- epm prescription i586-fix: drop primus (removed from Sisyphus, closes Etersoft/eepm#702)
+- epm prescription i586-fix: add pipewire-libs (no sound in 32 bit games, closes Etersoft/eepm#701)
+- epm install: keep i586-only packages from ALT tasks, drop only i586- duplicates of 64 bit ones (closes Etersoft/eepm#604)
+- epm repo addkey: fix armored key dearmor on deb systems, put key to /etc/apt/trusted.gpg.d/<name>.gpg instead of deprecated apt-key
+- epm play: add kompas3d-study (KOMPAS-3D Study educational version)
+- epm-sh-backend: use deb822 system sources (*.sources) in temporary APT config for repo/package installs
+- epm repack.d: add rules for KOMPAS-3D Study packages (skip requires to libs bundled in other Ascon packages, add kompas-study-v25 command)
+- epm play kodik: fix package url and add aarch64 support (eterbug #17865) (#836)
+- epm play muse-code: fix versioned download (eterbug #17865) (#837)
+- epm play terax: fix package url and desktop entry (eterbug #17865) (#838)
+- epm play lemonade-server: fix installation (eterbug #17865) (#829)
+- epm play discord: assemble complete app from distro packages, disable updater (no runtime downloads)
+- epm play v2rayn: fix update and aarch64 support (eterbug #17865) (#840)
+- epm play dorion: select package by CEF availability (eterbug #17865) (#841)
+- epm play xnview, xnconvert: fix repack (eterbug #17865)
+- epm-sh-altlinux-contents-index: download contents_index.gz from the Etersoft mirror via https if rsync fails (do not fall back to the uncompressed 280M index)
+
 * Wed Oct 21 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.71-alt1
 - epm play whatsie: add missing Qt WebChannel dependency (eterbug #17865)
 - epm play openshot: fix repack (eterbug #17865)
