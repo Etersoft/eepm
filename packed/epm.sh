@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.71"
+export EPMVERSION="3.64.72"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -5257,7 +5257,8 @@ __use_url_install()
         #    pkg_names="$pkg_names $pkg_urls"
         #    ;;
         pacman)
-            true
+            [ -n "$pkg_files" ] && pkg_files="$pkg_files $pkg_urls" || pkg_files="$pkg_urls"
+            return 0
             ;;
         yum-rpm|dnf-rpm|dnf5-rpm)
             true
@@ -5939,6 +5940,7 @@ Examples:
 epm_full_upgrade()
 {
     local orig_args="$*"
+    local epm_version_before epm_version_after
 
     while [ -n "$1" ] ; do
         case "$1" in
@@ -6012,10 +6014,15 @@ confirm_action()
             fi
         else
             if __check_for_epm_version ; then
+                epm_version_before=$(epm --short --version 2>/dev/null)
                 docmd epm ei || fatal "Failed to update epm"
-                info "An update for epm has been installed, restarting epm full-upgrade..."
-                exec $PROGDIR/$PROGNAME full-upgrade $orig_args
-                exit 0
+                epm_version_after=$(epm --short --version 2>/dev/null)
+                if [ -n "$epm_version_after" ] && [ "$epm_version_before" != "$epm_version_after" ] ; then
+                    info "An update for epm has been installed, restarting epm full-upgrade..."
+                    exec $PROGDIR/$PROGNAME full-upgrade $orig_args
+                    exit 0
+                fi
+                info "epm update did not change the installed version ($epm_version_before); continuing full-upgrade."
             fi
         fi
     fi
@@ -7701,6 +7708,20 @@ __epm_alt_task_drop_devel()
     estrlist reg_exclude ".*-devel .*-devel-static .*-checkinstall .*-debuginfo" "$1"
 }
 
+__epm_alt_task_drop_i586_dups()
+{
+    local i res=''
+    for i in $1 ; do
+        case "$i" in
+            i586-*)
+                estrlist contains "${i#i586-}" "$1" && continue
+                ;;
+        esac
+        res="$res $i"
+    done
+    echo $res
+}
+
 __epm_install_alt_task_list()
 {
     local installlist="$1" res
@@ -7729,20 +7750,17 @@ epm_install_alt_tasks()
 
     [ -n "$verbose" ] && info "Packages from task(s): $installlist"
 
+    # skip i586- packages duplicating 64 bit ones on install
+    installlist="$(__epm_alt_task_drop_i586_dups "$installlist")"
+
     if [ -n "$full" ] ; then
         installlist="$(estrlist reg_exclude ".*-checkinstall .*-debuginfo" "$installlist")"
     else
         installlist="$(__epm_alt_task_drop_devel "$installlist")"
-        # Keep packages explicitly requested as task/PACKAGE.  In particular,
-        # a task may be used to install a -devel subpackage.
-        installlist="$(estrlist union "$installlist $requested_task_packages")"
     fi
-
-    # TODO: need we this option?
-    #if [ -z "$force" ] ; then
-    #    # skip i586- on install
-    installlist="$(estrlist reg_exclude "i586-.*" "$installlist")"
-    #fi
+    # Keep packages explicitly requested as task/PACKAGE.  In particular,
+    # a task may be used to install a -devel or i586- subpackage.
+    installlist="$(estrlist union "$installlist $requested_task_packages")"
 
     # plain package names (without a task) are installed from the repos as is
     installlist="$(estrlist union "$installlist $plain_packages")"
@@ -14581,7 +14599,10 @@ __epm_repack()
 {
     local pkg
     repacked_pkgs=''
-    local packversion="${EPM_REPACK_VERSION:-}"
+    # hyphen is not allowed in rpm version and means revision in deb:
+    # numeric build suffix to plus (like -4 -> +4), pre-release suffix to tilde (like -b1 -> ~b1)
+    # keep in sync with repack.d/generic.sh
+    local packversion="$(echo "${EPM_REPACK_VERSION:-}" | sed -e 's/-\([0-9]\)/+\1/g' -e 's/-/~/g')"
     local packrelease="${EPM_REPACK_RELEASE:-}"
     [ -n "$pkg_urls_downloaded" ] || pkg_urls_downloaded="${EPM_REPACK_URL:-}"
 
@@ -15451,13 +15472,17 @@ __epm_addkey_deb()
     [ -s /etc/apt/trusted.gpg.d/$name.gpg ] && return
 
     if [ -z "$fingerprint" ] ; then
-        local tmpfile=$(__epm_get_file_from_url $url) || fatal
-        if cat $tmpfile | head -n3 | grep -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
+        local tmpfile
+        tmpfile=$(__epm_get_file_from_url $url) || fatal
+        if head -n3 $tmpfile | grep -q -- "-----BEGIN PGP PUBLIC KEY BLOCK-----" ; then
             # This is a GnuPG extension to OpenPGP
-            cat $tmpfile | a= gpg --dearmor >$tmpfile
+            assure_exists gpg gnupg
+            remove_on_exit $tmpfile.gpg
+            a= gpg --dearmor <$tmpfile >$tmpfile.gpg || fatal
+            tmpfile=$tmpfile.gpg
         fi
-        sudocmd apt-key add $tmpfile
-
+        # put the key where [signed-by=/etc/apt/trusted.gpg.d/$name.gpg] expects it (apt-key is deprecated)
+        sudocmd install -m 0644 $tmpfile /etc/apt/trusted.gpg.d/$name.gpg
         return
     fi
     sudocmd apt-key adv --keyserver "$url" --recv "$fingerprint"
@@ -19237,6 +19262,12 @@ update_alt_contents_index()
                 __add_to_contents_index_list "$MIRRORURL" "$LOCALPATH/contents_index.gz"
                 continue
             fi
+            # the same compressed index via https (rsync can be blocked or fail occasionally)
+            local HTTPSMIRRORURL="$(echo "$MIRRORURL" | sed -e "s|^rsync://|https://|")"
+            if eget_alt_contents_index "$HTTPSMIRRORURL/base/contents_index.gz" "$LOCALPATH/contents_index.gz" ; then
+                __add_to_contents_index_list "$HTTPSMIRRORURL" "$LOCALPATH/contents_index.gz"
+                continue
+            fi
         fi
 
         if rhas "$URL" "archive/" ; then
@@ -19872,14 +19903,25 @@ __ak_initrd_trigger_works()
     [ -d /proc/sys ] && [ -d /sys/class ] && [ -x /sbin/installkernel ]
 }
 
+__ak_initrd_exists()
+{
+    if [ -x "$1" ] ; then
+        [ -s "$1/initrd-$2.img" ]
+    else
+        sudorun test -s "$1/initrd-$2.img"
+    fi
+}
+
 __ak_check_initrd()
 {
     local kpkg="$1" vmlinuz kr
-    local bootdir="${EPM_BOOT_DIR:-/boot}"
+    local bootdir="${EPM_BOOT_DIR:-/boot}" installkernel="${EPM_INSTALLKERNEL:-/sbin/installkernel}"
     __ak_initrd_trigger_works || return 0
     vmlinuz="$(a='' rpm -ql "$kpkg" 2>/dev/null | grep -m1 '^/boot/vmlinuz-')" || return 0
     kr="${vmlinuz#/boot/vmlinuz-}"
-    [ -s "$bootdir/initrd-$kr.img" ] && return 0
+    __ak_initrd_exists "$bootdir" "$kr" && return 0
+    warning 'initrd $bootdir/initrd-$kr.img for the new kernel $kpkg is missing, trying to create it again.'
+    sudocmd "$installkernel" "$kr" && __ak_initrd_exists "$bootdir" "$kr" && return 0
     warning 'initrd $bootdir/initrd-$kr.img for the new kernel $kpkg was not created (see make-initrd errors above).'
     warning 'Do not reboot: the boot menu entry for the new kernel has no initrd.'
     info 'Fix the errors and run # /sbin/installkernel $kr (or remove the kernel: # epm remove $kpkg)'
@@ -20318,6 +20360,14 @@ EOF
     # (refresh: drop dangling links from a previous run, then link current files)
     find "$__EPM_APT_TMPDIR/lists/" -maxdepth 1 -type l ! -exec test -e {} \; -delete 2>/dev/null
     ln -sf /var/lib/apt/lists/*.* "$__EPM_APT_TMPDIR/lists/" 2>/dev/null
+    # deb822 system sources (Debian 12+, Ubuntu 24.04+) are missed in __get_system_sourceslist output: use them as is
+    find "$__EPM_APT_TMPDIR/sourceparts/" -maxdepth 1 -name "*.sources" -delete 2>/dev/null
+    [ -n "$EPM_APT_SOURCES_LIST" ] && return
+    local f
+    for f in "${EPM_APT_SOURCES_ROOT:-}/etc/apt/sources.list.d"/*.sources ; do
+        [ -s "$f" ] || continue
+        ln -s "$f" "$__EPM_APT_TMPDIR/sourceparts/"
+    done
 }
 
 __get_system_sourceslist()
@@ -27018,13 +27068,13 @@ create_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		tar)
-			#docmd $HAVE_7Z a -l $arc "$@"
+			#run_7z a -l $arc "$@"
 			docmd tar cvf "$arc" "$@"
 			;;
 		*)
 			# https://bugzilla.altlinux.org/49852
 			# FIXME: creating .tar.* (.tar.gz) is not supported
-			docmd $HAVE_7Z a -snl "$arc" "$@"
+			run_7z a -snl "$arc" "$@"
 			#fatal "Not yet supported creating of $type archives"
 			;;
 	esac
@@ -27040,7 +27090,7 @@ get_7z_snld()
 	if [ -z "$__7z_snld_checked" ] ; then
 		__7z_snld_checked=1
 		local ver
-		ver=$($HAVE_7Z 2>&1 | sed -n 's/.*[Zz]ip.*[[:space:]]\([0-9]*\)\.\([0-9]*\).*/\1\2/p' | head -1)
+		ver=$(run_7z 2>&1 | sed -n 's/.*[Zz]ip.*[[:space:]]\([0-9]*\)\.\([0-9]*\).*/\1\2/p' | head -1)
 		[ "${ver:-0}" -ge 2501 ] && __7z_snld_flag="-snld"
 	fi
 	echo $__7z_snld_flag
@@ -27050,9 +27100,8 @@ extract_7z_to_subdir()
 {
 	local arc="$1"
 	local subdir="$2"
-	assure_7z
 	mkdir -p "$subdir" && cd "$subdir" || fatal
-	docmd $HAVE_7Z x -y $(get_7z_snld) "$arc"
+	run_7z x -y $(get_7z_snld) "$arc"
 }
 
 # Extract squashfs-based archives (squashfs, snap)
@@ -27204,6 +27253,59 @@ extract_flatpak()
 	rm -rf "$checkout_root" "$FLATPAK_REPO_DIR"
 }
 
+# Extract the filesystem payload only, without running package scripts.
+extract_deb()
+{
+	local arc="$1"
+	local subdir="$2"
+	if [ -n "$HAVE_7Z" ] ; then
+		local listing member tdir ret
+		# Some reduced 7-Zip builds cannot read ar/DEB archives.
+		if listing=$(run_7z l -tAr -slt -ba "$arc" 2>/dev/null) ; then
+			member=$(printf '%s\n' "$listing" | sed -n 's/^Path = //p' | grep -E '^data\.tar(\.(gz|xz|zst|bz2|lzma))?$')
+			[ -n "$member" ] && [ "$(printf '%s\n' "$member" | wc -l)" = 1 ] \
+				|| fatal "Can't find a unique supported data.tar member in $arc"
+			tdir=$(mktemp -d "${TMPDIR:-/tmp}/erc-deb.XXXXXXXX") || return 1
+			if run_7z x -tAr -so "$arc" "$member" > "$tdir/$member" ; then
+				mkdir -p "$subdir" || { rm -rf "$tdir"; return 1; }
+				# Use tar for the payload to preserve Unix permissions and links.
+				if [ "$member" = data.tar ] ; then
+					docmd tar -xpf "$tdir/$member" -C "$subdir"
+				else
+					( set -o pipefail; run_7z x -so "$tdir/$member" | tar -xp -C "$subdir" )
+				fi
+				ret=$?
+			else
+				ret=$?
+			fi
+			rm -rf "$tdir"
+			return "$ret"
+		fi
+	fi
+	if is_command dpkg-deb ; then
+		docmd dpkg-deb --extract "$arc" "$subdir"
+		return
+	fi
+
+	is_command ar || fatal "ar is required to extract DEB packages without dpkg-deb"
+	local members member
+	members=$(ar t "$arc") || return 1
+	member=$(printf '%s\n' "$members" | grep -E '^data\.tar(\.(gz|xz|zst|bz2|lzma))?$')
+	[ -n "$member" ] && [ "$(printf '%s\n' "$member" | wc -l)" = 1 ] \
+		|| fatal "Can't find a unique supported data.tar member in $arc"
+	local decomp
+	case "$member" in
+		*.gz) decomp="gzip -dc" ;;
+		*.xz|*.lzma) decomp="xz -dc" ;;
+		*.zst) decomp="zstd -dc" ;;
+		*.bz2) decomp="bzip2 -dc" ;;
+		*.tar) decomp="cat" ;;
+	esac
+	mkdir -p "$subdir" || return 1
+	# Propagate ar and decompressor errors, including a truncated stream.
+	( set -o pipefail; ar p "$arc" "$member" | $decomp | tar -xp -C "$subdir" )
+}
+
 # TODO: move to patool
 # Extract special archive types that are not supported by patool
 extract_special_archive()
@@ -27230,6 +27332,9 @@ extract_special_archive()
 	fi
 
 	case "$type" in
+		deb)
+			extract_deb "$arc" "$subdir" || fatal "Could not extract DEB package $arc"
+			;;
 		exe|dll)
 			extract_7z_to_subdir "$arc" "$subdir"
 			;;
@@ -27321,7 +27426,7 @@ extract_by_type()
 			extract_command "tar -xhf" "$arc"
 			;;
 		*)
-			docmd $HAVE_7Z x -y "$arc" "$@"
+			run_7z x -y "$arc" "$@"
 			#fatal "Not yet supported extracting of $type archives"
 			;;
 	esac
@@ -27476,8 +27581,7 @@ list_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
-		assure_7z
-		docmd $HAVE_7Z l "$arc" || fatal
+		run_7z l "$arc" || fatal
 		return
 	fi
 
@@ -27496,7 +27600,7 @@ list_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z l "$arc" "$@"
+			run_7z l "$arc" "$@"
 			#fatal "Not yet supported listing of $type archives"
 			;;
 	esac
@@ -27510,8 +27614,7 @@ test_archive()
 
 	# TODO: move to patool
 	if [ "$(get_archive_type "$arc" 2>/dev/null)" = "exe" ] ; then
-		assure_7z
-		docmd $HAVE_7Z t "$arc" || fatal
+		run_7z t "$arc" || fatal
 		return
 	fi
 
@@ -27530,7 +27633,7 @@ test_archive()
 	local type="$(get_archive_type "$arc")"
 	case "$type" in
 		*)
-			docmd $HAVE_7Z t "$arc" "$@"
+			run_7z t "$arc" "$@"
 			#fatal "Not yet supported test of $type archives"
 			;;
 	esac
@@ -27582,13 +27685,13 @@ repack_archive()
 	local ttype="$(get_archive_type "$2")"
 	case "$ftype-$ttype" in
 		tar.*-tar|tgz-tar)
-			docmd $HAVE_7Z x -so "$1" > "$2"
+			run_7z x -so "$1" > "$2"
 			;;
 		tar-tar.*)
-			docmd $HAVE_7Z a -si "$2" < "$1"
+			run_7z a -si "$2" < "$1"
 			;;
 		tar.*-tar.*)
-			docmd $HAVE_7Z x -so "$1" | $HAVE_7Z a -si "$2"
+			run_7z x -so "$1" | run_7z a -si "$2"
 			;;
 		*)
 			__repack_via_tmp "$1" "$2"
@@ -27798,7 +27901,7 @@ case $cmd in
     b|-b|bench|benchmark)    # HELPCMD: do CPU benchmark
         #assure_cmd $HAVE_7Z
         # TODO: can be $HAVE_7Za?
-        docmd $HAVE_7Z b
+        run_7z b
         ;;
     search|grep)               # HELPCMD: search in files from archive
         docmd patool $verbose search "$@"
