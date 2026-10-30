@@ -7,7 +7,7 @@ PKGURL="$4"
 
 . $(dirname $0)/common.sh
 
-[ -n "$VERSION" ] || VERSION="$(echo "$PKGURL" | sed -n 's|.*/dmde-\([0-9][0-9-]*\)-lin[0-9][0-9]-con\.zip|\1|p' | sed 's|-|.|g')"
+[ -n "$VERSION" ] || VERSION="$(echo "$PKGURL" | sed -n 's|.*/dmde-\([0-9][0-9-]*\(-beta\)\?\)-lin[0-9][0-9]-con\.zip|\1|p' | sed 's|-|.|g')"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 PKGNAME=$PRODUCT-$VERSION
 
