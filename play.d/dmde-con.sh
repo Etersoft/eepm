@@ -1,10 +1,12 @@
 #!/bin/sh
 
-PKGNAME=dmde-con
+BASEPKGNAME=dmde-con
+PRODUCTALT="'' beta"
 SUPPORTEDARCHES="x86_64 x86"
 VERSION="$2"
 DESCRIPTION="Powerful tool for data searching, editing, and recovery on disks (Console version)"
 URL="https://dmde.com/download.html"
+TIPS="Run 'epm play dmde-con=beta' to install beta version."
 
 . $(dirname $0)/common.sh
 
@@ -19,11 +21,20 @@ case "$(epm print info -a)" in
         ;;
 esac
 
+if [ "$BRANCH" = "beta" ] ; then
+    beta=-beta
+    beta_filter=
+    override_pkgname "$BASEPKGNAME"
+else
+    beta=
+    beta_filter=-v
+fi
+
 if [ "$VERSION" = "*" ] ; then
-    PKGURL="$(eget --list --latest "$URL" "dmde-*-$arch-con.zip")"
+    PKGURL="$(eget --list "$URL" "dmde-*-$arch-con.zip" | grep $beta_filter -- '-beta-' | sort -V | tail -n1)"
     [ -n "$PKGURL" ] || fatal "Can't find DMDE Linux $archname console download URL."
 else
-    PKGURL="https://dmde.com/download/dmde-$(echo "$VERSION" | tr . -)-$arch-con.zip"
+    PKGURL="https://dmde.com/download/dmde-$(echo "$VERSION" | tr . -)$beta-$arch-con.zip"
 fi
 
 install_pack_pkgurl
