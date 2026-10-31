@@ -19,10 +19,11 @@ epm install $PKGNAME || exit
 #    $SUDO usermod -a -G vboxusers $USER
 #fi
 
-#[ "$vendor" != "alt" ] && exit
-
-# epm can install module correctly
-epm install kernel-module-virtualbox || exit
+# Other distributions pull host modules as a virtualbox package dependency.
+# ALT keeps modules in separate packages built for each kernel flavour.
+if [ "$vendor" = "alt" ] ; then
+    epm install kernel-modules-virtualbox || exit
+fi
 
 echo
 echo "Note:Add needed users to vboxusers group via # usermod -a -G vboxusers <user>"
