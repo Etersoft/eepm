@@ -10,16 +10,14 @@ URL="https://github.com/deltachat/deltachat-desktop"
 
 warn_version_is_not_supported
 
-case "$(epm print info -p)" in
-    rpm)
-        pkgtype=rpm
-        arch=$(epm print info -a)
-        ;;
-    *)
-        pkgtype=deb
-        arch=$(epm print info --debian-arch)
-        ;;
-esac
+pkgtype=deb
+arch=$(epm print info --debian-arch)
+
+# Upstream RPM cannot be unpacked by alien on ALT, use the DEB there.
+if [ "$(epm print info -p)" = "rpm" ] && [ "$(epm print info -s)" != "alt" ] ; then
+    pkgtype=rpm
+    arch=$(epm print info -a)
+fi
 
 PKGURL=$(get_github_url "$URL" "deltachat-desktop*$arch.$pkgtype")
 
