@@ -14,28 +14,36 @@ erc --here unpack "$TAR"
 erc ru.xsoyuz.vostok.flatpak
 erc ru.xsoyuz.vostok.Locale.flatpak
 
-VERSION="$(grep -E '^Version=' ru.xsoyuz.vostok/lib/vostok-browser/application.ini | cut -d= -f2)"
+APPDIR=ru.xsoyuz.vostok
+APP_TREE="$APPDIR/lib/vostok"
+
+[ -r "$APP_TREE/application.ini" ] || fatal "Can't find Vostok application.ini"
+VERSION="$(grep -E '^Version=' "$APP_TREE/application.ini" | cut -d= -f2)"
+[ -n "$VERSION" ] || fatal "Can't detect Vostok version"
 
 mkdir -p opt usr/bin usr/share/applications usr/share/icons
 
 # the self-contained Firefox tree goes to /opt/vostok-browser
-mv ru.xsoyuz.vostok/lib/vostok-browser opt/$PRODUCT
+mv "$APP_TREE" opt/$PRODUCT || fatal
 
 # bundle the Russian language pack as a system-wide extension
 mkdir -p opt/$PRODUCT/distribution/extensions
-cp ru.xsoyuz.vostok.Locale/langpack-ru@vostok-browser.xsoyuz.ru.xpi \
-    opt/$PRODUCT/distribution/extensions/
+LANGPACK=langpack-ru@vostok-browser.xsoyuz.ru.xpi
+rm -f "opt/$PRODUCT/distribution/extensions/$LANGPACK" || fatal
+cp "ru.xsoyuz.vostok.Locale/$LANGPACK" \
+    "opt/$PRODUCT/distribution/extensions/$LANGPACK" || fatal
 
 # native launcher (the flatpak one pointed at /app)
 cat <<EOF >usr/bin/$PRODUCT
 #!/bin/sh
-exec /opt/$PRODUCT/vostok-browser --name ru.xsoyuz.vostok "\$@"
+exec /opt/$PRODUCT/vostok --name ru.xsoyuz.vostok "\$@"
 EOF
 chmod 755 usr/bin/$PRODUCT
 
 # desktop entry and icons from the bundle
-cp ru.xsoyuz.vostok/share/applications/ru.xsoyuz.vostok.desktop usr/share/applications/
-cp -a ru.xsoyuz.vostok/share/icons/hicolor usr/share/icons/
+cp "$APPDIR/share/applications/ru.xsoyuz.vostok.desktop" usr/share/applications/
+subst 's|^Exec=vostok|Exec=vostok-browser|' usr/share/applications/ru.xsoyuz.vostok.desktop
+cp -a "$APPDIR/share/icons/hicolor" usr/share/icons/
 
 PKGNAME=$PRODUCT-$VERSION.tar
 erc pack $PKGNAME opt usr
