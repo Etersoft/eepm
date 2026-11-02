@@ -158,7 +158,8 @@ __get_alt_mirror_url_by_host()
 # instead of the default ftp.basealt.ru. The mirror is reused ONLY if its host is one of
 # the known ALT mirrors (listed in mirrors-alt.list); unknown hosts fall back to the
 # default. The returned URL is the mirror root (includes the ALTLinux path segment),
-# so callers append only <branch>/<arch>. Optional $1 = repo (sisyphus, p10, ...)
+# so callers append only <branch>/<arch>. The scheme (http/https) is taken from
+# the configured repo line. Optional $1 = repo (sisyphus, p10, ...)
 # to prefer a line for the same branch. Prints base URL; returns non-zero if no
 # known mirror is configured.
 __get_alt_mirror_baseurl()
@@ -180,7 +181,11 @@ __get_alt_mirror_baseurl()
     [ -n "$host" ] || return 1
     # reuse the mirror only if its host is one of the known ALT mirrors
     __get_alt_mirror_hosts 2>/dev/null | grep -Fxq "$host" || return 1
-    __get_alt_mirror_url_by_host "$host"
+    local mirror_url
+    mirror_url="$(__get_alt_mirror_url_by_host "$host")" || return 1
+    [ -n "$mirror_url" ] || return 1
+    # keep the scheme of the configured repo: apt-https may be not installed
+    echo "${url%%://*}://${mirror_url#*://}"
 }
 
 # Usage:
