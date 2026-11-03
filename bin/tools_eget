@@ -1783,10 +1783,13 @@ url_sget()
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
+       # aria2 -o is relative to the download dir (-d), so split the path
+       local OUTDIR="$(dirname "$2")"
+       local OUTNAME="$(basename "$2")"
        if [ -n "$TIMESTAMPING" ] ; then
-           __timestamping_download "$URL" "$2" "download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -o \"$2\" \"$URL\""
+           __timestamping_download "$URL" "$2" "download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -d \"$OUTDIR\" -o \"$OUTNAME\" \"$URL\""
        else
-           download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -o "$2" "$URL"
+           download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -d "$OUTDIR" -o "$OUTNAME" "$URL"
        fi
        return
     fi
