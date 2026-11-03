@@ -720,12 +720,14 @@ is_repacked_package()
 
     epm status --installed $pkg >/dev/null 2>&1 || return 0
 
+    [ -n "$force" ] && return 0
+
     if ! epm status --supported $pkg ; then
+       # repacked check does not depend on the distro vendor
+       epm status --repacked $pkg && return 0
        echo "Status checking is not supported for $(epm print info -e). Skipping installed package check (use --force to override)."
        return 1
     fi
-
-    [ -n "$force" ] && return 0
 
     if epm status --original $pkg ; then
        echo "Package $pkg is already installed from repository (use --force to override it)."
