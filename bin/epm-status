@@ -126,7 +126,7 @@ epm_status_supported() {
     local distro
     distro=$(epm print info -s)
     case "$distro" in
-        alt|redos|rosa*|mos|astra|fedora|debian|ubuntu)
+        alt|redos|rosa*|mos|astra|fedora|debian|ubuntu|almalinux|rhel)
             return 0
             ;;
         *)
@@ -173,6 +173,28 @@ epm_status_signed()
     esac
 }
 
+# check if the package is built by RHEL-family distro vendor (or EPEL)
+__epm_status_rhel_vendor()
+{
+    local pkg="$1"
+    local vendor="$(epm print field Vendor for "$pkg" 2>/dev/null)"
+    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+
+    # 6.el10, 20.el10.alma.1, 12.el9_0
+    echo "$release" | grep -q "\.el[0-9]" || return 1
+
+    case "$vendor" in
+        "AlmaLinux"|"Rocky Enterprise Software Foundation"|"CentOS"|"Red Hat, Inc."|"Oracle America"|"Fedora Project")
+            return 0
+            ;;
+        "Koji")
+            # some CentOS Stream packages
+            [ "$DISTRNAME" = "CentOSStream" ] && return 0
+            ;;
+    esac
+    return 1
+}
+
 epm_status_original()
 {
     local pkg="$1"
@@ -180,6 +202,15 @@ epm_status_original()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
     local release="$(epm print release from package "$pkg" 2>/dev/null )"
+
+    case $BASEDISTRNAME in
+        almalinux|rhel)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+            __epm_status_rhel_vendor $pkg
+            return
+            ;;
+    esac
 
     case $DISTRNAME in
         ALTLinux)
@@ -346,6 +377,13 @@ epm_status_thirdparty()
 
             echo "$distribution" | grep -q "^Fedora Project" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
+            ;;
+        almalinux|rhel)
+            epm_status_validate $pkg || return 1
+
+            __epm_status_rhel_vendor $pkg && return 1
+            epm_status_repacked $pkg && return 1
             return 0
             ;;
         debian|ubuntu)
