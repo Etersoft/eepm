@@ -10,8 +10,9 @@ URL="https://mattermost.com/"
 
 arch="$(epm print info --debian-arch)"
 
-if [ "$VERSION" = "*" ] ; then
-    PKGURL=$(get_github_url "https://github.com/mattermost/desktop/" "$(epm print constructname $PKGNAME "$VERSION*" $arch "deb")")
+# RELEASE is unknown for explicit version (epm play mattermost-desktop=6.3.2)
+if [ "$VERSION" = "*" ] || [ "$RELEASE" = "*" ] ; then
+    PKGURL=$(get_github_url "https://github.com/mattermost/desktop/" "$(epm print constructname $PKGNAME "$VERSION-*" $arch "deb")")
 else
     PKGURL="https://github.com/mattermost/desktop/releases/download/v${VERSION}/$(epm print constructname $PKGNAME "${VERSION}-${RELEASE}" $arch "deb")"
 fi
