@@ -242,8 +242,11 @@ epm_status_original()
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
-            echo "$distribution" | grep -q "RED SOFT" || return 1
-            echo "$release" | grep -q "el7" || return 1
+            # RED OS 7: Distribution: RED SOFT, release *.el7
+            # RED OS 8: Distribution: redos, Packager: RED SOFT, release *.red80
+            local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
+            echo "$distribution $packager" | grep -q "RED SOFT" || return 1
+            echo "$release" | grep -q -E "el7|red[0-9]" || return 1
             return 0
             ;;
         ROSA*|MOSDesktop)
@@ -361,8 +364,9 @@ epm_status_thirdparty()
         redos)
             epm_status_validate $pkg || return 1
 
-            echo "$distribution" | grep -q "^RED SOFT" && return 1
+            epm_status_original $pkg && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+            epm_status_repacked $pkg && return 1
             return 0
             ;;
         rosa*|mos)
