@@ -37,7 +37,17 @@ rpm_query_package_format_field()
     if is_pkgfile "$1" ; then
         INSTALLED="-p"
     fi
-    a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
+    local out res
+    out="$(a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@")"
+    res=$?
+    if [ "$res" = "0" ] ; then
+        echo "$out"
+        return
+    fi
+    [ -n "$out" ] || return $res
+    # rpm prints 'package NAME is not installed' to stdout for missing packages
+    echo "$out" | grep -v -e "^package .* is not installed$" -e "^пакет .* не установлен$"
+    return $res
 }
 
 rpm_query_package_field()
