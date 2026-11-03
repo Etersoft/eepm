@@ -1747,7 +1747,8 @@ __aria2()
 {
     [ "$USEOUTPUTDIR" ] && set -- -d "$USEOUTPUTDIR" "$@"
     [ "$showprogress" ] && set -- --show-console-readout=true "$@"
-    # aria2 has no direct quiet flag, but --show-console-readout=false reduces output
+    # --show-progress overrides --quiet for aria2
+    [ "$quiet" ] && [ -z "$showprogress" ] && set -- --quiet=true "$@"
     if [ "$READTIMEOUT_VALUE" ] ; then
         docmd timeout "${READTIMEOUT_VALUE}s" $ARIA2 $EGET_ARIA2_OPTIONS "$@"
     else
