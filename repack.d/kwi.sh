@@ -5,6 +5,8 @@ SPEC="$2"
 
 . $(dirname $0)/common.sh
 
+set_alt_terminal_alternatives 57
+
 # org.kde.config does not publish a QML provide in ALT.
 add_requires kf6-kconfig
 # org.kde.sonnet does not publish a QML provide in ALT.

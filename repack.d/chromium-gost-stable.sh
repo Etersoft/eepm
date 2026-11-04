@@ -13,7 +13,7 @@ PRODUCTDIR=/opt/$PRODUCT
 # can be in the repo (ALT p10, c10f2)
 add_conflicts "chromium-gost < 125.0.6422.112"
 
-set_alt_alternatives 62
+set_alt_browser_alternatives 62
 
 copy_icons_to_share
 # TODO: report to the upsteam

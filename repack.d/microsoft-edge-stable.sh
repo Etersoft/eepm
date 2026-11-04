@@ -17,7 +17,7 @@ for i in microsoft-edge-stable microsoft-edge-beta microsoft-edge-dev ; do
 done
 
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 copy_icons_to_share
 

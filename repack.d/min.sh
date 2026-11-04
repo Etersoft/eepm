@@ -14,7 +14,7 @@ cleanup
 
 add_electron_deps
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 add_bin_exec_command $PRODUCT $PRODUCTDIR/$PRODUCT 
 

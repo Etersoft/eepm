@@ -490,6 +490,34 @@ add_obsoletes()
     __add_tag_after_d "Obsoletes: $*"
 }
 
+# Usage: set_alt_alternatives PRIORITY ALTERNATIVE_PATH ...
+set_alt_alternatives()
+{
+    local priority="$1"
+    local alternative
+    shift
+    subst "s|%files|%files\n/etc/alternatives/packages.d/$PRODUCT|" "$SPEC"
+    mkdir -p "$BUILDROOT/etc/alternatives/packages.d/"
+    : > "$BUILDROOT/etc/alternatives/packages.d/$PRODUCT"
+    for alternative in "$@" ; do
+        # Versioned file provides are not supported by eepm-rpm-build.
+        add_provides "$alternative"
+        printf '%s\t%s\t%s\n' "$alternative" "/usr/bin/$PRODUCT" "$priority" >> "$BUILDROOT/etc/alternatives/packages.d/$PRODUCT"
+    done
+}
+
+set_alt_browser_alternatives()
+{
+    add_provides webclient
+    set_alt_alternatives "$1" /usr/bin/xbrowser /usr/bin/x-www-browser
+}
+
+set_alt_terminal_alternatives()
+{
+    add_provides x-terminal-emulator xvt
+    set_alt_alternatives "$1" /usr/bin/xvt /usr/bin/x-terminal-emulator
+}
+
 add_provides()
 {
     [ -n "$1" ] || return
