@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/brave.com/brave-nightly
 
 add_conflicts brave-browser brave-browser-beta
 
-set_alt_alternatives 80
+set_alt_browser_alternatives 80
 
 copy_icons_to_share
 

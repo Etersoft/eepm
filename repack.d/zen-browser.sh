@@ -19,4 +19,4 @@ remove_file $PRODUCTDIR/updater
 remove_file $PRODUCTDIR/updater.ini
 
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65

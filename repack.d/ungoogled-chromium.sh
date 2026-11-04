@@ -33,7 +33,7 @@ GenericName=Ungoogle Chromium Web Browser
 GenericName[ru]=Веб-браузер Ungoogled Chromium
 EOF
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 [ -f .$PRODUCTDIR/chrome_sandbox ] && move_file $PRODUCTDIR/chrome_sandbox $PRODUCTDIR/chrome-sandbox
 

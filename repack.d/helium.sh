@@ -20,6 +20,6 @@ install_file $PRODUCTDIR/$PRODUCT.desktop /usr/share/applications/$PRODUCT.deskt
 
 install_file $PRODUCTDIR/apparmor.cfg /etc/apparmor.d/helium-bin
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 add_chromium_deps

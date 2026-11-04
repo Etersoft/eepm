@@ -13,4 +13,4 @@ fix_desktop_file "/usr/share/$PRODUCT/$PRODUCT"
 
 rm usr/bin/librewolf
 add_bin_link_command
-set_alt_alternatives 65
+set_alt_browser_alternatives 65

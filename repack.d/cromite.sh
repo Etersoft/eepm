@@ -99,6 +99,6 @@ GenericName=Web Browser
 GenericName[ru]=Веб-браузер
 EOF
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 add_chromium_deps

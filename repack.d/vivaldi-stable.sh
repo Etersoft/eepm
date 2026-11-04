@@ -11,7 +11,7 @@ PRODUCTDIR=/opt/vivaldi
 
 add_conflicts vivaldi-snapshot
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 copy_icons_to_share
 

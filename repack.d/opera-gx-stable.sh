@@ -9,7 +9,7 @@ PRODUCTDIR=/opt/$PRODUCTCUR
 
 . $(dirname $0)/common-chromium-browser.sh
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 move_to_opt "/usr/lib/*/$PRODUCTCUR" "/usr/lib*/$PRODUCTCUR"
 

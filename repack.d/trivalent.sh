@@ -85,5 +85,5 @@ fi
 exec "$HERE/trivalent" ${CHROMIUM_ALL_FLAGS} "$@"
 EOF
 
-set_alt_alternatives 85
+set_alt_browser_alternatives 85
 add_chromium_deps

@@ -30,4 +30,4 @@ for i in 16 22 24 32 48 64 128 256 ; do
     install_file $iconpath/default$i.png /usr/share/icons/hicolor/${i}x${i}/apps/$iconname.png
 done
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65

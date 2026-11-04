@@ -19,7 +19,7 @@ for i in opera-stable opera-beta opera-developer ; do
     add_conflicts $i
 done
 
-set_alt_alternatives 65
+set_alt_browser_alternatives 65
 
 move_to_opt "/usr/lib/*/$PRODUCTCUR" "/usr/lib*/$PRODUCTCUR"
 
