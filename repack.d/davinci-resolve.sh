@@ -13,11 +13,10 @@ REMOTE_MONITOR="$PRODUCTDIR/bin/DaVinci Remote Monitor"
 [ -f "$BUILDROOT$PRODUCTDIR/bin/Blackmagic Remote Monitor" ] && \
 	REMOTE_MONITOR="$PRODUCTDIR/bin/Blackmagic Remote Monitor"
 
-if echo "$PRODUCT" | grep -q "Studio"; then
-	add_conflicts davinci-resolve
-else
-	add_conflicts davinci-resolve-Studio
-fi
+for variant in davinci-resolve davinci-resolve-beta davinci-resolve-studio davinci-resolve-studio-beta davinci-resolve-Studio ; do
+	[ "$variant" = "$PRODUCT" ] && continue
+	add_conflicts "$variant"
+done
 
 # Legacy 32-bit LUT tools duplicate otherwise 64-bit system requirements.
 ignore_library_path "$PRODUCTDIR/LUT"
@@ -32,7 +31,59 @@ ignore_library_path "$PRODUCTDIR/Onboarding/qml/QtQuick/VirtualKeyboard"
 # CUDA is an optional backend; libQtGui.so.4 is an unused legacy bundled copy.
 ignore_lib_requires libcuda.so.1 libpng12.so.0 libstdc++-libc6.2-2.so.3 libstdc++.so.5
 
-add_bin_exec_command davinci-resolve "$PRODUCTDIR/bin/resolve"
+# Resolve expects these directories below its installation prefix.
+# Fairlight needs an existing directory; Extras and Studio activation data
+# use process-local binds to writable user directories, not writable /opt.
+directories="Fairlight Extras"
+studio=''
+case "$PRODUCT" in
+    *studio*|*Studio*)
+        studio=1
+        directories="$directories .license"
+        ;;
+esac
+for directory in $directories ; do
+    install -d -m 0755 "$BUILDROOT$PRODUCTDIR/$directory"
+    pack_dir "$PRODUCTDIR/$directory"
+done
+
+# Keep downloaded extras and Studio activation data outside the system package,
+# as in Nixpkgs. A process-local bind keeps the paths expected by Resolve
+# while supporting multiple users without a shared writable /opt directory:
+# https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/da/davinci-resolve/package.nix
+add_requires /usr/bin/bwrap
+{
+    printf '#!/bin/sh\nstudio=%s\n' "$studio"
+    cat <<'RESOLVE_WRAPPER'
+data="${XDG_DATA_HOME:-$HOME/.local/share}/DaVinciResolve"
+extras="$data/Extras"
+# Keep user Extras private, including data created by earlier package versions.
+(umask 077; mkdir -p "$extras") || exit 1
+chmod go-rwx "$extras" || exit 1
+# Install upstream bundles locally, using the same helper as the installer.
+# ddmx checks installed packages, so subsequent launches do not reinstall them.
+if [ -x /opt/davinci-resolve/.ddm/ddmx ] ; then
+    /opt/davinci-resolve/.ddm/ddmx \
+        --src=/opt/davinci-resolve/.ddm --dst="$extras" || exit 1
+fi
+set -- -- /opt/davinci-resolve/bin/resolve "$@"
+if [ -n "$studio" ] ; then
+    # Preserve an existing system activation and its permissions. A nonempty
+    # directory is not proof of a valid license; Resolve validates it normally.
+    # Do not copy activation data between system and user installations.
+    system_license="$(find /opt/davinci-resolve/.license -mindepth 1 -maxdepth 1 -print -quit)" || exit 1
+    if [ -z "$system_license" ] ; then
+        license="$data/license"
+        (umask 077; mkdir -p "$license") || exit 1
+        chmod go-rwx "$license" || exit 1
+        set -- --bind "$license" /opt/davinci-resolve/.license "$@"
+    fi
+fi
+# Only redirect user data; keep normal access to devices and host files.
+exec bwrap --dev-bind / / \
+    --bind "$extras" /opt/davinci-resolve/Extras "$@"
+RESOLVE_WRAPPER
+} | create_exec_file /usr/bin/davinci-resolve
 add_bin_exec_command blackmagicrawplayer "$PRODUCTDIR/BlackmagicRAWPlayer/BlackmagicRAWPlayer"
 add_bin_exec_command blackmagicrawspeedtest "$PRODUCTDIR/BlackmagicRAWSpeedTest/BlackmagicRAWSpeedTest"
 add_bin_exec_command davinci_control_panels_setup "$PRODUCTDIR/DaVinci Control Panels Setup/DaVinci Control Panels Setup"
