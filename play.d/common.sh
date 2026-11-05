@@ -741,6 +741,8 @@ is_repacked_package()
 
     if epm status --thirdparty $pkg ; then
        [ -n "$SKIPREPACK" ] && return 0
+       # on deb systems vendor deb packages are installed as is (see install_pkgurl)
+       [ "$PKGFORMAT" = "deb" ] && return 0
        echo "Package $pkg is already installed, packaged by vendor $(epm print field Vendor for $pkg)."
        return 1
     fi
@@ -764,6 +766,14 @@ is_repacked_packages()
     done
 }
 
+# Check if installed package is managed by us: repacked by epm,
+# or (on deb systems) vendor deb package installed as is (see install_pkgurl)
+__is_play_package()
+{
+    epm status --repacked "$1" >/dev/null 2>&1 && return 0
+    [ "$PKGFORMAT" = "deb" ] && epm status --thirdparty "$1" >/dev/null 2>&1
+}
+
 # Check if package is installed and managed by us (for --installed check)
 is_installed_by_play()
 {
@@ -773,7 +783,7 @@ is_installed_by_play()
 
     # Check exact package first
     if epm status --installed $pkg >/dev/null 2>&1 ; then
-        epm status --repacked $pkg >/dev/null 2>&1 && return 0
+        __is_play_package $pkg && return 0
     fi
 
     # If BASEPKGNAME and PRODUCTALT are set, check only valid alternatives
@@ -784,11 +794,11 @@ is_installed_by_play()
         if [ "$i" = "''" ] ; then
             # Check base package without suffix
             if epm status --installed "$BASEPKGNAME" >/dev/null 2>&1 ; then
-                epm status --repacked "$BASEPKGNAME" >/dev/null 2>&1 && return 0
+                __is_play_package "$BASEPKGNAME" && return 0
             fi
         else
             if epm status --installed "$BASEPKGNAME-$i" >/dev/null 2>&1 ; then
-                epm status --repacked "$BASEPKGNAME-$i" >/dev/null 2>&1 && return 0
+                __is_play_package "$BASEPKGNAME-$i" && return 0
             fi
         fi
     done
