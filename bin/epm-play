@@ -338,6 +338,7 @@ __epm_play_update()
         echo
         info 'Updating $i ...'
             if ! __is_app_installed "$i" ; then
+                info 'Skipping $i: it is not installed via epm play'
                 continue
             fi
             local pkgname="$(__get_app_package "$i")"
