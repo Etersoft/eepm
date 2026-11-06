@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.72
+Version: 3.64.73
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -184,6 +184,37 @@ EOF
 # metapackage, no files
 
 %changelog
+* Fri Nov 06 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.73-alt1
+- epm play: add chimbabenchcl (OpenCL benchmark for CPU and GPU)
+- epm play hiddify: fix upstream url (eterbug #17865)
+- epm play dmde-con, dmde-gui: add beta edition (eterbug #17865)
+- epm play k3s: add prerelease edition (eterbug #17865)
+- epm play virtualbox: fix kernel module install (eterbug #17865)
+- epm play vostok-browser: fix pack layout (eterbug #17865)
+- epm play deltachat: use deb package on ALT (eterbug #17865)
+- epm play metasploit-framework: fix repack (eterbug #17865)
+- epm install: download package URLs via eget on pacman too (pacman -U <URL> requires the vendor key for the downloaded .sig, no IPFS support)
+- epm play: add craft-anything (explore how software works and build your own version)
+- epm play chatgpt: add Arch Linux package support (eterbug #19790)
+- epm-sh-backend: __get_alt_mirror_baseurl: keep http/https scheme of the configured repo for branch repos (apt-https may be not installed)
+- epm play mattermost-desktop: fix install of explicit version (RELEASE is unknown, find the package via get_github_url)
+- epm play common.sh: is_repacked_package: check --force before status support, allow repacked packages on distros without status support
+- epm status: add RHEL family support (AlmaLinux, Rocky, CentOS Stream, RHEL): original by vendor and .elN release, EPEL is original
+- distr_info: detect Oracle Linux as OracleLinux (RHEL based), not Fedora (it has ID_LIKE=fedora)
+- epm status: support RED OS 8 package fields (Distribution: redos, Packager: RED SOFT, release red80), thirdparty via original check
+- epm status: detect alien converted deb packages as repacked (Maintainer support@eepm.ru, Version -epmN.repacked.)
+- epm print: do not print rpm "package is not installed" message as a field value (rpm prints it to stdout)
+- epm play: added kwi (eterbug #19841)
+- eget: fix aria2 backend saving -O path relative to current dir (eepm#854)
+- eget: make aria2 backend respect -q
+- epm repack: generalize set_alt_alternatives
+- epm play: added Lolka X (eterbug #19883)
+- epm play: add bss-crypto-plugin (BSS Crypto Plugin for AB Rossiya bank Internet-Client)
+- epm play.d/common.sh: treat vendor deb packages installed as is as managed by epm play (fix --installed and --update on deb systems)
+- epm play: report skipped apps in --update instead of silent skip
+- epm play firefox: fix download (eterbug #17865)
+- epm play penpot-desktop: move to GitHub releases (eterbug #17865)
+
 * Thu Oct 29 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.72-alt1
 - release_commit: check SRPM before publishing tags
 - fix: avoid restarting full-upgrade after a no-op EPM update
