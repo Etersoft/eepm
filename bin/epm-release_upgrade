@@ -582,8 +582,73 @@ __switch_alt_to_distro()
     docmd epm update
 }
 
+# offline upgrade (with boot to special mode) is impossible in containers and chroot
+__is_container_or_chroot()
+{
+    if is_command systemd-detect-virt ; then
+        a='' systemd-detect-virt --quiet --container && return 0
+        a='' systemd-detect-virt --quiet --chroot && return 0
+        return 1
+    fi
+    [ -f /.dockerenv ] || [ -f /run/.containerenv ] && return 0
+    grep -qa "^container=" /proc/1/environ 2>/dev/null
+}
+
+# upgrade Fedora (or other dnf based distro) to $1 release
+# offline_upgrade: empty (distro-sync on the running system), 1 (offline upgrade via system-upgrade with reboot)
+__fedora_release_upgrade()
+{
+    local RELEASEVER="$1"
+    [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
+
+    info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
+    #docmd epm install epel-release yum-utils
+    sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+    #sudocmd $DNFCMD clean all
+
+    if [ -n "$offline_upgrade" ] && __is_container_or_chroot ; then
+        fatal "Offline upgrade is not possible in a container or chroot (there is no boot), run without --offline to upgrade the running system."
+    fi
+
+    confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
+
+    # --allowerasing is needed for replaced packages (python3-protobuf in Fedora 45, rhbz#2530520)
+    if [ -z "$offline_upgrade" ] ; then
+        sudocmd $DNFCMD distro-sync --refresh --releasever=$RELEASEVER --allowerasing $(subst_option non_interactive -y) || fatal
+        info "You can run '# epm autoorphans' to remove orphaned packages"
+        return
+    fi
+
+    # system-upgrade is built in dnf5
+    [ "$PMTYPE" = "dnf-rpm" ] && assure_exists dnf-plugin-system-upgrade
+    sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER --allowerasing $(subst_option non_interactive -y) || fatal
+    info "You can run '# epm autoorphans' after the upgrade to remove orphaned packages"
+    local rebootcmd="$DNFCMD system-upgrade reboot"
+    [ "$PMTYPE" = "dnf5-rpm" ] && rebootcmd="$DNFCMD offline reboot"
+    # the upgrade is installed during reboot
+    if [ -z "$non_interactive" ] && confirm "Reboot now to install the upgrade? [y/N]" ; then
+        sudocmd $rebootcmd
+    else
+        info 'Run # $rebootcmd to reboot and install the upgrade'
+    fi
+}
+
 epm_release_upgrade()
 {
+    local offline_upgrade=''
+    local i args=''
+    for i in "$@" ; do
+        case "$i" in
+            --offline)
+                offline_upgrade=1
+                ;;
+            *)
+                args="$args $i"
+                ;;
+        esac
+    done
+    set -- $args
+
     assure_root
     assure_safe_run
     info "Starting upgrade/switch whole system to other release"
@@ -757,22 +822,7 @@ epm_release_upgrade()
             exit
         fi
 
-        info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
-        #docmd epm install epel-release yum-utils
-        sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
-        #sudocmd $DNFCMD clean all
-        assure_exists dnf-plugin-system-upgrade
-        sudocmd $DNFCMD $(subst_option non_interactive -y) upgrade --refresh
-        local RELEASEVER="$1"
-        [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
-        #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
-        confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER
-        # TODO: from docs:
-        # dnf system-upgrade reboot
-        # FIXME: download all packages again
-        sudocmd $DNFCMD distro-sync --releasever=$RELEASEVER
-        info "You can run '# epm autoorphans' to remove orphaned packages"
+        __fedora_release_upgrade "$1"
         ;;
     zypper-rpm)
         docmd epm repolist

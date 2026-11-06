@@ -415,7 +415,7 @@ check_command()
         epm_cmd=full_upgrade
         direct_args=1
         ;;
-    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
+    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release), use --offline for Fedora offline upgrade with reboot
         epm_cmd=release_upgrade
         direct_args=1
         ;;
