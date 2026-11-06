@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.72"
+export EPMVERSION="3.64.73"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -5256,10 +5256,8 @@ __use_url_install()
         #urpm-rpm)
         #    pkg_names="$pkg_names $pkg_urls"
         #    ;;
-        pacman)
-            [ -n "$pkg_files" ] && pkg_files="$pkg_files $pkg_urls" || pkg_files="$pkg_urls"
-            return 0
-            ;;
+        # pacman: download via eget (IPFS support), pacman -U <URL> downloads .sig
+        # and requires the vendor key (SigLevel = Required for remote files)
         yum-rpm|dnf-rpm|dnf5-rpm)
             true
             ;;
@@ -10329,6 +10327,7 @@ __epm_play_update()
         echo
         info 'Updating $i ...'
             if ! __is_app_installed "$i" ; then
+                info 'Skipping $i: it is not installed via epm play'
                 continue
             fi
             local pkgname="$(__get_app_package "$i")"
@@ -11156,7 +11155,17 @@ rpm_query_package_format_field()
     if is_pkgfile "$1" ; then
         INSTALLED="-p"
     fi
-    a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@"
+    local out res
+    out="$(a= rpmquery $INSTALLED --queryformat "$FORMAT" "$@")"
+    res=$?
+    if [ "$res" = "0" ] ; then
+        echo "$out"
+        return
+    fi
+    [ -n "$out" ] || return $res
+    # rpm prints 'package NAME is not installed' to stdout for missing packages
+    echo "$out" | grep -v -e "^package .* is not installed$" -e "^пакет .* не установлен$"
+    return $res
 }
 
 rpm_query_package_field()
@@ -20294,7 +20303,11 @@ __get_alt_mirror_baseurl()
     [ -n "$host" ] || return 1
     # reuse the mirror only if its host is one of the known ALT mirrors
     __get_alt_mirror_hosts 2>/dev/null | grep -Fxq "$host" || return 1
-    __get_alt_mirror_url_by_host "$host"
+    local mirror_url
+    mirror_url="$(__get_alt_mirror_url_by_host "$host")" || return 1
+    [ -n "$mirror_url" ] || return 1
+    # keep the scheme of the configured repo: apt-https may be not installed
+    echo "${url%%://*}://${mirror_url#*://}"
 }
 
 __generate_alt_sourceslist()
@@ -21655,7 +21668,7 @@ epm_status_supported() {
     local distro
     distro=$(epm print info -s)
     case "$distro" in
-        alt|redos|rosa*|mos|astra|fedora|debian|ubuntu)
+        alt|redos|rosa*|mos|astra|fedora|debian|ubuntu|almalinux|rhel)
             return 0
             ;;
         *)
@@ -21701,6 +21714,27 @@ epm_status_signed()
     esac
 }
 
+__epm_status_rhel_vendor()
+{
+    local pkg="$1"
+    local vendor="$(epm print field Vendor for "$pkg" 2>/dev/null)"
+    local release="$(epm print release from package "$pkg" 2>/dev/null)"
+
+    # 6.el10, 20.el10.alma.1, 12.el9_0
+    echo "$release" | grep -q "\.el[0-9]" || return 1
+
+    case "$vendor" in
+        "AlmaLinux"|"Rocky Enterprise Software Foundation"|"CentOS"|"Red Hat, Inc."|"Oracle America"|"Fedora Project")
+            return 0
+            ;;
+        "Koji")
+            # some CentOS Stream packages
+            [ "$DISTRNAME" = "CentOSStream" ] && return 0
+            ;;
+    esac
+    return 1
+}
+
 epm_status_original()
 {
     local pkg="$1"
@@ -21708,6 +21742,15 @@ epm_status_original()
     #is_installed $pkg || fatal "FIXME: implemented for installed packages as for now"
     local distribution="$(epm print field Distribution for "$pkg" 2>/dev/null )"
     local release="$(epm print release from package "$pkg" 2>/dev/null )"
+
+    case $BASEDISTRNAME in
+        almalinux|rhel)
+            epm_status_validate $pkg || return 1
+            epm_status_repacked $pkg && return 1
+            __epm_status_rhel_vendor $pkg
+            return
+            ;;
+    esac
 
     case $DISTRNAME in
         ALTLinux)
@@ -21739,8 +21782,11 @@ epm_status_original()
             epm_status_validate $pkg || return 1
             epm_status_repacked $pkg && return 1
 
-            echo "$distribution" | grep -q "RED SOFT" || return 1
-            echo "$release" | grep -q "el7" || return 1
+            # RED OS 7: Distribution: RED SOFT, release *.el7
+            # RED OS 8: Distribution: redos, Packager: RED SOFT, release *.red80
+            local packager="$(epm print field Packager for "$pkg" 2>/dev/null )"
+            echo "$distribution $packager" | grep -q "RED SOFT" || return 1
+            echo "$release" | grep -q -E "el7|red[0-9]" || return 1
             return 0
             ;;
         ROSA*|MOSDesktop)
@@ -21820,6 +21866,9 @@ epm_status_repacked()
 
             # In packages repackaged via alien maintainer equal to $USER, it is better to use the package description
             [ ! -z "$repacked" ] && return 0
+            # alien converted packages: Maintainer: root <support@eepm.ru>, Version: 3.5.16-epm1.repacked.1
+            epm print field Maintainer for "$pkg" 2>/dev/null | grep -q "<support@eepm.ru>" && return 0
+            epm print field Version for "$pkg" 2>/dev/null | grep -q -- "-epm[0-9]*\.repacked\." && return 0
             ;;
         *)
             fatal 'epm_status_repacked: unsupported $PKGNAME ($BASEDISTRNAME)'
@@ -21858,8 +21907,9 @@ epm_status_thirdparty()
         redos)
             epm_status_validate $pkg || return 1
 
-            echo "$distribution" | grep -q "^RED SOFT" && return 1
+            epm_status_original $pkg && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+            epm_status_repacked $pkg && return 1
             return 0
             ;;
         rosa*|mos)
@@ -21874,6 +21924,13 @@ epm_status_thirdparty()
 
             echo "$distribution" | grep -q "^Fedora Project" && return 1
             echo "$distribution" | grep -q "^EEPM" && return 1
+            return 0
+            ;;
+        almalinux|rhel)
+            epm_status_validate $pkg || return 1
+
+            __epm_status_rhel_vendor $pkg && return 1
+            epm_status_repacked $pkg && return 1
             return 0
             ;;
         debian|ubuntu)
@@ -23244,6 +23301,9 @@ normalize_name()
         "Red Hat Enterprise Linux Server")
             echo "RHEL"
             ;;
+        "Oracle Linux Server")
+            echo "OracleLinux"
+            ;;
         "ROSA Fresh"*|"ROSA Desktop Fresh"*)
             echo "ROSA"
             ;;
@@ -23330,6 +23390,10 @@ if distro os-release ; then
     DISTRIB_CODENAME="$VERSION_CODENAME"
     case "$VENDOR_ID" in
         ubuntu|reld|rhel|astra|manjaro|ublinux|redos|msvsphere|alteros|rockylinux|almalinux)
+            ;;
+        ol)
+            # Oracle Linux is RHEL based, but has ID_LIKE=fedora
+            VENDOR_ID="rhel"
             ;;
         *)
             if [ -n "$ID_LIKE" ] ; then
@@ -25967,7 +26031,8 @@ __aria2()
 {
     [ "$USEOUTPUTDIR" ] && set -- -d "$USEOUTPUTDIR" "$@"
     [ "$showprogress" ] && set -- --show-console-readout=true "$@"
-    # aria2 has no direct quiet flag, but --show-console-readout=false reduces output
+    # --show-progress overrides --quiet for aria2
+    [ "$quiet" ] && [ -z "$showprogress" ] && set -- --quiet=true "$@"
     if [ "$READTIMEOUT_VALUE" ] ; then
         docmd timeout "${READTIMEOUT_VALUE}s" $ARIA2 $EGET_ARIA2_OPTIONS "$@"
     else
@@ -26003,10 +26068,13 @@ url_sget()
        scat "$URL"
        return
     elif [ -n "$2" ] ; then
+       # aria2 -o is relative to the download dir (-d), so split the path
+       local OUTDIR="$(dirname "$2")"
+       local OUTNAME="$(basename "$2")"
        if [ -n "$TIMESTAMPING" ] ; then
-           __timestamping_download "$URL" "$2" "download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -o \"$2\" \"$URL\""
+           __timestamping_download "$URL" "$2" "download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -d \"$OUTDIR\" -o \"$OUTNAME\" \"$URL\""
        else
-           download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -o "$2" "$URL"
+           download_with_mirroring __aria2_download -x1 -s1 --allow-piece-length-change=false --allow-overwrite=true -d "$OUTDIR" -o "$OUTNAME" "$URL"
        fi
        return
     fi

@@ -34,7 +34,7 @@ SHAREDIR=$PROGDIR
 # will replaced with /etc/eepm during install
 CONFIGDIR=$PROGDIR/../etc
 
-EPMVERSION="3.64.72"
+EPMVERSION="3.64.73"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -2593,6 +2593,9 @@ normalize_name()
         "Red Hat Enterprise Linux Server")
             echo "RHEL"
             ;;
+        "Oracle Linux Server")
+            echo "OracleLinux"
+            ;;
         "ROSA Fresh"*|"ROSA Desktop Fresh"*)
             echo "ROSA"
             ;;
@@ -2679,6 +2682,10 @@ if distro os-release ; then
     DISTRIB_CODENAME="$VERSION_CODENAME"
     case "$VENDOR_ID" in
         ubuntu|reld|rhel|astra|manjaro|ublinux|redos|msvsphere|alteros|rockylinux|almalinux)
+            ;;
+        ol)
+            # Oracle Linux is RHEL based, but has ID_LIKE=fedora
+            VENDOR_ID="rhel"
             ;;
         *)
             if [ -n "$ID_LIKE" ] ; then
