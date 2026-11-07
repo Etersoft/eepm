@@ -149,6 +149,29 @@ extract_makeself()
 	extract_makeself_tar "$arc" | extract_tar_stdin
 }
 
+# Qt Installer Framework installers (.run) end with the magic cookie 0xc2630a1c99d668f8
+is_qtifw_installer()
+{
+	[ "$(tail -c 8 "$1" | od -An -tx1 | tr -d ' \n')" = "f868d6991c0a63c2" ]
+}
+
+# Extract Qt Installer Framework installers: components are embedded 7z archives
+# (do not run the installer, it runs the component scripts)
+extract_qtifw()
+{
+	local arc="$1"
+	local subdir="$2"
+	local tdir i
+	mkdir -p "$subdir" || fatal "Could not create extraction directory $subdir"
+	tdir="$(mktemp -d "$(realpath "$subdir")/UXXXXXXXX")" || fatal
+	run_7z x -t# -y -o"$tdir" "$arc" '*.7z' >/dev/null || fatal "Could not find components in Qt Installer Framework installer $arc"
+	for i in "$tdir"/*.7z ; do
+		[ -f "$i" ] || fatal "Could not find components in Qt Installer Framework installer $arc"
+		run_7z x -snl $(get_7z_snld) -y -o"$subdir" "$i" >/dev/null || fatal "Could not extract component $(basename "$i") from $arc"
+	done
+	rm -rf "$tdir"
+}
+
 # Extract AppImage archives
 extract_appimage()
 {
@@ -332,7 +355,11 @@ extract_special_archive()
 			extract_7z_to_subdir "$arc" "$subdir"
 			;;
 		run)
-			extract_makeself "$arc" "$subdir"
+			if is_qtifw_installer "$arc" ; then
+				extract_qtifw "$arc" "$subdir"
+			else
+				extract_makeself "$arc" "$subdir"
+			fi
 			;;
 		AppImage|appimage)
 			extract_appimage "$arc" "$subdir"
@@ -652,6 +679,10 @@ repack_special_archive()
 	local ftype="$(get_archive_type "$1")"
 	case "$ftype" in
 		run)
+			if is_qtifw_installer "$1" ; then
+				__repack_via_tmp "$1" "$2"
+				exit
+			fi
 			# makeself payload is already tar, just decompress
 			extract_makeself_tar "$1" > "$2"
 			exit
