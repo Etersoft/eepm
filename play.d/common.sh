@@ -931,6 +931,12 @@ case "$1" in
     "--remove")
         #is_repacked_packages || exit 0
         # PKGNAME may contain several space-separated package names — pass them as separate args
+        # Apps installing several packages may define a get_remove_packages() function
+        # returning the additional packages (f.i., subpackages of a PRODUCTALT package).
+        if type get_remove_packages >/dev/null 2>&1 ; then
+            epm remove $(__lowpkgname "$PKGNAME") $(get_remove_packages)
+            exit
+        fi
         epm remove $(__lowpkgname "$PKGNAME")
         exit
         ;;
