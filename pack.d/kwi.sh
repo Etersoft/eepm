@@ -24,9 +24,11 @@ a='' ostree checkout --repo="$REPO" --user-mode "kwi:$REF" app_checkout || fatal
 
 mkdir -p "opt/$PRODUCT/bin" "opt/$PRODUCT/lib" usr/bin usr/share || fatal
 cp -a app_checkout/files/bin/kwi "opt/$PRODUCT/bin/" || fatal
-for lib in libkwi-terminal libghostty-vt libUnion libUnionQuickImpl libUnionQuickStyle libKirigamiActionCollection ; do
+for lib in libkwi-terminal libghostty-vt libKirigamiActionCollection ; do
     cp -a app_checkout/files/lib/$lib.so* "opt/$PRODUCT/lib/" || fatal
 done
+# Union style libraries (libUnion, libUnionQuickImpl, libUnionQuickPrivate, ...)
+cp -a app_checkout/files/lib/libUnion*.so* "opt/$PRODUCT/lib/" || fatal
 for dir in qml/org/kde/kwi/terminal qml/org/kde/union qml/org/kde/kirigami/actioncollection \
            qml/org/kde/kirigami/styles/org.kde.union plugins/union ; do
     mkdir -p "opt/$PRODUCT/lib/$(dirname "$dir")" || fatal
