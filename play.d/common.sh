@@ -767,11 +767,12 @@ is_repacked_packages()
 }
 
 # Check if installed package is managed by us: repacked by epm,
-# or (on deb systems) vendor deb package installed as is (see install_pkgurl)
+# or vendor package installed as is (on deb systems, see install_pkgurl, or with SKIPREPACK)
 __is_play_package()
 {
     epm status --repacked "$1" >/dev/null 2>&1 && return 0
-    [ "$PKGFORMAT" = "deb" ] && epm status --thirdparty "$1" >/dev/null 2>&1
+    [ "$PKGFORMAT" = "deb" ] || [ -n "$SKIPREPACK" ] || return 1
+    epm status --thirdparty "$1" >/dev/null 2>&1
 }
 
 # Check if package is installed and managed by us (for --installed check)
