@@ -13,19 +13,14 @@ URL="$4"
 PKGNAME=$PRODUCT-$VERSION
 APPNAME=AmneziaVPN
 
-epm assure fakeroot || fatal
+# Qt Installer Framework installer: extract the components without running it
+# (the installer runs post_install.sh via sudo on the host)
+mkdir -p opt/$APPNAME
+erc -C opt/$APPNAME unpack "$TAR" || fatal
+[ -x opt/$APPNAME/bin/$APPNAME ] || fatal "Can't find bin/$APPNAME in $TAR"
 
-# Qt Installer Framework binary: extract with fakeroot
-chmod +x "$TAR"
-a='' fakeroot "$TAR" --root "$PWD/install-root" --accept-licenses --no-size-checking --accept-messages --confirm-command install >/dev/null 2>&1 || fatal "Can't extract installer"
-
-mkdir -p opt
-mv install-root opt/$APPNAME || fatal
-
-# remove installer metadata and maintainer scripts
-cd opt/$APPNAME || fatal
-rm -rf maintenancetool* installer.dat installerResources components.xml network.xml InstallationLog.txt post_install.sh post_uninstall.sh
-cd - >/dev/null
+# remove maintainer scripts (repack.d replaces post_install.sh)
+rm -f opt/$APPNAME/post_install.sh opt/$APPNAME/post_uninstall.sh
 
 erc pack $PKGNAME.tar opt || fatal
 
