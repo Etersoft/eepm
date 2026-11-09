@@ -20,6 +20,14 @@ PRODUCTDIR="/opt/Tensor/Saby Center"
 # Move all from temp_sabycenter/ into PRODUCTDIR/
 move_dir "$PRODUCTDIR/temp_sabycenter" "$PRODUCTDIR"
 
+# Upstream marks the version ready after installCenter; without it the launcher exits.
+for service in "$BUILDROOT$PRODUCTDIR"/*/service ; do
+    [ -d "$service" ] || continue
+    appversion="$(basename "$(dirname "$service")")"
+    echo '' | create_file "$PRODUCTDIR/$appversion/integrity.checked"
+done
+echo '' | create_file "/usr/share/Tensor/$PRODUCTCUR/afterInstall.marker"
+
 awk '/^%dir/ {key=$0; gsub(/"/,"",key); gsub(/\/+$/,"",key); if (seen[key]++) next} {print}' "$SPEC" > "$SPEC.dedup" && mv "$SPEC.dedup" "$SPEC"
 
 # /usr/bin/sabycenter launcher symlink

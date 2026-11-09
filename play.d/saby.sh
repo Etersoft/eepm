@@ -28,7 +28,7 @@ case "$pkgtype" in
         epm install --repack \
             "$DLBASE/SabyDesktop/master/linux/saby.rpm" \
             "$DLBASE/SabyCenter/master/linux/sabycenter.rpm" \
-            "$DLBASE/NmhTransport/master/linux/nmh-transport.rpm"
+            "$DLBASE/NmhTransport/master/linux/nmh-transport.rpm" || fatal
         ;;
     deb)
         # saby.deb requires certutil — provided by libnss3-tools on Debian/Ubuntu
@@ -39,7 +39,7 @@ case "$pkgtype" in
         epm install --repack \
             "$DLBASE/SabyDesktop/master/linux/deb_repo/saby.deb" \
             "$DLBASE/SabyCenter/master/linux/sabycenter.deb" \
-            "$DLBASE/NmhTransport/master/linux/nmh-transport.deb"
+            "$DLBASE/NmhTransport/master/linux/nmh-transport.deb" || fatal
         ;;
     *)
         fatal "Only rpm and deb package formats are supported"
@@ -55,23 +55,7 @@ if [ -d "$SABYDIR/temp_saby" ] ; then
     warning "Possible cause: epm older than 3.64.63, or 'epm install --repack' did not trigger repack scripts."
 fi
 
-# Replacement for postinstall actions (maintainer scripts dropped via repack):
-
-# 1. Saby plugin connector path (used by browsers via sbis3plugin)
-SABYVER="$(ls -1d $SABYDIR/*/service/modules/SbisNNGConnector 2>/dev/null | head -1 | sed "s|$SABYDIR/||;s|/service/.*||")"
-if [ -n "$SABYVER" ] ; then
-    mkdir -p /usr/share/Tensor/Saby
-    echo "$SABYDIR/$SABYVER/service/modules/SbisNNGConnector/libsbis-plugin-connector.so" > /usr/share/Tensor/Saby/sbis-plugin-connector-path
-fi
-
-# 2. Register Saby native messaging host and other components for browsers
-NMHDIR="/opt/nmh-transport"
-NMHVER="$(ls -1d $NMHDIR/*/service/components-registrator 2>/dev/null | head -1 | sed "s|$NMHDIR/||;s|/service/.*||")"
-if [ -n "$NMHVER" ] && [ -x "$NMHDIR/$NMHVER/service/components-registrator" ] ; then
-    "$NMHDIR/$NMHVER/service/components-registrator" installNmh || warning 'Failed to register native messaging host'
-fi
-
-# 3. Show post-install hints.
+# Show post-install hints. Registration files are shipped by repack.
 # We DON'T auto-start SabyCenter — registering a system daemon is left to the user
 # (per saby.md: "сложнее и потенциально ломает поведение системы — оставлено пользователю").
 # The unit file itself is shipped by repack.d/sabycenter.sh.
