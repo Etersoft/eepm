@@ -18,6 +18,22 @@ PRODUCTDIR=/opt/Tensor/Saby
 # Move all from temp_saby/ to PRODUCTDIR/ — replaces postinstall `cp -r temp_saby/. PRODUCTDIR/`.
 move_dir "$PRODUCTDIR/temp_saby" "$PRODUCTDIR"
 
+# Upstream marks SVG assets executable; words in spaced names (e.g. "exchange
+# between banks_l.svg") then get treated as package names by dependency scanning.
+find "$BUILDROOT$PRODUCTDIR" -type f -name '*.svg' -exec chmod a-x {} +
+
+# The launcher only accepts versions marked ready by the upstream postinstall.
+for service in "$BUILDROOT$PRODUCTDIR"/*/service ; do
+    [ -d "$service" ] || continue
+    appversion="$(basename "$(dirname "$service")")"
+    echo '' | create_file "$PRODUCTDIR/$appversion/integrity.checked"
+done
+# The connector path is shared; register the newest version once.
+connector="$(find "$BUILDROOT$PRODUCTDIR" -type f -name libsbis-plugin-connector.so | sort -V | tail -n 1)"
+[ -n "$connector" ] || fatal "Can't find Saby browser connector"
+echo "${connector#"$BUILDROOT"}" | create_file /usr/share/Tensor/Saby/sbis-plugin-connector-path
+echo '' | create_file /usr/share/Tensor/Saby/afterInstall.marker
+
 # move_dir's subst can leave duplicate %dir lines (both the old PRODUCTDIR
 # entry and the rewritten temp_saby one). Drop dups (normalize quotes/slashes).
 awk '/^%dir/ {key=$0; gsub(/"/,"",key); gsub(/\/+$/,"",key); if (seen[key]++) next} {print}' "$SPEC" > "$SPEC.dedup" && mv "$SPEC.dedup" "$SPEC"
@@ -35,6 +51,7 @@ Type=Application
 Encoding=UTF-8
 Categories=Network;
 StartupNotify=true
+StartupWMClass=Saby
 EOF
 chmod +x "$BUILDROOT/usr/share/applications/Saby.desktop"
 
