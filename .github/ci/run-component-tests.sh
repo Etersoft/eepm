@@ -111,6 +111,7 @@ run_ci() {
   check_shell_syntax .github/ci/detect-components.sh
   check_shell_syntax .github/ci/run-tests.sh
   check_shell_syntax .github/ci/run-component-tests.sh
+  check_shell_syntax .github/ci/publish-results.sh
   check_shell_syntax .github/ci/ci-smoke-test.sh
   check_shell_syntax ci/run_one_ci.sh
 
