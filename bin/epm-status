@@ -77,6 +77,26 @@ __epm_vendor_ok_scripts()
     return $res
 }
 
+# check if the package is built by Etersoft Korinf build system
+# TODO: check Etersoft signature instead (Vendor and BuildHost can be faked)
+# args: package [vendor]
+__epm_korinf_built()
+{
+    local vendor="$2"
+    [ -n "$vendor" ] || vendor="$(epm print field Vendor for "$1" 2>/dev/null)"
+    [ "$vendor" = "Etersoft Korinf" ] && return 0
+
+    # Korinf builds for ALT have ALT vendor, but are built by Etersoft builder
+    local buildhost
+    buildhost="$(epm print field BuildHost for "$1" 2>/dev/null)"
+    case "$buildhost" in
+        builder.hasher.altlinux.org|builder*.etersoft.ru)
+            return 0
+            ;;
+    esac
+    return 1
+}
+
 #  check if the package is installed and the version is enough (if the version is specified)
 epm_status_installed()
 {
