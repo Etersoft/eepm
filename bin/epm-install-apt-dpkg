@@ -39,6 +39,7 @@ epm_install_files_apt_dpkg()
         return
     fi
 
+    [ -n "$noscripts" ] && warning 'Option --noscripts is not supported for deb packages (dpkg has no such option), package scripts will be run.'
 
     # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 

@@ -54,6 +54,7 @@ epm_remove_low()
             cd - >/dev/null
             return $RES ;;
         *-dpkg|-dpkg)
+            [ -n "$noscripts" ] && warning 'Option --noscripts is not supported for deb packages (dpkg has no such option), package scripts will be run.'
             # shellcheck disable=SC2046
             sudocmd dpkg --purge $(subst_option nodeps --force-all) $(subst_option force --force-remove-reinstreq)  $(print_name "$@")
             return ;;
