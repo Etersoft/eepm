@@ -91,3 +91,22 @@ jobs:
           APPS_TEXT: ${{ matrix.app }}
           CHANGED_FILES_TEXT: ${{ needs.detect.outputs.changed_files }}
         run: ./.github/ci/run-component-tests.sh
+
+      - name: Publish test summary
+        if: ${{ always() && matrix.component == 'play' }}
+        shell: bash
+        env:
+          APPS_TEXT: ${{ matrix.app }}
+          TEST_TARGET: ${{ matrix.target }}
+          TEST_SYSTEM: ${{ matrix.system }}
+          ARTIFACT_NAME: epm-results-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+        run: ./.github/ci/publish-results.sh
+
+      - name: Upload test results
+        if: ${{ always() && matrix.component == 'play' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: epm-results-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index }}
+          path: epm-results
+          if-no-files-found: warn
+          retention-days: 7
