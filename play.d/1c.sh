@@ -13,9 +13,6 @@ epm play 1c = /path/to/setup-full-8.*.run"
 
 . $(dirname $0)/common.sh
 
-EPM_LOCAL="$(dirname "$0")/../bin/epm"
-[ -x "$EPM_LOCAL" ] && EPM="$(realpath "$EPM_LOCAL")"
-
 SOURCE="$VERSION"
 
 if [ -n "$3" ] && [ ! -r "$SOURCE" ] && [ -r "$SOURCE-$3" ] ; then
@@ -49,10 +46,10 @@ install_package()
     abs="$(realpath "$package")" || fatal "Can't resolve $package"
     case "$package" in
         *.rpm)
-            ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise "$EPM" --auto repack --install "$abs" )
+            ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise epm repack --install "$abs" )
             ;;
         *.deb)
-            ( unset EEPM_INTERNAL_PKGNAME ; "$EPM" --auto pack --install 1c83-universal "$abs" )
+            ( unset EEPM_INTERNAL_PKGNAME ; epm pack --install 1c83-universal "$abs" )
             ;;
         *) fatal "Unsupported 1C package format: $package" ;;
     esac
@@ -62,10 +59,10 @@ install_archive()
 {
     case "$(basename "$1")" in
         *deb*.zip|*deb*.tar.gz|*deb*.tgz)
-            ( unset EEPM_INTERNAL_PKGNAME ; "$EPM" --auto pack --install 1c83-universal "$1" )
+            ( unset EEPM_INTERNAL_PKGNAME ; epm pack --install 1c83-universal "$1" )
             ;;
         *)
-            ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise "$EPM" --auto pack --repack --install 1c83-universal "$1" )
+            ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise epm pack --repack --install 1c83-universal "$1" )
             ;;
     esac
 }
@@ -73,7 +70,7 @@ install_archive()
 install_run()
 {
     override_pkgname 1c83-client
-    "$EPM" --auto pack --install 1c83-client "$1"
+    epm pack --install 1c83-client "$1"
 }
 
 if [ -z "$SOURCE" ] || [ "$SOURCE" = "*" ] ; then

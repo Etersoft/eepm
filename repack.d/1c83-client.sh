@@ -47,7 +47,6 @@ VERSION="$(basename "$(echo "$BUILDROOT$PRODUCTDIR"/$arch/8.*.*.* | sed -e 's| .
 VERSIONDIR="$PRODUCTDIR/$arch/$VERSION"
 
 __1c_enterprise_add_requires
-__1c_enterprise_remove_bundled_runtime_libs_from_root "$BUILDROOT"
 
 remove_dir "$PRODUCTDIR/conf"
 remove_dir "$VERSIONDIR/conf"
@@ -63,7 +62,9 @@ export LD_LIBRARY_PATH="$VERSIONDIR:$PRODUCTDIR/common\${LD_LIBRARY_PATH:+:\$LD_
 exec "$PRODUCTDIR/common/$STARTER" "\$@"
 EOF
     __1c_enterprise_normalize_desktop_name "$STARTER" "$VERSIONDIR"
-    fix_desktop_file "$PRODUCTDIR/common/$STARTER" "$STARTER"
+    if [ -f "$BUILDROOT/usr/share/applications/$STARTER.desktop" ] ; then
+        fix_desktop_file "$PRODUCTDIR/common/$STARTER" "$STARTER"
+    fi
 fi
 
 for command in $STARTER $COMMANDS ; do
@@ -74,17 +75,45 @@ for command in $COMMANDS ; do
     [ -x "$BUILDROOT$VERSIONDIR/$command" ] || continue
     __1c_enterprise_normalize_desktop_name "$command" "$VERSIONDIR"
     add_bin_exec_command "$command" "$VERSIONDIR/$command"
-    fix_desktop_file "$VERSIONDIR/$command" "$command"
+    if [ -f "$BUILDROOT/usr/share/applications/$command.desktop" ] ; then
+        fix_desktop_file "$VERSIONDIR/$command" "$command"
+    fi
 done
 
+if [ "$PRODUCTDIR" = /opt/1cv8t ] ; then
+    # Unattended installers can omit desktop integration.
+    launcher=
+    for command in "$STARTER" $COMMANDS ; do
+        [ -x "$BUILDROOT/usr/bin/$command" ] || continue
+        if [ -f "$BUILDROOT/usr/share/applications/$command.desktop" ] ; then
+            launcher=
+            break
+        fi
+        [ -n "$launcher" ] || launcher="$command"
+    done
+    if [ -n "$launcher" ] ; then
+        cat <<EOF | create_file "/usr/share/applications/$launcher.desktop" || fatal "Can't create the 1C training launcher"
+[Desktop Entry]
+Type=Application
+Name=$PRODUCTSUMMARY
+Exec=/usr/bin/$launcher
+Icon=applications-office
+Categories=Office;
+EOF
+    fi
+fi
+
+remove_file /usr/share/applications/mimeinfo.cache
 remove_dir /usr/share/app-install
 
 epm assure patchelf || exit
 
-for i in $BUILDROOT$PRODUCTDIR/*/*/lib* ; do
-    a= patchelf --set-rpath "\$ORIGIN:$PRODUCTDIR/common" $i
+for i in "$BUILDROOT$VERSIONDIR"/lib* ; do
+    [ -f "$i" ] || continue
+    a= patchelf --set-rpath "\$ORIGIN:$PRODUCTDIR/common" "$i"
 done
 
-for i in $BUILDROOT$PRODUCTDIR/common/lib* ; do
-    a= patchelf --set-rpath '$ORIGIN' $i
+for i in "$BUILDROOT$PRODUCTDIR"/common/lib* ; do
+    [ -f "$i" ] || continue
+    a= patchelf --set-rpath '$ORIGIN' "$i"
 done

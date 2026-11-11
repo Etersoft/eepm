@@ -3,10 +3,9 @@
 FILENAME="$1"
 RETURNTARNAME="$2"
 PKGROOT="$PWD/1c83-client-root"
-PK1CV8_CREATED=''
+INSTALLTMP="$PWD/1c83-installer-tmp"
 
 . $(dirname $0)/common.sh
-. $(dirname $0)/../repack.d/common-1c-enterprise.sh
 
 # unpack if something like server64_8_3_22_1851.tar.gz
 if echo "$(basename "$FILENAME")" | grep -q "^server.._8_3.*tar\.gz$" ; then
@@ -29,28 +28,41 @@ case "$(basename "$FILENAME")" in
 esac
 VERSION="$(echo $FILENAME | sed 's|.*-8|8|' | sed 's|-.*||')"
 TARNAME="1c83-client-$VERSION.tar"
-HOST_CONFDIR_WAS_PRESENT=''
 
-run_root_command()
-{
-    if [ "$(id -u)" = 0 ] ; then
-        "$@"
-    else
-        esu "$@"
-    fi
-}
+epm assure bwrap bubblewrap || fatal
+epm assure xdg-desktop-menu xdg-utils || fatal
+mkdir -p "$PKGROOT$INSTDIR" "$PKGROOT/usr/share" "$INSTALLTMP" || fatal
+installer="$(realpath "$FILENAME")" || fatal "Can't resolve $FILENAME"
+# A symlink to the source can lead outside the pack directory, where the
+# sandbox's mapped uid may not be able to traverse the parent directories.
+case "$installer" in
+    "$PWD"/*) stage_installer= ;;
+    *) stage_installer=1 ;;
+esac
+if [ -n "$stage_installer" ] || [ ! -x "$installer" ] ; then
+    staged_installer="$(mktemp "$PWD/1c83-installer.XXXXXX")" || fatal
+    cp --reflink=auto "$installer" "$staged_installer" || fatal "Can't stage $FILENAME"
+    installer="$staged_installer"
+    chmod u+x "$installer" || fatal
+fi
 
-chmod -v u+x $FILENAME
-# По умолчанию устанавливается только "client_full,langs,en,ru,advanced". Все остальные компоненты по умолчанию отключены.
-# Задана тихая установка.
-rm -rf "$PKGROOT" || fatal
-[ -e /usr/local/bin/pk1cv8 ] || PK1CV8_CREATED=1
-[ -e "$INSTDIR/conf" ] && HOST_CONFDIR_WAS_PRESENT=1
-run_root_command "$(realpath "$FILENAME")" --mode unattended --prefix "$PKGROOT" || {
-    [ -d "$PKGROOT$INSTDIR" ] || fatal "Can't install"
-}
-[ -z "$PK1CV8_CREATED" ] || rm -f /usr/local/bin/pk1cv8
-[ -n "$HOST_CONFDIR_WAS_PRESENT" ] || run_root_command rm -rf "$INSTDIR/conf"
+# --prefix does not isolate vendor scripts (and is absent in the 8.5 installer).
+# Only payload and generated shared data persist; other host paths are read-only
+# or private mounts. Never fall back to an unsandboxed privileged installer.
+bwrap --unshare-all --uid 0 --gid 0 --die-with-parent --new-session \
+    --ro-bind / / --ro-bind /proc /proc --dev /dev \
+    --bind "$INSTALLTMP" /tmp --tmpfs /var/tmp --tmpfs /opt --tmpfs /usr/local \
+    --bind "$PKGROOT$INSTDIR" "$INSTDIR" \
+    --bind "$PKGROOT/usr/share" /usr/share \
+    --ro-bind "$installer" /tmp/installer --chdir /tmp \
+    --setenv HOME /tmp --setenv TMPDIR /tmp \
+    /tmp/installer --mode unattended --unattendedmodeui none \
+    --disable-components v8_install_deps,ws --enable-components desktop_icons || fatal "1C installer failed in the sandbox"
+
+# Some installer versions use the per-user XDG paths even in unattended mode.
+if [ -d "$INSTALLTMP/.local/share" ] ; then
+    cp -a "$INSTALLTMP/.local/share/." "$PKGROOT/usr/share/"
+fi
 
 if echo "$FILENAME" | grep -q "x86_64.run$" ; then
     arch="x86_64"
@@ -62,11 +74,9 @@ fi
 
 [ -d "$PKGROOT$INSTDIR/$arch/$VERSION" ] || fatal "Can't detect installed 1C files in $PKGROOT$INSTDIR/$arch/$VERSION"
 
-__1c_enterprise_remove_bundled_runtime_libs_from_root "$PKGROOT"
-
 rm -rf "$PKGROOT$INSTDIR/conf" "$PKGROOT$INSTDIR/$arch/$VERSION/conf" || fatal
 
-command -v tar >/dev/null 2>&1 || epm install --skip-installed tar || fatal
-( cd "$PKGROOT" && tar cf "../$TARNAME" opt usr ) || fatal
+epm assure tar || fatal
+( cd "$PKGROOT" && erc pack "../$TARNAME" opt usr ) || fatal
 
 return_tar $TARNAME

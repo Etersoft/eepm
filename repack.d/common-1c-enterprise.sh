@@ -32,148 +32,22 @@ __1c_enterprise_add_requires()
     fi
 }
 
-__1c_enterprise_lib_version()
-{
-    local file="$1"
-    local libname="$2"
-    local realfile
-
-    case "$libname" in
-        libstdc++.so.6)
-            strings "$file" 2>/dev/null | sed -n 's|^GLIBCXX_\([0-9][0-9.]*\)$|\1|p' | sort -V | tail -n1
-            ;;
-        libgcc_s.so.1)
-            strings "$file" 2>/dev/null | sed -n 's|^GCC_\([0-9][0-9.]*\)$|\1|p' | sort -V | tail -n1
-            ;;
-        libhwy.so.1)
-            realfile="$(readlink -f "$file" 2>/dev/null || echo "$file")"
-            basename "$realfile" | sed -n 's|^libhwy\.so\.\([0-9][0-9.]*\)$|\1|p'
-            ;;
-    esac
-}
-
-__1c_enterprise_version_ge()
-{
-    local ver="$1"
-    local minver="$2"
-
-    [ -n "$ver" ] || return 1
-    [ -n "$minver" ] || return 1
-    [ "$(printf '%s\n%s\n' "$ver" "$minver" | sort -V | tail -n1)" = "$ver" ]
-}
-
-__1c_enterprise_version_gt()
-{
-    local ver="$1"
-    local minver="$2"
-
-    [ -n "$ver" ] || return 1
-    [ -n "$minver" ] || return 1
-    [ "$ver" != "$minver" ] || return 1
-    __1c_enterprise_version_ge "$ver" "$minver"
-}
-
-__1c_enterprise_assure_strings()
-{
-    command -v strings >/dev/null 2>&1 && return 0
-
-    if command -v epm >/dev/null 2>&1 ; then
-        epm install --skip-installed binutils || true
-    fi
-
-    command -v strings >/dev/null 2>&1 && return 0
-    warning "Keeping bundled runtime libraries: strings command was not found"
-    return 1
-}
-
-__1c_enterprise_best_lib_in_dir()
-{
-    local dir="$1"
-    local libname="$2"
-    local file version bestfile bestversion
-
-    for file in "$dir/$libname" "$dir/$libname".*
-    do
-        [ -e "$file" ] || [ -L "$file" ] || continue
-        version="$(__1c_enterprise_lib_version "$file" "$libname")"
-        [ -n "$version" ] || continue
-        if [ -z "$bestversion" ] || __1c_enterprise_version_ge "$version" "$bestversion" ; then
-            bestfile="$file"
-            bestversion="$version"
-        fi
-    done
-
-    [ -n "$bestfile" ] || return 1
-    echo "$bestfile"
-}
-
-__1c_enterprise_best_system_lib()
-{
-    local libname="$1"
-    local file version bestfile bestversion
-
-    for file in \
-        /lib*/"$libname" /lib*/"$libname".* \
-        /usr/lib*/"$libname" /usr/lib*/"$libname".* \
-        /lib*/*/"$libname" /lib*/*/"$libname".* \
-        /usr/lib*/*/"$libname" /usr/lib*/*/"$libname".*
-    do
-        [ -e "$file" ] || [ -L "$file" ] || continue
-        version="$(__1c_enterprise_lib_version "$file" "$libname")"
-        [ -n "$version" ] || continue
-        if [ -z "$bestversion" ] || __1c_enterprise_version_ge "$version" "$bestversion" ; then
-            bestfile="$file"
-            bestversion="$version"
-        fi
-    done
-
-    [ -n "$bestfile" ] || return 1
-    echo "$bestfile"
-}
-
-__1c_enterprise_distro_name()
-{
-    if command -v distr_info >/dev/null 2>&1 ; then
-        distr_info -d 2>/dev/null && return 0
-    fi
-
-    if command -v lsb_release >/dev/null 2>&1 ; then
-        lsb_release -is 2>/dev/null && return 0
-    fi
-
-    sed -n 's|^ID=||p' /etc/os-release 2>/dev/null | tr -d '"' | head -n1
-}
-
-__1c_enterprise_distro_version()
-{
-    if command -v distr_info >/dev/null 2>&1 ; then
-        distr_info -v 2>/dev/null && return 0
-    fi
-
-    if command -v lsb_release >/dev/null 2>&1 ; then
-        lsb_release -r 2>/dev/null | awk '{print $NF}' && return 0
-    fi
-
-    sed -n 's|^VERSION_ID=||p' /etc/os-release 2>/dev/null | tr -d '"' | head -n1
-}
-
 __1c_enterprise_use_wk41()
 {
     local distrname distrver
 
-    distrname="$(__1c_enterprise_distro_name | tr '[:upper:]' '[:lower:]')"
-    distrver="$(__1c_enterprise_distro_version | cut -d_ -f1 | cut -d. -f1)"
+    distrname="$(epm print info -d | tr '[:upper:]' '[:lower:]')"
+    distrver="$(epm print info -v | cut -d_ -f1)"
 
     case "$distrname" in
         *stra*)
-            distrver="$(__1c_enterprise_distro_version | cut -d_ -f1)"
-            __1c_enterprise_version_gt "$distrver" 1.7 || return 1
+            [ "$(epm print compare version "$distrver" 1.7)" = 1 ] || return 1
             ;;
         *buntu)
-            __1c_enterprise_version_gt "$distrver" 23 || return 1
+            [ "$(epm print compare version "${distrver%%.*}" 23)" = 1 ] || return 1
             ;;
         *inux*int*)
-            __1c_enterprise_version_gt "$distrver" 21 || return 1
+            [ "$(epm print compare version "${distrver%%.*}" 21)" = 1 ] || return 1
             ;;
         *)
             return 1
@@ -195,62 +69,6 @@ __1c_enterprise_prepare_wk41()
     [ -f "$BUILDROOT$versiondir/webkit2_extu-3.0.so.wk41" ] &&
         [ -d "$BUILDROOT$versiondir/webkit2ext" ] &&
         ln -sfn ../webkit2_extu-3.0.so.wk41 "$BUILDROOT$versiondir/webkit2ext/webkit2_extu-3.0.so"
-}
-
-__1c_enterprise_remove_lib_files()
-{
-    local root="$1"
-    local dir="$2"
-    local libname="$3"
-    local reldir
-
-    reldir="${dir#$root}"
-
-    if [ -n "$BUILDROOT" ] && [ "$root" = "$BUILDROOT" ] && command -v remove_file >/dev/null 2>&1 ; then
-        remove_file "$reldir/$libname"
-        remove_file "$reldir/$libname.*"
-        return
-    fi
-
-    rm -fv "$dir/$libname" "$dir/$libname".*
-}
-
-__1c_enterprise_remove_bundled_runtime_libs_from_root()
-{
-    local root="$1"
-    local dir libname bundled systemlib bundledversion systemversion
-
-    [ -n "$root" ] || root="$BUILDROOT"
-    [ -n "$root" ] || return 0
-    __1c_enterprise_assure_strings || return 0
-
-    for dir in \
-        "$root"/opt/1cv8/*/* "$root"/opt/1cv8/common \
-        "$root"/opt/1cv8t/*/* "$root"/opt/1cv8t/common
-    do
-        [ -d "$dir" ] || continue
-        for libname in libstdc++.so.6 libgcc_s.so.1 libhwy.so.1 ; do
-            bundled="$(__1c_enterprise_best_lib_in_dir "$dir" "$libname")" || continue
-            systemlib="$(__1c_enterprise_best_system_lib "$libname")" || {
-                warning "Keeping bundled $libname: system library was not found"
-                continue
-            }
-            bundledversion="$(__1c_enterprise_lib_version "$bundled" "$libname")"
-            systemversion="$(__1c_enterprise_lib_version "$systemlib" "$libname")"
-
-            if [ -z "$bundledversion" ] || [ -z "$systemversion" ] ; then
-                warning "Keeping bundled $libname: can't compare bundled and system versions"
-                continue
-            fi
-
-            if __1c_enterprise_version_ge "$systemversion" "$bundledversion" ; then
-                info "Removing bundled $libname $bundledversion; system $systemversion is enough"
-                __1c_enterprise_remove_lib_files "$root" "$dir" "$libname"
-            else
-                info "Keeping bundled $libname $bundledversion; system $systemversion is older"
-            fi
-        done
-    done
 }
 
 __1c_enterprise_get_version_dir()
@@ -405,7 +223,10 @@ __1c_enterprise_normalize_icon_name()
         move_file "${file#"$BUILDROOT"}" "$dest"
     done
 
-    subst "s|^Icon=$icon-.*|Icon=$icon|" "$BUILDROOT"/usr/share/applications/*.desktop
+    for file in "$BUILDROOT"/usr/share/applications/*.desktop ; do
+        [ -f "$file" ] || continue
+        subst "s|^Icon=$icon-.*|Icon=$icon|" "$file"
+    done
 }
 
 __1c_enterprise_normalize_desktop_name()
@@ -414,7 +235,9 @@ __1c_enterprise_normalize_desktop_name()
     local versiondir="$2"
     local desktop
 
-    for desktop in "$BUILDROOT/usr/share/applications/$command"-*.desktop "$BUILDROOT$versiondir/$command"-*.desktop ; do
+    [ ! -f "$BUILDROOT/usr/share/applications/$command.desktop" ] || return 0
+    for desktop in "$BUILDROOT/usr/share/applications/$command"-*.desktop \
+        "$BUILDROOT$versiondir/$command.desktop" "$BUILDROOT$versiondir/$command"-*.desktop ; do
         [ -e "$desktop" ] || [ -L "$desktop" ] || continue
         move_file "${desktop#$BUILDROOT}" "/usr/share/applications/$command.desktop"
         chmod 0644 "$BUILDROOT/usr/share/applications/$command.desktop"
@@ -497,5 +320,6 @@ fix_1c_enterprise_package()
             ;;
     esac
 
-    __1c_enterprise_remove_bundled_runtime_libs_from_root "$BUILDROOT"
+    # Keep the vendor runtime: host-library versions alone do not prove ABI/arch compatibility.
+    true
 }
