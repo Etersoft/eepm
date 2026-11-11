@@ -131,20 +131,23 @@ __epm_play_suggest_similar_apps()
     local arch="$SYSTEMARCH"
     local count="${suggest_count:-7}"
 
-    # need fzf for fuzzy search
-    is_command fzf || return 1
-
     local list
     list="$(__get_fast_short_list_app $arch)"
     [ -z "$list" ] && return 1
 
-    [ -n "$verbose" ] && showcmd fzf -i -f "$app"
     local similar
-    similar="$(echo "$list" | fzf -i -f "$app" 2>/dev/null | head -$count)"
+    if is_command fzf ; then
+        [ -n "$verbose" ] && showcmd fzf -i -f "$app" >&2
+        similar="$(echo "$list" | fzf -i -f "$app" 2>/dev/null | head -$count)"
+    else
+        # fallback: plain substring match (we are called inside $(), so print the hint to stderr)
+        echog 'Install fzf package for interactive selection and suggestions.' >&2
+        similar="$(echo "$list" | grep -i -F -- "$app" | head -$count)"
+    fi
     [ -z "$similar" ] && return 1
 
     # Interactive selection if enabled (via config or --interactive flag)
-    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
+    if [ -n "$suggest_interactive$interactive" ] && is_command fzf && inputisatty ; then
         local selected
         selected="$(echo "$similar" | fzf --prompt="$(eval_gettext "Select app"): " --height=10 --reverse)"
         if [ -n "$selected" ] ; then
