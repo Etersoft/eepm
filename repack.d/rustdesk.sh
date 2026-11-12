@@ -67,6 +67,6 @@ add_unirequires curl
 # KDE tray integration (issue #699): loaded at runtime, missed by autodeps.
 add_unirequires libayatana-appindicator3.so.1
 
-# since 1.4.6 librustdesk.so dlopens libxdo (libxdo.so.4 / libxdo.so.3) instead of
-# linking it, so it is missed by autodeps, and input does not work without it
-add_requires 'libxdo.so.3()(64bit)'
+# Since 1.4.6 libxdo is loaded at runtime, so autodeps misses it.
+# xdotool pulls in the matching libxdo version on both old and new systems.
+add_unirequires xdotool
