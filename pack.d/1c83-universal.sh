@@ -29,7 +29,6 @@ same_package_build()
 }
 
 # Pack only extracts/selects vendor artifacts; metadata belongs to repack.
-# Keep native DEBs intact until the shared DEB backend supports these recipes.
 packages_list=''
 pkgtype=''
 for package in $package_list ; do

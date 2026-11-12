@@ -45,11 +45,8 @@ install_package()
 
     abs="$(realpath "$package")" || fatal "Can't resolve $package"
     case "$package" in
-        *.rpm)
+        *.rpm|*.deb)
             ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise epm repack --install "$abs" )
-            ;;
-        *.deb)
-            ( unset EEPM_INTERNAL_PKGNAME ; epm pack --install 1c83-universal "$abs" )
             ;;
         *) fatal "Unsupported 1C package format: $package" ;;
     esac
@@ -57,14 +54,7 @@ install_package()
 
 install_archive()
 {
-    case "$(basename "$1")" in
-        *deb*.zip|*deb*.tar.gz|*deb*.tgz)
-            ( unset EEPM_INTERNAL_PKGNAME ; epm pack --install 1c83-universal "$1" )
-            ;;
-        *)
-            ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise epm pack --repack --install 1c83-universal "$1" )
-            ;;
-    esac
+    ( unset EEPM_INTERNAL_PKGNAME ; EPM_REPACK_SCRIPT=1c-enterprise epm pack --repack --install 1c83-universal "$1" )
 }
 
 install_run()

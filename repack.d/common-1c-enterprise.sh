@@ -188,21 +188,6 @@ __1c_enterprise_installing_client()
     return 1
 }
 
-__1c_enterprise_remove_thin_client_duplicate_icons()
-{
-    local icon
-
-    for icon in 1cestart 1cv8c 1cv8s ; do
-        remove_file "/usr/share/app-install/icons/$icon-*.png"
-        remove_file "/usr/share/icons/hicolor/*x*/apps/$icon.png"
-        remove_file "/usr/share/icons/hicolor/*x*/apps/$icon-*.png"
-        remove_file "/usr/share/icons/hicolor/scalable/apps/$icon.svg"
-        remove_file "/usr/share/icons/hicolor/scalable/apps/$icon-*.svg"
-        remove_file "/usr/share/pixmaps/$icon-*.png"
-        remove_file "/usr/share/pixmaps/$icon.png"
-    done
-}
-
 __1c_enterprise_remove_app_install_icons()
 {
     remove_dir /usr/share/app-install
@@ -293,9 +278,38 @@ __1c_enterprise_remove_deb_client_postinst_actions()
     sed -i '/^# "conf" directory$/,$d' "$postinst"
 }
 
+__1c_enterprise_fix_deb_dependencies()
+{
+    [ -n "${EPM_DEB_REQUIRES:-}" ] || return 0
+    local pkgname="$1"
+    local dependencies family version release dependency
+    case "$pkgname" in
+        *-nls) dependencies="${pkgname%-nls}" ;;
+        *-thin-client) return 0 ;;
+        *-client) dependencies="${pkgname%-client}-server" ;;
+        *-server) dependencies="${pkgname%-server}-common" ;;
+        *-ws) dependencies="${pkgname%-ws}-common" ;;
+        *-crs)
+            family="${pkgname%-crs}"
+            dependencies="$family-server $family-ws"
+            ;;
+        *) return 0 ;;
+    esac
+    version="$(sed -n 's/^Version:[[:space:]]*//p' "$SPEC" | head -n1)"
+    release="$(sed -n 's/^Release:[[:space:]]*//p' "$SPEC" | head -n1)"
+    [ -n "$version" ] && [ -n "$release" ] || fatal "Can't read the repacked 1C version"
+    # Alien builds the DEB version from RPM Version-Release, without RPM Epoch.
+    for dependency in $dependencies ; do
+        remove_deb_requires "$dependency"
+        add_requires "$dependency = $version-$release"
+    done
+}
+
 fix_1c_enterprise_package()
 {
     local pkgname="$1"
+
+    __1c_enterprise_fix_deb_dependencies "$pkgname"
 
     case "$pkgname" in
         *-client|*-thin-client|*-server)
@@ -311,12 +325,6 @@ fix_1c_enterprise_package()
             ;;
         *-server)
             __1c_enterprise_install_server_units
-            ;;
-    esac
-
-    case "$pkgname" in
-        *-thin-client)
-            __1c_enterprise_remove_thin_client_duplicate_icons "$pkgname"
             ;;
     esac
 
