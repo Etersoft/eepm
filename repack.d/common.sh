@@ -291,7 +291,7 @@ install_file()
 create_file()
 {
     local t="$1"
-    install_file /dev/stdin $t
+    install_file /dev/stdin "$t"
 }
 
 create_exec_file()
