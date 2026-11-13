@@ -5,65 +5,57 @@ RETURNTARNAME="$2"
 
 . $(dirname $0)/common.sh
 
-BASENAME=$(basename "$1" | sed -e 's|\.zip$||')
-VERSION=$(echo "$BASENAME" | sed -n 's/.*_\([0-9]\+\)_\([0-9]\+\)_\([0-9]\+\)_\([0-9]\+\).*/\1.\2.\3.\4/p')
+case "$(basename "$FILENAME")" in
+    *.rpm|*.deb)
+        package_list="$FILENAME"
+        ;;
+    *.zip|*.tar.gz|*.tgz)
+        erc --here unpack "$FILENAME" || fatal
+        package_list="$(find . -type f \( -name '1c-enterprise*.rpm' -o -name '1c-enterprise*.deb' \) | LC_ALL=C sort)"
+        ;;
+    *)
+        fatal "run with 1C rpm/deb package or archive"
+        ;;
+esac
 
-erc --here unpack "$FILENAME" || fatal
-cd $BASENAME
-
-__remove_libstdc(){
-
-    rm -f opt/1cv8/x86_64/$VERSION/libstdc++.so.6
-    rm -f opt/1cv8/x86_64/$VERSION/libgcc_s.so.1
-    rm -f opt/1cv8/common/libgcc_s.so.1
+same_package_build()
+{
+    local field left right
+    for field in arch version-release ; do
+        left="$(epm print "$field" for package "$1")" || fatal "Can't read $field from $1"
+        right="$(epm print "$field" for package "$2")" || fatal "Can't read $field from $2"
+        [ -n "$left" ] && [ "$left" = "$right" ] || return 1
+    done
 }
 
-packages_list=$(echo "1c-enterprise*")
-
-for file in $packages_list; do
-
-    # Skip files containing 'nls' in the name
-    if echo "$file" | grep -q 'nls'; then
-        continue
-    fi
-
-    case $file in
-        1c-enterprise-*-server-*)
-            erc --here unpack "$file" || fatal
-            __remove_libstdc
-            erc pack 1c-enterprise-server-$VERSION.tar opt || fatal
-            rm $file
-            ;;
-       
-        1c-enterprise-*-thin-client-*)
-            erc --here unpack "$file" || fatal
-
-            mv 1c-enterprise-*-thin-client-*/opt opt
-            mv 1c-enterprise-*-thin-client-*/usr usr
-
-            __remove_libstdc
-            rm -r $file $(basename $file | sed -e 's|\.rpm||' -e 's|\.deb||')
-            
-            erc pack 1c-enterprise-thin-client-$VERSION.tar opt usr || fatal
-
-            ;;
-
-        1c-enterprise-*-client-*)
-            erc --here unpack "$file" || fatal
-            
-            mv 1c-enterprise-*-client-*/opt opt
-            mv 1c-enterprise-*-client-*/usr usr
-            
-            __remove_libstdc
-            rm -r $file $(basename $file | sed -e 's|\.rpm||' -e 's|\.deb||')
-
-            erc pack 1c-enterprise-client-$VERSION.tar opt usr || fatal
-            # Clien also contains thin client
-            rm 1c-enterprise-*-thin-client-*
-            break
+# Pack only extracts/selects vendor artifacts; metadata belongs to repack.
+packages_list=''
+pkgtype=''
+for package in $package_list ; do
+    type="${package##*.}"
+    [ -z "$pkgtype" ] || [ "$pkgtype" = "$type" ] || fatal "Mixed rpm and deb archives are not supported"
+    pkgtype="$type"
+    pkgname="$(epm print name for package "$package")" || fatal "Can't read package name from $package"
+    case "$pkgname" in
+        *-thin-client|*-thin-client-nls)
+            fullpkg="${pkgname%-thin-client*}-client"
+            # Full and thin clients of the same version ship the same launchers.
+            skip=''
+            for candidate in $package_list ; do
+                name="$(epm print name for package "$candidate")" || fatal
+                [ "$name" = "$fullpkg" ] || continue
+                same_package_build "$package" "$candidate" || continue
+                skip=1
+                break
+            done
+            if [ -n "$skip" ] ; then
+                echo "Skipping $pkgname: $fullpkg already includes the thin client."
+                continue
+            fi
             ;;
     esac
+    packages_list="$packages_list $package"
 done
 
-epm install --repack $(echo 1c-enterprise-$VERSION*) 
-return_tar 1c-enterprise-*.tar
+[ -n "$packages_list" ] || fatal "Can't find 1C rpm/deb packages in $(basename "$FILENAME")"
+return_tar $packages_list
