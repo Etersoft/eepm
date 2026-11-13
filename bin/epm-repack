@@ -105,6 +105,18 @@ __epm_have_repack_rule()
     [ -s "$repackcode" ]
 }
 
+# Recipes opt in only after their file and metadata operations support DEB.
+__epm_native_deb_recipe()
+{
+    [ "$PKGFORMAT" = deb ] || return 1
+    [ "$(get_package_type "$1")" = deb ] || return 1
+    local recipe
+    recipe="$(resolve_repack_script "$(epm print name for package "$1")")"
+    [ -f "$recipe" ] || return 1
+    grep -qx '# EPM_REPACK_BACKEND: native-deb' "$recipe" || return 1
+    echo "$recipe"
+}
+
 __epm_check_repack_rule()
 {
     # skip repacking on non ALT systems
@@ -361,12 +373,7 @@ __epm_repack_source()
         cd "$previous_dir" || return
     fi
 
-    for artifact in $source_packages ; do
-        repacked_pkg=''
-        __epm_repack_single "$artifact" "$packversion" "$packrelease" || return
-        [ -n "$repacked_pkg" ] || return 1
-        repacked_pkgs="${repacked_pkgs:+$repacked_pkgs }$repacked_pkg"
-    done
+    prepared_packages="${prepared_packages:+$prepared_packages }$source_packages"
 }
 
 # fill repacked_pkgs
@@ -374,6 +381,7 @@ __epm_repack()
 {
     local pkg
     repacked_pkgs=''
+    local prepared_packages='' native_packages='' legacy_packages='' recipe
     # hyphen is not allowed in rpm version and means revision in deb:
     # numeric build suffix to plus (like -4 -> +4), pre-release suffix to tilde (like -b1 -> ~b1)
     # keep in sync with repack.d/generic.sh
@@ -385,6 +393,24 @@ __epm_repack()
 
     for pkg in "$@" ; do
         __epm_repack_source "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
+    done
+
+    for pkg in $prepared_packages ; do
+        if recipe="$(__epm_native_deb_recipe "$pkg")" ; then
+            native_packages="${native_packages:+$native_packages }$pkg"
+        else
+            legacy_packages="${legacy_packages:+$legacy_packages }$pkg"
+        fi
+    done
+    if [ -n "$native_packages" ] ; then
+        load_helper epm-repack-deb
+        __epm_repack_native_debs $native_packages || fatal 'Error repacking native DEB set'
+    fi
+    for pkg in $legacy_packages ; do
+        repacked_pkg=''
+        __epm_repack_single "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
+        [ -n "$repacked_pkg" ] || fatal 'Empty repack result for $pkg'
+        repacked_pkgs="${repacked_pkgs:+$repacked_pkgs }$repacked_pkg"
     done
 }
 
