@@ -1,0 +1,105 @@
+#!/bin/sh
+# Internal worker: extraction, recipes and packing share one fakeroot database.
+set -eu
+work="$1"
+helper="$(dirname "$0")/epm-repack-deb-control"
+export EPM_REPACK_BACKEND=deb
+export EPM_DEB_SET_DIR="$work/packages"
+export EPM_DEB_CONTROL_HELPER="$helper"
+mkdir -p "$EPM_DEB_SET_DIR" "$work/out"
+: > "$work/order"
+: > "$work/outputs"
+
+while IFS= read -r source && IFS= read -r recipe; do
+    entry="$(mktemp -d "$work/extract.XXXXXX")"
+    dpkg-deb --raw-extract "$source" "$entry/root"
+    [ ! -L "$entry/root/DEBIAN" ] && [ ! -L "$entry/root/DEBIAN/control" ]
+    perl "$helper" check-tree "$entry/root/DEBIAN/control" "$entry/root"
+    perl "$helper" prepare "$entry/root/DEBIAN/control" "${EPM_REPACK_VERSION:-}" "${EPM_REPACK_RELEASE:-}" > "$entry/info"
+    name="$(sed -n '1p' "$entry/info")"
+    arch="$(sed -n '4p' "$entry/info")"
+    [ "$arch" = all ] || [ "$arch" = "$(dpkg --print-architecture)" ] || { echo "Foreign DEB architecture is not supported: $arch" >&2; exit 1; }
+    [ -z "${EEPM_INTERNAL_PKGNAME:-}" ] || [ "$EEPM_INTERNAL_PKGNAME" = "$name" ] || { echo "Unexpected DEB package name: $name" >&2; exit 1; }
+    [ ! -e "$EPM_DEB_SET_DIR/$name" ] || { echo "Duplicate package in DEB set: $name" >&2; exit 1; }
+    printf '%s\n' "$source" > "$entry/source"
+    printf '%s\n' "$recipe" > "$entry/recipe"
+    mv "$entry" "$EPM_DEB_SET_DIR/$name"
+    printf '%s\n' "$name" >> "$work/order"
+done < "$work/inputs"
+
+while IFS= read -r name; do
+    entry="$EPM_DEB_SET_DIR/$name"
+    export EPM_DEB_STATE="$entry"
+    export EPM_DEB_SOURCE_VERSION="$(sed -n '2p' "$entry/info")"
+    export EPM_DEB_OUTPUT_VERSION="$(sed -n '3p' "$entry/info")"
+    recipe="$(cat "$entry/recipe")"
+    source="$(cat "$entry/source")"
+    (cd "$entry/root" && unset EPMCURDIR && bash -e "$recipe" "$entry/root" '' "$name" "$source")
+    # Recipes may add safe command links; validate conffiles before building.
+    if [ -f "$entry/root/DEBIAN/conffiles" ]; then
+        while IFS= read -r file; do
+            [ -z "$file" ] || [ -f "$entry/root$file" ] || { echo "Missing conffile: $file" >&2; exit 1; }
+        done < "$entry/root/DEBIAN/conffiles"
+    fi
+    [ -z "$(find "$entry/root" -name '.eepm*' -print -quit)" ]
+done < "$work/order"
+
+# Prepare local shlibs for every sibling before scanning any package. These
+# describe private providers for this build only and are never installed.
+while IFS= read -r name; do
+    entry="$EPM_DEB_SET_DIR/$name"
+    [ -f "$entry/scan" ] || continue
+    root="$entry/root"
+    version="$(sed -n '3p' "$entry/info")"
+    arch="$(sed -n '4p' "$entry/info")"
+    mkdir -p "$entry/build/debian"
+    printf '12\n' > "$entry/build/debian/compat"
+    printf 'Source: %s\nSection: misc\nPriority: optional\nMaintainer: EPM <support@eepm.ru>\n\nPackage: %s\nArchitecture: %s\nDescription: Dependency scan\n' "$name" "$name" "$arch" > "$entry/build/debian/control"
+    printf '%s (%s) unstable; urgency=medium\n\n  * Repack.\n\n -- EPM <support@eepm.ru>  Thu, 01 Jan 1970 00:00:00 +0000\n' "$name" "$version" > "$entry/build/debian/changelog"
+    [ ! -f "$root/DEBIAN/shlibs" ] || cp -p "$root/DEBIAN/shlibs" "$entry/original-shlibs"
+    (cd "$entry/build" && dh_makeshlibs -P"$root" -p"$name" -n -V"$name (= $version)")
+done < "$work/order"
+
+while IFS= read -r name; do
+    entry="$EPM_DEB_SET_DIR/$name"
+    [ -f "$entry/scan" ] || continue
+    root="$entry/root"
+    set -- -P"$root" -p"$name"
+    library_paths=''
+    if [ -f "$entry/library-paths" ]; then
+        while IFS= read -r dir; do library_paths="${library_paths:+$library_paths:}$root$dir"; done < "$entry/library-paths"
+    fi
+    if [ -f "$entry/providers" ]; then
+        while IFS= read -r provider; do
+            other="$EPM_DEB_SET_DIR/$provider"
+            [ -f "$other/scan" ] && [ -f "$other/library-paths" ] || { echo "Missing prepared provider: $provider" >&2; exit 1; }
+            while IFS= read -r dir; do library_paths="${library_paths:+$library_paths:}$other/root$dir"; done < "$other/library-paths"
+        done < "$entry/providers"
+    fi
+    [ -z "$library_paths" ] || set -- "$@" -l"$library_paths"
+    (cd "$entry/build" && dh_shlibdeps "$@" -- -x"$name")
+    libs="$(sed -n 's/^shlibs:Depends=//p' "$entry/build/debian/$name.substvars")"
+    # A private library can legitimately have no external dependencies.
+    # A missing substvars file or a failed scanner still stops the worker.
+    [ -z "$libs" ] || perl "$helper" add "$root/DEBIAN/control" Depends "$libs"
+done < "$work/order"
+
+while IFS= read -r name; do
+    entry="$EPM_DEB_SET_DIR/$name"
+    root="$entry/root"
+    if [ -f "$entry/scan" ]; then
+        rm -f "$root/DEBIAN/shlibs"
+        [ ! -f "$entry/original-shlibs" ] || cp -p "$entry/original-shlibs" "$root/DEBIAN/shlibs"
+    fi
+    version="$(sed -n '3p' "$entry/info")"
+    arch="$(sed -n '4p' "$entry/info")"
+    size="$(du -sk --exclude=DEBIAN "$root" | cut -f1)"
+    perl "$helper" size "$root/DEBIAN/control" "$size"
+    (cd "$root" && find . -path ./DEBIAN -prune -o -type f -printf '%P\0') > "$entry/files"
+    sort -z "$entry/files" > "$entry/sorted-files"
+    (cd "$root" && xargs -0 -r md5sum < "$entry/sorted-files") > "$entry/md5sums"
+    mv "$entry/md5sums" "$root/DEBIAN/md5sums"
+    output="$work/out/${name}_${version#*:}_$arch.deb"
+    DPKG_DEB_THREADS_MAX=2 dpkg-deb -Zxz -z1 --build "$root" "$output"
+    printf '%s\n' "$output" >> "$work/outputs"
+done < "$work/order"

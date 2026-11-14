@@ -83,12 +83,38 @@ CPIOWRAPPER
     fi
 }
 
+# args: package name or recipe name/path
+get_repack_script()
+{
+    local repackcode="$1"
+    is_abs_path "$repackcode" || repackcode="$EPM_REPACK_SCRIPTS_DIR/$1.sh"
+    echo "$repackcode"
+}
+
+# Keep override selection identical for recipe discovery and execution.
+resolve_repack_script()
+{
+    get_repack_script "${EPM_REPACK_SCRIPT:-$1}"
+}
+
 __epm_have_repack_rule()
 {
     # FIXME: use real way (for any archive)
     local pkgname="$(epm print name for package "$1" 2>/dev/null)"
-    local repackcode="$EPM_REPACK_SCRIPTS_DIR/$pkgname.sh"
+    local repackcode="$(resolve_repack_script "$pkgname")"
     [ -s "$repackcode" ]
+}
+
+# Recipes opt in only after their file and metadata operations support DEB.
+__epm_native_deb_recipe()
+{
+    [ "$PKGFORMAT" = deb ] || return 1
+    [ "$(get_package_type "$1")" = deb ] || return 1
+    local recipe
+    recipe="$(resolve_repack_script "$(epm print name for package "$1")")"
+    [ -f "$recipe" ] || return 1
+    grep -qx '# EPM_REPACK_BACKEND: native-deb' "$recipe" || return 1
+    echo "$recipe"
 }
 
 __epm_check_repack_rule()
@@ -254,7 +280,8 @@ __prepare_source_package()
         SUBGENERIC='tar'
     fi
 
-    # it is possible there are a few files, we don't support it
+    # Backends consume a single artifact; packrule sets are expanded by
+    # __epm_repack_source before reaching this generic conversion path.
     [ -s "$returntarname" ] || fatal 'Can'\''t read result from pack: $returntarname is not a readable file.'
 
     alpkg=$(basename $returntarname)
@@ -321,11 +348,40 @@ __epm_repack_single()
     return 0
 }
 
+# Expand packrules before choosing a backend: one archive can contain a set
+# of native packages that must be adapted separately and installed together.
+__epm_repack_source()
+{
+    local pkg="$1"
+    local packversion="$2"
+    local packrelease="$3"
+    local source_packages="$pkg"
+    local source_dir artifact
+
+    if ! rhas "$pkg" "\.(rpm|deb)$" && __check_packrule "$(basename "$pkg")" ; then
+        load_helper epm-pack
+        pkg="$(realpath "$pkg")" || return
+        source_dir="$(mktemp -d --tmpdir="$BIGTMPDIR")" || fatal
+        remove_on_exit "$source_dir"
+        local previous_dir="$PWD"
+        cd "$source_dir" || return
+        __epm_pack_run_handler "$__PACKRULE" "$pkg" "$packversion" "$pkg_urls_downloaded" '' || {
+            cd "$previous_dir" || fatal
+            return 1
+        }
+        source_packages="$returntarname"
+        cd "$previous_dir" || return
+    fi
+
+    prepared_packages="${prepared_packages:+$prepared_packages }$source_packages"
+}
+
 # fill repacked_pkgs
 __epm_repack()
 {
     local pkg
     repacked_pkgs=''
+    local prepared_packages='' native_packages='' legacy_packages='' recipe
     # hyphen is not allowed in rpm version and means revision in deb:
     # numeric build suffix to plus (like -4 -> +4), pre-release suffix to tilde (like -b1 -> ~b1)
     # keep in sync with repack.d/generic.sh
@@ -335,9 +391,26 @@ __epm_repack()
 
     print_sha256sum $pkg_files
 
-    for pkg in $* ; do
+    for pkg in "$@" ; do
+        __epm_repack_source "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
+    done
+
+    for pkg in $prepared_packages ; do
+        if recipe="$(__epm_native_deb_recipe "$pkg")" ; then
+            native_packages="${native_packages:+$native_packages }$pkg"
+        else
+            legacy_packages="${legacy_packages:+$legacy_packages }$pkg"
+        fi
+    done
+    if [ -n "$native_packages" ] ; then
+        load_helper epm-repack-deb
+        __epm_repack_native_debs $native_packages || fatal 'Error repacking native DEB set'
+    fi
+    for pkg in $legacy_packages ; do
+        repacked_pkg=''
         __epm_repack_single "$pkg" "$packversion" "$packrelease" || fatal 'Error with $pkg repacking.'
-        [ -n "$repacked_pkgs" ] && repacked_pkgs="$repacked_pkgs $repacked_pkg" || repacked_pkgs="$repacked_pkg"
+        [ -n "$repacked_pkg" ] || fatal 'Empty repack result for $pkg'
+        repacked_pkgs="${repacked_pkgs:+$repacked_pkgs }$repacked_pkg"
     done
 }
 

@@ -18,6 +18,30 @@
 #
 
 
+__epm_repack_native_debs()
+{
+    assure_exists dpkg-deb dpkg
+    assure_exists fakeroot
+    assure_exists dh_shlibdeps debhelper
+    local work pkg recipe
+    work="$(mktemp -d --tmpdir="$BIGTMPDIR")" || return
+    remove_on_exit "$work"
+    for pkg in "$@" ; do
+        local name="$(epm print name for package "$pkg")"
+        if [ -z "$force" ] && __check_stoplist "$name" ; then
+            fatal "Please use the official $name package instead of repacking"
+        fi
+        recipe="$(__epm_native_deb_recipe "$pkg")" || return
+        printf '%s\n%s\n' "$(realpath "$pkg")" "$(realpath "$recipe")" >> "$work/inputs"
+    done
+    info 'Repacking DEB set without RPM ...'
+    PATH="$PROGDIR:$PATH" fakeroot $CMDSHELL "$PROGDIR/epm-repack-deb-native" "$work" || return
+    while IFS= read -r pkg ; do
+        [ -s "$pkg" ] || return 1
+        repacked_pkgs="${repacked_pkgs:+$repacked_pkgs }$pkg"
+    done < "$work/outputs"
+}
+
 # fills repacked_pkg
 # args: pkg [orig_deb_depends] [orig_pkg_type]
 __need_skip_dh_strip_nondeterminism()
