@@ -62,6 +62,8 @@ remove_file()
 
         rm -v "$file"
 
+        [ "${EPM_REPACK_BACKEND:-}" != deb ] || continue
+
         local relative_file="${file#"$BUILDROOT"}"
 
         subst "s|^$relative_file$||" $SPEC
@@ -128,6 +130,7 @@ move_dir()
     echo "Moving $from/* to $to/ ..."
     mv -v "$BUILDROOT$from"/* "$BUILDROOT$to/"
     rmdir "$BUILDROOT$from" 2>/dev/null || rm -rv "$BUILDROOT$from"
+    [ "${EPM_REPACK_BACKEND:-}" != deb ] || return 0
     subst "s|$from|$to|g" $SPEC
     true
 }
@@ -147,6 +150,7 @@ remove_dir()
     chmod u+rwx "$BUILDROOT$file" 2>/dev/null
     chmod -R u+rwX "$BUILDROOT$file/" 2>/dev/null
     rm -r "$BUILDROOT$file/"
+    [ "${EPM_REPACK_BACKEND:-}" != deb ] || return 0
     # %dir "/icons/"
     subst "s|^%dir $file/*$||" $SPEC
     subst "s|^%dir \"$file/*\"$||" $SPEC
@@ -216,6 +220,7 @@ patch_binary()
 # Usage: pack_file <path_to_file>
 pack_file()
 {
+    [ "${EPM_REPACK_BACKEND:-}" != deb ] || return 0
     local file="$1"
     [ -n "$file" ] || return
     grep -q "^$file$" $SPEC && return
@@ -238,6 +243,7 @@ mark_config_noreplace()
 # Usage: pack_dir <path_to_dir>
 pack_dir()
 {
+    [ "${EPM_REPACK_BACKEND:-}" != deb ] || return 0
     local file="$1"
     [ -n "$file" ] || return
     # Check if already listed as %dir (quoted or unquoted)
@@ -462,12 +468,17 @@ fix_chrome_sandbox()
 
 __add_tag_after_d()
 {
+    [ "${EPM_REPACK_BACKEND:-}" != deb ] || fatal "RPM metadata helper used in native DEB: $*"
     subst "s|^\(Distribution:.*\)|\1\n$*|" $SPEC
 }
 
 add_requires()
 {
     [ -n "$1" ] || return
+    if [ "${EPM_REPACK_BACKEND:-}" = deb ] ; then
+        perl "$EPM_DEB_CONTROL_HELPER" add "$BUILDROOT/DEBIAN/control" Depends "$@"
+        return
+    fi
     [ "$(epm print info -s)" = "alt" ] || return 0
     __add_tag_after_d "Requires: $*"
 }
@@ -863,6 +874,10 @@ is_stdcpp_enough()
 
     is_pkg_enough $STDCPKG $needed
 }
+
+if [ "${EPM_REPACK_BACKEND:-}" = deb ] ; then
+    . "$(dirname "$0")/common-deb.sh"
+fi
 
 [ -d "$BUILDROOT" ] || fatal "Run me only via epm repack <package>"
 
