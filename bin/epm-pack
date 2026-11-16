@@ -79,6 +79,7 @@ __epm_pack_run_handler()
     showcmd $packscript "$tarname" "$filefortarname" "$packversion" "$url" "$@"
     ( unset BASH_ENV ; unset EPMCURDIR ; export PATH=$SCPATH ; export HOME=$(pwd) ; $CMDSHELL $bashopt $packscript "$tarname" "$filefortarname" "$packversion" "$url" "$@") || fatal
     returntarname="$(cat "$filefortarname")" || fatal 'pack script $packscript didn'\''t set tarname'
+    [ -n "$returntarname" ] || fatal 'pack script $packscript returned no artifacts'
 
     local i
     for i in $returntarname ; do
@@ -113,27 +114,27 @@ __epm_pack()
     #  * install (repacked) files
     # the most replacement is epm repack [--install] or epm install [--repack]
 
-    # FIXME: check for every package would be more reliable
-    # by default
-    dorepack='--repack'
-    # don't repack by default there is our pkg format
-    __epm_split_by_pkg_type $PKGFORMAT $returntarname && dorepack=''
-    # repack if we have a repack rule for it
-    [ -z "$norepack" ] && __epm_check_repack_rule $returntarname && dorepack='--repack'
-    # repack if forced
-    [ -n "$repack" ] && dorepack='--repack'
+    local pkgnames='' artifact artifacts="$returntarname"
+    local dorepack repack_artifacts=''
+    for artifact in $artifacts ; do
+        dorepack='--repack'
+        __epm_split_by_pkg_type "$PKGFORMAT" "$artifact" && dorepack=''
+        [ -z "$norepack" ] && __epm_check_repack_rule "$artifact" && dorepack='--repack'
+        [ -n "$repack" ] && dorepack='--repack'
 
-    local pkgnames
-    if [ -n "$dorepack" ]  ; then
-        # TODO: where .eepm.yaml?
+        if [ -n "$dorepack" ] ; then
+            repack_artifacts="${repack_artifacts:+$repack_artifacts }$artifact"
+        else
+            pkgnames="${pkgnames:+$pkgnames }$artifact"
+        fi
+    done
+
+    # Repack together so recipes can resolve dependencies within the set.
+    if [ -n "$repack_artifacts" ] ; then
         [ -n "$EPM_REPACK_VERSION" ] || EPM_REPACK_VERSION="$packversion"
-        __epm_repack $returntarname
-        [ -n "$repacked_pkgs" ] || fatal "Can't repack $returntarname"
-        # remove packed file if we have repacked one
-        rm -f $returntarname
-        pkgnames="$repacked_pkgs"
-    else
-        pkgnames="$returntarname"
+        __epm_repack $repack_artifacts || fatal "Can't repack $repack_artifacts"
+        [ -n "$repacked_pkgs" ] || fatal "Can't repack $repack_artifacts"
+        pkgnames="${pkgnames:+$pkgnames }$repacked_pkgs"
     fi
 
     if [ -n "$install" ] ; then
@@ -145,7 +146,7 @@ __epm_pack()
     mv -v $pkgnames "$EPMCURDIR" || fatal
 
     local i
-    for i in $returntarname ; do
+    for i in $artifacts ; do
         [ -r "$i.eepm.yaml" ] && mv -v "$i.eepm.yaml" "$EPMCURDIR"
     done
 
