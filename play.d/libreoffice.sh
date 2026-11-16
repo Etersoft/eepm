@@ -22,6 +22,10 @@ if [ -z "$VERSION" ] || [ "$VERSION" = "*" ] ; then
     [ -n "$VERSION" ] || fatal "Can't detect the latest LibreOffice version"
 fi
 
+# TDF download dirs are named by the 3-part version (26.8.3), while the package
+# (and so app-versions) carries the 4-part build version (26.8.3.1)
+VERSION="$(echo "$VERSION" | cut -d. -f1-3)"
+
 # the main archive; pack.d/libreoffice-tdf.sh fetches the ru langpack/help itself
 PKGURL="$BASEURL/$VERSION/rpm/x86_64/LibreOffice_${VERSION}_Linux_x86-64_rpm.tar.gz"
 
