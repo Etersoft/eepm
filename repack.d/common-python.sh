@@ -10,14 +10,20 @@ fix_python_path()
     local py_sys_site=$(python3 -c 'import sysconfig; print(sysconfig.get_path("purelib") or "")' 2>/dev/null)
     [ -n "$py_sys_site" ] || py_sys_site=$(python3 -c 'import sys; print("/usr/lib/python%d.%d/site-packages" % sys.version_info[:2])' 2>/dev/null)
     [ -n "$py_sys_site" ] || return 0
+    local py_ext_suffix=$(python3 -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX") or "")' 2>/dev/null)
     local found_site
 
     for found_site in $(find "$BUILDROOT" -type d \( -path "*/python3.*/site-packages" -o -path "*/python*/dist-packages" \) 2>/dev/null | sed "s|^$BUILDROOT||") ; do
-        [ "$found_site" = "$py_sys_site" ] && continue
-
-        if find "$BUILDROOT$found_site" -type f -name "*.so" 2>/dev/null | grep -q .; then
+        # Directory layout may differ (lib/lib64 or site/dist-packages) even
+        # when the Python ABI matches. Check CPython's version/platform tag.
+        if find "$BUILDROOT$found_site" -type f -name "*.cpython-*.so" ! -name "*$py_ext_suffix" 2>/dev/null | grep -q .; then
             fatal "Python ABI mismatch"
         fi
+        if [ -z "$py_ext_suffix" ] && find "$BUILDROOT$found_site" -type f -name "*.cpython-*.so" 2>/dev/null | grep -q .; then
+            fatal "Cannot determine Python ABI"
+        fi
+
+        [ "$found_site" = "$py_sys_site" ] && continue
 
         info "Fixing python path: $found_site -> $py_sys_site"
         move_dir "$found_site" "$py_sys_site"
