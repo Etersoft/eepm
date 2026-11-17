@@ -9,11 +9,14 @@ URL="https://git.linux-gaming.ru/Linux-Gaming/PortProtonQt"
 
 . $(dirname $0)/common.sh
 
-# upstream ships one rpm per Fedora release (fc42..fc45); we repack any of them,
-# so pin one dist and use the concrete RELEASE from app-versions, giving a download
-# URL without a glob that can be resolved in the IPFS cache. Fall back for --latest.
-[ -n "$RELEASE" ] || RELEASE="*"
+REPOURL="https://repos.fyralabs.com/terra43"
 
-PKGURL="$(get_gitea_url "$URL" "${PKGNAME}-${VERSION}-${RELEASE}.fc42.x86_64.rpm")"
+[ "$VERSION" = "*" ] && VERSION='[0-9.]*'
+[ -n "$RELEASE" ] && [ "$RELEASE" != "*" ] || RELEASE='[0-9]*'
+
+# Terra includes the epoch in RPM filenames (for example, portprotonqt-0:1.5.0-1.fc43.x86_64.rpm).
+filename="$(get_rpm_repo_latest_file "$REPOURL" "$PKGNAME-[0-9]*:$VERSION-$RELEASE\.fc43\.x86_64\.rpm")"
+[ -n "$filename" ] || fatal "Can't find PortProtonQt $VERSION-$RELEASE for x86_64 in $REPOURL"
+PKGURL="$REPOURL/$filename"
 
 install_pkgurl
