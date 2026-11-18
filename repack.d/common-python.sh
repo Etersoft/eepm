@@ -61,7 +61,13 @@ get_python_requires()
     fi
 
     # Keep standard library modules out of generated package requires.
-    local STD_LIBS="abc|argparse|asyncio|base64|calendar|collections|contextlib|copy|csv|datetime|enum|errno|fcntl|functools|gc|getopt|gettext|glob|hashlib|importlib|inspect|io|itertools|json|locale|logging|math|multiprocessing|os|pathlib|pickle|platform|posix|pwd|queue|random|re|selectors|shlex|shutil|signal|site|socket|sqlite3|ssl|stat|string|subprocess|sys|tarfile|tempfile|threading|time|traceback|types|typing|unittest|urllib|uuid|warnings|weakref|webbrowser|xml|zipfile"
+    local STD_LIBS="__future__|abc|argparse|ast|asyncio|base64|calendar|codecs|collections|concurrent|configparser|contextlib|copy|csv|ctypes|dataclasses|datetime|enum|errno|fcntl|functools|gc|getopt|gettext|glob|hashlib|html|importlib|inspect|io|itertools|json|locale|logging|math|multiprocessing|os|pathlib|pickle|platform|posix|pty|pwd|queue|random|re|select|selectors|shlex|shutil|signal|site|socket|sqlite3|ssl|stat|string|struct|subprocess|sys|tarfile|tempfile|termios|threading|time|traceback|types|typing|unittest|urllib|uuid|warnings|weakref|webbrowser|xml|zipfile|zlib"
+
+    local detected_stdlibs
+    detected_stdlibs=$(python3 -c 'import sys; print("|".join(sorted(sys.stdlib_module_names)))' 2>/dev/null) || detected_stdlibs=
+    if [ -n "$detected_stdlibs" ]; then
+        STD_LIBS="$detected_stdlibs"
+    fi
 
     local INTERNAL_PKGS=$(find "$fdir" -type d \( -path "*/site-packages/*" -o -path "*/dist-packages/*" \) -not -path "*/__pycache__*" 2>/dev/null | sed -E 's#.*/(site|dist)-packages/([^/]+).*#\2#' | sort -u)
 
