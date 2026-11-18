@@ -33,12 +33,32 @@ fix_python_path()
     done
 }
 
+# Detect the Python package naming convention once per scan.
+__python_requires_prefix()
+{
+    local packages prefix
+    packages=$(epm search --short 'python*' 2>/dev/null) || return 0
+    for prefix in python3- python-module- python-; do
+        if printf '%s\n' "$packages" | grep -q "^$prefix"; then
+            echo "$prefix"
+            return
+        fi
+    done
+}
+
 # get python requires
 get_python_requires()
 {
     local fdir="$BUILDROOT"
 
     local LANG=C
+    local python_prefix
+    if [ "$(epm print info -s)" = "alt" ]; then
+        python_prefix='python3('
+    else
+        python_prefix=$(__python_requires_prefix)
+        [ -n "$python_prefix" ] || info "Warning: cannot determine Python package prefix" >&2
+    fi
 
     # Keep standard library modules out of generated package requires.
     local STD_LIBS="abc|argparse|asyncio|base64|calendar|collections|contextlib|copy|csv|datetime|enum|errno|fcntl|functools|gc|getopt|gettext|glob|hashlib|importlib|inspect|io|itertools|json|locale|logging|math|multiprocessing|os|pathlib|pickle|platform|posix|pwd|queue|random|re|selectors|shlex|shutil|signal|site|socket|sqlite3|ssl|stat|string|subprocess|sys|tarfile|tempfile|threading|time|traceback|types|typing|unittest|urllib|uuid|warnings|weakref|webbrowser|xml|zipfile"
@@ -64,7 +84,12 @@ get_python_requires()
         grep -vE "$EXCLUDE_PATTERN" | \
         sort -u | \
         while read -r lib; do
-            [ -n "$lib" ] && echo "python3($lib)"
+            [ -n "$lib" ] || continue
+            case "$python_prefix" in
+                'python3(') echo "python3($lib)" ;;
+                '') ;;
+                *) printf '%s%s\n' "$python_prefix" "$(printf '%s' "$lib" | tr '[:upper:]_' '[:lower:]-')" ;;
+            esac
         done
 
     # GObject Typelibs
