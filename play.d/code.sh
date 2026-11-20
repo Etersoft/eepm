@@ -10,13 +10,12 @@ URL="https://code.visualstudio.com/"
 . $(dirname $0)/common.sh
 
 # override only checked version and latest version
+# libmsalruntime.so (microsoft-authentication extension) in 1.107+ needs libcrypto.so.3;
+# its libwebkit2gtk-4.1 requirement is ignored in repack.d/code.sh, so webkit is not checked here
 if [ -n "$CHECKED_VERSION" ] || [ "$VERSION" = "*" ] ; then
     if ! is_openssl_enough 3 ; then
         VERSION="1.106.3"
         info "There is no needed OpenSSL 3 in the system,  we'll stick with the old version $VERSION"
-    elif ! is_soname_present libwebkit2gtk-4.1.so.0 ; then
-        VERSION="1.106.3"
-        info "There is no libwebkit2gtk-4.1 in the system, we'll stick with the old version $VERSION"
     fi
 fi
 
