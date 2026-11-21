@@ -5,6 +5,7 @@ PRODUCTALT="'' beta"
 SUPPORTEDARCHES="x86_64"
 VERSION="$2"
 DESCRIPTION="Telegram client from the official site"
+DESCRIPTION_ru="Клиент Telegram с официального сайта"
 URL="https://github.com/telegramdesktop/tdesktop"
 TIPS="Run 'epm play telegram=beta' to install beta version of the Telegram client."
 
