@@ -10,7 +10,9 @@ PRODUCTDIR=/opt/Mattermost
 
 add_electron_deps
 
-add_bin_link_command
-
-
-fix_desktop_file
+target="$PRODUCTDIR/$PRODUCT"
+if [ -f "$BUILDROOT$PRODUCTDIR/com.Mattermost.Desktop" ] ; then
+    target="$PRODUCTDIR/com.Mattermost.Desktop"
+fi
+add_bin_link_command "$PRODUCT" "$target"
+fix_desktop_file "$target" "$PRODUCT"
