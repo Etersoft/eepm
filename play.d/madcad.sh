@@ -23,6 +23,8 @@ case $(epm print info -p) in
 esac
 
 if [ $(epm print info -e) = 'ALTLinux/Sisyphus' ]; then
+    # The repository path does not resolve a download URL.
+    [ -z "$print_url" ] || fatal "--print-url is not supported for madcad from the system repository."
     epm install uimadcad && exit
 fi 
 

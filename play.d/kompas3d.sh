@@ -11,6 +11,9 @@ REPOURL="https://repo.ascon.ru/stable"
 
 . $(dirname $0)/common.sh
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for kompas3d."
+
 # Migrate legacy Ascon entries from sources.list to a named disabled repository.
 # EPM can temporarily enable only the latter for ascon/<package> installs.
 case $(epm print info -g) in

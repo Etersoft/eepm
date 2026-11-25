@@ -11,6 +11,9 @@ URL="https://www.virtualbox.org/"
 vendor="$(epm print info -s)"
 arch="$(epm print info -a)"
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for virtualbox."
+
 epm install $PKGNAME || exit
 
 #if [ "$USER" != "root" ] ; then

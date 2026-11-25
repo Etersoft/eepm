@@ -10,6 +10,9 @@ URL="https://packages.microsoft.com/"
 dname="$(epm print info -s)"
 dversion="$(epm print info -v)"
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for mssql-tools."
+
 ODBCDRIVER="ODBC Driver 17 for SQL Server"
 
 # msodbcsql17 preinst refuses to install if the driver is already registered in /etc/odbcinst.ini:

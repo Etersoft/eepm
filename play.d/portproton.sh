@@ -13,11 +13,18 @@ epm installed i586-portproton-installer && PKGNAME="i586-portproton-installer"
 
 warn_version_is_not_supported
 
+PKGURL="https://github.com/Castro-Fidel/PortProton_dpkg/releases/download/portproton_amd64/portproton_amd64.deb"
+
+if [ -n "$print_url" ] ; then
+    # Keep the repository preference, but allow the existing direct-download fallback.
+    epm status --installable portproton && fatal "--print-url is not supported for portproton from the system repository."
+    install_pkgurl
+fi
+
 if epm install portproton ; then
     # ALT hack
     epm installed i586-portproton-installer && override_pkgname i586-portproton-installer
 else
-    PKGURL="https://github.com/Castro-Fidel/PortProton_dpkg/releases/download/portproton_amd64/portproton_amd64.deb"
     install_pkgurl
 fi
 

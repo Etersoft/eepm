@@ -12,6 +12,9 @@ reponame=$(epm print info --repo-name)
 
 GPGKEY="https://build.openvpn.net/debian/openvpn/stable/pubkey.gpg"
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for openvpn."
+
 case $(epm print info -e) in
     Debian/*)
         epm install --skip-installed ca-certificates lsb-release
