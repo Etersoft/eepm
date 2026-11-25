@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use Dpkg::Control;
+use Dpkg::Deps qw(deps_parse deps_iterate);
+use Dpkg::Deps::KnownFacts;
+use Dpkg::Version;
+use File::Find;
+
+my ($op, $path, @args) = @ARGV;
+my $c = Dpkg::Control->new(type => CTRL_PKG_DEB);
+$c->load($path) or die "Cannot read $path\n";
+if ($op eq 'prepare') {
+    my ($version, $release) = @args;
+    my $source = Dpkg::Version->new($c->{Version}, check => 1);
+    die "Invalid source version\n" unless $source->is_valid();
+    die "Already repacked DEB\n" if $c->{'X-Epm-Repacked'} || ($source->{revision} // '') =~ /^epm\d+\.repacked\./;
+    $version = ($source->{epoch} ? "$source->{epoch}:" : '') . $source->{version} unless length $version;
+    $release = $source->{revision} || '1' unless length $release;
+    my $out = "$version-epm1.repacked.$release";
+    my $parsed = Dpkg::Version->new($out, check => 1);
+    die "Invalid native DEB output version: $out\n" unless $parsed->is_valid();
+    die "Invalid package name\n" unless $c->{Package} =~ /^[a-z0-9][a-z0-9+.-]+$/;
+    die "Invalid architecture\n" unless $c->{Architecture} =~ /^[a-z0-9][a-z0-9-]*$/;
+    print "$c->{Package}\n$c->{Version}\n$out\n$c->{Architecture}\n";
+    $c->{Version} = $out;
+    $c->{'X-Epm-Repacked'} = '1';
+} elsif ($op eq 'add') {
+    my $field = shift @args;
+    die "Unsupported relation field\n" unless $field =~ /^(Depends|Pre-Depends|Recommends|Suggests|Conflicts|Breaks|Replaces|Provides)$/;
+    my $text = join(', ', grep { length } ($c->{$field} // '', @args));
+    my $deps = deps_parse($text, reduce_arch => 0, reduce_profiles => 0)
+        or die "Invalid Debian $field: $text\n";
+    $deps->simplify_deps(Dpkg::Deps::KnownFacts->new());
+    $c->{$field} = $deps->output();
+} elsif ($op eq 'exact') {
+    my ($name, $old, $new) = @args;
+    my $deps = deps_parse($c->{Depends} // '', reduce_arch => 0, reduce_profiles => 0)
+        or die "Invalid Depends\n";
+    my $count = 0;
+    deps_iterate($deps, sub {
+        my ($d) = @_;
+        if ($d->{package} eq $name && ($d->{relation} // '') eq '=' && "$d->{version}" eq $old) {
+            $d->{version} = Dpkg::Version->new($new, check => 1);
+            ++$count;
+        }
+        return 1;
+    });
+    die "Expected one dependency on $name (= $old)\n" unless $count == 1;
+    $c->{Depends} = $deps->output();
+} elsif ($op eq 'size') {
+    die "Invalid Installed-Size\n" unless $args[0] =~ /^\d+$/;
+    $c->{'Installed-Size'} = $args[0];
+} elsif ($op eq 'check-tree') {
+    my ($root) = @args;
+    # Recipes are trusted code, but upstream payload symlinks must not redirect
+    # their writes into the host. Reject directory/escaping/dangling links.
+    require Cwd;
+    my $base = Cwd::realpath($root);
+    find({ no_chdir => 1, wanted => sub {
+        my $p = $File::Find::name;
+        die "Forbidden internal metadata: $p\n" if /(?:^|\/)\.eepm[^\/]*$|\.eepm\.yaml$/;
+        return unless -l $p;
+        die "Control symlink: $p\n" if index($p, "$base/DEBIAN/") == 0 || $p eq "$base/DEBIAN";
+        my $target = Cwd::realpath($p);
+        die "Unsafe payload symlink: $p\n" unless defined($target) && index($target, "$base/") == 0 && !-d $target;
+    }}, $base);
+    exit 0;
+} else {
+    die "Unknown DEB metadata operation: $op\n";
+}
+$c->save($path) or die "Cannot write $path\n";
