@@ -21,5 +21,9 @@ load_helper serv-status
 
 serv_is_active()
 {
+    if [ -n "$show_command_only" ] ; then
+        serv_status "$@"
+        return
+    fi
     is_service_running "$1"
 }

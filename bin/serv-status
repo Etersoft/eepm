@@ -81,7 +81,9 @@ is_service_autostart()
 
 serv_status()
 {
-    is_service_autostart $1 && echo "Service $1 is scheduled to run on startup" || echo "Service $1 will NOT run on startup"
+    if [ -z "$show_command_only" ] ; then
+        is_service_autostart $1 && echo "Service $1 is scheduled to run on startup" || echo "Service $1 will NOT run on startup"
+    fi
 
     local SERVICE="$1"
     shift
@@ -94,7 +96,7 @@ serv_status()
             fi
             sudocmd service $SERVICE status "$@"
             ;;
-        service-update)
+        service-initd|service-update)
             sudocmd $INITDIR/$SERVICE status "$@"
             ;;
         systemd)

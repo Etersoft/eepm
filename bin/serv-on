@@ -26,6 +26,8 @@ serv_on()
     local SERVICE="$1"
     serv_enable "$SERVICE" || return
     # start if need
-    is_service_running $SERVICE && info 'Service $SERVICE is already running' && return
+    if [ -z "$show_command_only" ] ; then
+        is_service_running $SERVICE && info 'Service $SERVICE is already running' && return
+    fi
     serv_start $SERVICE
 }

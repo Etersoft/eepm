@@ -24,6 +24,10 @@ serv_exists()
 
     case $SERVICETYPE in
         systemd)
+            if [ -n "$show_command_only" ] ; then
+                run_systemctl cat "$SERVICE" "$@"
+                return
+            fi
             # too direct way: test -s /lib/systemd/system/dm.service
             run_systemctl cat "$SERVICE" "$@" >/dev/null 2>/dev/null
             ;;

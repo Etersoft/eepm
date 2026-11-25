@@ -24,6 +24,10 @@ serv_edit()
 
     case $SERVICETYPE in
         systemd)
+            if [ -n "$show_command_only" ] ; then
+                run_systemctl edit "$@" "$SERVICE"
+                return
+            fi
             # editing only a drop-in is pointless for a unit that already lives in
             # /etc/systemd/system, so edit the full file there (unless args given)
             if [ -z "$*" ] ; then

@@ -20,6 +20,19 @@
 # List all available services
 serv_list_all()
 {
+    if [ -n "$show_command_only" ] ; then
+        case $SERVICETYPE in
+            service-chkconfig|service-upstart)
+                sudocmd chkconfig --list
+                [ -z "$ANYSERVICE" ] || sudocmd anyservice --quiet list
+                return 0
+                ;;
+            service-initd|service-update)
+                sudocmd ls $INITDIR/
+                return
+                ;;
+        esac
+    fi
     case $SERVICETYPE in
         service-chkconfig|service-upstart)
             if [ -n "$short" ] ; then

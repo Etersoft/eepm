@@ -21,6 +21,14 @@ serv_list_startup()
 {
     load_helper serv-list_all
     load_helper serv-status
+    if [ -n "$show_command_only" ] ; then
+        if [ "$SERVICETYPE" = "systemd" ] ; then
+            run_systemctl list-unit-files --type=service --state=enabled "$@"
+        else
+            serv_list_all "$@"
+        fi
+        return
+    fi
     case $SERVICETYPE in
 #        service-chkconfig|service-upstart)
 #            # service --status-all for Ubuntu/Fedora
