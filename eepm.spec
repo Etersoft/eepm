@@ -2,7 +2,7 @@
 
 %define _unpackaged_files_terminate_build 1
 Name: eepm
-Version: 3.64.73
+Version: 3.64.74
 Release: alt1
 
 Summary: Etersoft EPM package manager
@@ -184,6 +184,46 @@ EOF
 # metapackage, no files
 
 %changelog
+* Wed Nov 25 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.74-alt1
+- epm release-upgrade: Fedora: upgrade the running system via distro-sync --allowerasing by default, add --offline (system-upgrade download --allowerasing and reboot, not possible in containers and chroot), require dnf-plugin-system-upgrade only for dnf4
+- erc: extract Qt Installer Framework installers (.run) via embedded 7z components, do not treat them as makeself
+- epm pack amnezia-vpn: extract Qt Installer Framework components via erc instead of running the installer (it runs post_install.sh via sudo on the host)
+- epm play: added crush (eterbug #19913)
+- epm pack kwi: copy all libUnion* libraries (nightly added libUnionQuickPrivate)
+- epm play.d/common.sh: treat vendor packages installed as is with SKIPREPACK as managed by epm play (fix --installed and --update)
+- epm play.d/common.sh: allow apps to remove additional packages via get_remove_packages()
+- epm play: add postgrespro-1c (PostgreSQL for 1C from Postgres Professional, major versions 14-18, installed from vendor packages as is)
+- epm play: add deepseek-harness-desktop (desktop app for DeepSeek Harness)
+- epm install: do not disable scripts in packages built by Etersoft Korinf (Vendor "Etersoft Korinf" or Etersoft builder BuildHost)
+- epm install, epm remove: warn that --noscripts is not supported for deb packages
+- epm play pgadmin4: use rhel-10 build for python 3.12 and as fallback (fedora-40 and fedora-42 repos are removed upstream)
+- github ci: declare workflow permissions (eterbug #18828)
+- github ci: expose PR test results (eterbug #18828)
+- github ci: enable Debian non-free repositories (eterbug #18828)
+- epm play epic-games-launcher: use deb package
+- epm play: add grok-bot (Grok Bot desktop agent from xAI)
+- epm play: suggest similar apps via substring match when fzf is missing
+- epm play: add Ceno Browser for Windows via Wine
+- epm repack rustdesk: support libxdo4 via xdotool dependency (fixes #866)
+- repack.d/common.sh: create_file: quote destination path (paths with spaces)
+- epm repack: preserve paths with spaces when scanning library dependencies
+- epm play libreoffice: use 3-part version in TDF download URL
+- epm play spo-anketa: update to 1.3.7, follow the new site build to find the download URL
+- epm play saby: fix startup and replace obsolete sbis-plugin (eterbug #19851)
+- epm play: added horizon launcher (eterbug #20136)
+- epm play: added agent-browser (eterbug #20066)
+- epm play: added agent-desktop (eterbug #20066)
+- epm play: added lightpanda (eterbug #20066)
+- epm play: added oh-my-pi (eterbug #20213)
+- merge pull request #869 from Boria138/omp
+- epm play code: do not fall back to 1.106.3 when libwebkit2gtk-4.1 is not installed
+- epm play: add FluxCast
+- epm repack mattermost-desktop: handle the renamed executable
+- epm play: add git-writer (git-backed markdown notes)
+- epm play: add ladybird (independent web browser)
+- epm play: added kilo-desktop (eterbug #20303)
+- epm play: add streamtube (native youtube client)
+
 * Fri Nov 06 2026 Ivan Mazhukin <vanomj@altlinux.org> 3.64.73-alt1
 - epm play: add chimbabenchcl (OpenCL benchmark for CPU and GPU)
 - epm play hiddify: fix upstream url (eterbug #17865)
