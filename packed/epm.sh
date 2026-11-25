@@ -40,7 +40,7 @@ SHAREDIR="$PROGDIR"
 # will replaced with /etc/eepm during install
 CONFIGDIR="$PROGDIR/../etc"
 
-export EPMVERSION="3.64.73"
+export EPMVERSION="3.64.74"
 
 # package, single (file), pipe, git
 EPMMODE="package"
@@ -7796,6 +7796,7 @@ epm_install_files_apt_dpkg()
         return
     fi
 
+    [ -n "$noscripts" ] && warning 'Option --noscripts is not supported for deb packages (dpkg has no such option), package scripts will be run.'
 
     # TODO: if dpkg can't install due missed deps, trying with apt (as for now, --refuse-depends, --refuse-breaks don't help me)
 
@@ -10940,20 +10941,23 @@ __epm_play_suggest_similar_apps()
     local arch="$SYSTEMARCH"
     local count="${suggest_count:-7}"
 
-    # need fzf for fuzzy search
-    is_command fzf || return 1
-
     local list
     list="$(__get_fast_short_list_app $arch)"
     [ -z "$list" ] && return 1
 
-    [ -n "$verbose" ] && showcmd fzf -i -f "$app"
     local similar
-    similar="$(echo "$list" | fzf -i -f "$app" 2>/dev/null | head -$count)"
+    if is_command fzf ; then
+        [ -n "$verbose" ] && showcmd fzf -i -f "$app" >&2
+        similar="$(echo "$list" | fzf -i -f "$app" 2>/dev/null | head -$count)"
+    else
+        # fallback: plain substring match (we are called inside $(), so print the hint to stderr)
+        echog 'Install fzf package for interactive selection and suggestions.' >&2
+        similar="$(echo "$list" | grep -i -F -- "$app" | head -$count)"
+    fi
     [ -z "$similar" ] && return 1
 
     # Interactive selection if enabled (via config or --interactive flag)
-    if [ -n "$suggest_interactive$interactive" ] && inputisatty ; then
+    if [ -n "$suggest_interactive$interactive" ] && is_command fzf && inputisatty ; then
         local selected
         selected="$(echo "$similar" | fzf --prompt="$(eval_gettext "Select app"): " --height=10 --reverse)"
         if [ -n "$selected" ] ; then
@@ -13315,8 +13319,70 @@ __switch_alt_to_distro()
     docmd epm update
 }
 
+__is_container_or_chroot()
+{
+    if is_command systemd-detect-virt ; then
+        a='' systemd-detect-virt --quiet --container && return 0
+        a='' systemd-detect-virt --quiet --chroot && return 0
+        return 1
+    fi
+    [ -f /.dockerenv ] || [ -f /run/.containerenv ] && return 0
+    grep -qa "^container=" /proc/1/environ 2>/dev/null
+}
+
+__fedora_release_upgrade()
+{
+    local RELEASEVER="$1"
+    [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
+
+    info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
+    #docmd epm install epel-release yum-utils
+    sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
+    #sudocmd $DNFCMD clean all
+
+    if [ -n "$offline_upgrade" ] && __is_container_or_chroot ; then
+        fatal "Offline upgrade is not possible in a container or chroot (there is no boot), run without --offline to upgrade the running system."
+    fi
+
+    confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
+
+    # --allowerasing is needed for replaced packages (python3-protobuf in Fedora 45, rhbz#2530520)
+    if [ -z "$offline_upgrade" ] ; then
+        sudocmd $DNFCMD distro-sync --refresh --releasever=$RELEASEVER --allowerasing $(subst_option non_interactive -y) || fatal
+        info "You can run '# epm autoorphans' to remove orphaned packages"
+        return
+    fi
+
+    # system-upgrade is built in dnf5
+    [ "$PMTYPE" = "dnf-rpm" ] && assure_exists dnf-plugin-system-upgrade
+    sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER --allowerasing $(subst_option non_interactive -y) || fatal
+    info "You can run '# epm autoorphans' after the upgrade to remove orphaned packages"
+    local rebootcmd="$DNFCMD system-upgrade reboot"
+    [ "$PMTYPE" = "dnf5-rpm" ] && rebootcmd="$DNFCMD offline reboot"
+    # the upgrade is installed during reboot
+    if [ -z "$non_interactive" ] && confirm "Reboot now to install the upgrade? [y/N]" ; then
+        sudocmd $rebootcmd
+    else
+        info 'Run # $rebootcmd to reboot and install the upgrade'
+    fi
+}
+
 epm_release_upgrade()
 {
+    local offline_upgrade=''
+    local i args=''
+    for i in "$@" ; do
+        case "$i" in
+            --offline)
+                offline_upgrade=1
+                ;;
+            *)
+                args="$args $i"
+                ;;
+        esac
+    done
+    set -- $args
+
     assure_root
     assure_safe_run
     info "Starting upgrade/switch whole system to other release"
@@ -13490,22 +13556,7 @@ epm_release_upgrade()
             exit
         fi
 
-        info "Check https://fedoraproject.org/wiki/DNF_system_upgrade for an additional info"
-        #docmd epm install epel-release yum-utils
-        sudocmd $DNFCMD $(subst_option non_interactive -y) --refresh upgrade || fatal
-        #sudocmd $DNFCMD clean all
-        assure_exists dnf-plugin-system-upgrade
-        sudocmd $DNFCMD $(subst_option non_interactive -y) upgrade --refresh
-        local RELEASEVER="$1"
-        [ -n "$RELEASEVER" ] || RELEASEVER=$(($DISTRVERSION + 1))
-        #[ -n "$RELEASEVER" ] || fatal "Run me with new version"
-        confirm_info 'Upgrade to $DISTRNAME/$RELEASEVER'
-        sudocmd $DNFCMD system-upgrade download --refresh --releasever=$RELEASEVER
-        # TODO: from docs:
-        # dnf system-upgrade reboot
-        # FIXME: download all packages again
-        sudocmd $DNFCMD distro-sync --releasever=$RELEASEVER
-        info "You can run '# epm autoorphans' to remove orphaned packages"
+        __fedora_release_upgrade "$1"
         ;;
     zypper-rpm)
         docmd epm repolist
@@ -13568,6 +13619,7 @@ epm_remove_low()
             cd - >/dev/null
             return $RES ;;
         *-dpkg|-dpkg)
+            [ -n "$noscripts" ] && warning 'Option --noscripts is not supported for deb packages (dpkg has no such option), package scripts will be run.'
             # shellcheck disable=SC2046
             sudocmd dpkg --purge $(subst_option nodeps --force-all) $(subst_option force --force-remove-reinstreq)  $(print_name "$@")
             return ;;
@@ -20903,6 +20955,11 @@ __epm_check_vendor()
             continue
         fi
 
+        if __epm_korinf_built "$i" "$vendor" ; then
+            warning 'Scripts are ENABLED for package $bi built by Etersoft Korinf. Use --noscripts if you need disable scripts in such packages.'
+            continue
+        fi
+
         if __epm_package_ok_scripts "$i" ; then
             warning 'Scripts are ENABLED for package $bi from outside vendor $vendor (the package is listed in $CONFIGDIR/pkgallowscripts.list).  Use --noscripts if you need disable scripts in such packages.'
             continue
@@ -21620,6 +21677,23 @@ __epm_vendor_ok_scripts()
     local res=$?
     rm $tmpalf
     return $res
+}
+
+__epm_korinf_built()
+{
+    local vendor="$2"
+    [ -n "$vendor" ] || vendor="$(epm print field Vendor for "$1" 2>/dev/null)"
+    [ "$vendor" = "Etersoft Korinf" ] && return 0
+
+    # Korinf builds for ALT have ALT vendor, but are built by Etersoft builder
+    local buildhost
+    buildhost="$(epm print field BuildHost for "$1" 2>/dev/null)"
+    case "$buildhost" in
+        builder.hasher.altlinux.org|builder*.etersoft.ru)
+            return 0
+            ;;
+    esac
+    return 1
 }
 
 epm_status_installed()
@@ -27224,6 +27298,29 @@ extract_makeself()
 	extract_makeself_tar "$arc" | extract_tar_stdin
 }
 
+# Qt Installer Framework installers (.run) end with the magic cookie 0xc2630a1c99d668f8
+is_qtifw_installer()
+{
+	[ "$(tail -c 8 "$1" | od -An -tx1 | tr -d ' \n')" = "f868d6991c0a63c2" ]
+}
+
+# Extract Qt Installer Framework installers: components are embedded 7z archives
+# (do not run the installer, it runs the component scripts)
+extract_qtifw()
+{
+	local arc="$1"
+	local subdir="$2"
+	local tdir i
+	mkdir -p "$subdir" || fatal "Could not create extraction directory $subdir"
+	tdir="$(mktemp -d "$(realpath "$subdir")/UXXXXXXXX")" || fatal
+	run_7z x -t# -y -o"$tdir" "$arc" '*.7z' >/dev/null || fatal "Could not find components in Qt Installer Framework installer $arc"
+	for i in "$tdir"/*.7z ; do
+		[ -f "$i" ] || fatal "Could not find components in Qt Installer Framework installer $arc"
+		run_7z x -snl $(get_7z_snld) -y -o"$subdir" "$i" >/dev/null || fatal "Could not extract component $(basename "$i") from $arc"
+	done
+	rm -rf "$tdir"
+}
+
 # Extract AppImage archives
 extract_appimage()
 {
@@ -27407,7 +27504,11 @@ extract_special_archive()
 			extract_7z_to_subdir "$arc" "$subdir"
 			;;
 		run)
-			extract_makeself "$arc" "$subdir"
+			if is_qtifw_installer "$arc" ; then
+				extract_qtifw "$arc" "$subdir"
+			else
+				extract_makeself "$arc" "$subdir"
+			fi
 			;;
 		AppImage|appimage)
 			extract_appimage "$arc" "$subdir"
@@ -27727,6 +27828,10 @@ repack_special_archive()
 	local ftype="$(get_archive_type "$1")"
 	case "$ftype" in
 		run)
+			if is_qtifw_installer "$1" ; then
+				__repack_via_tmp "$1" "$2"
+				exit
+			fi
 			# makeself payload is already tar, just decompress
 			extract_makeself_tar "$1" > "$2"
 			exit
@@ -29188,7 +29293,7 @@ check_command()
         epm_cmd=full_upgrade
         direct_args=1
         ;;
-    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release)
+    release-upgrade|upgrade-release|upgrade-system|release-switch)  # HELPCMD: upgrade/switch whole system to the release in arg (default: next (latest) release), use --offline for Fedora offline upgrade with reboot
         epm_cmd=release_upgrade
         direct_args=1
         ;;
