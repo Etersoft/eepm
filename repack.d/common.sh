@@ -22,6 +22,25 @@ warning()
 
 # compatibility layer
 
+# print ELF class of the file (32 or 64), fail if it is not an ELF file
+# reads the header with od (coreutils), so it does not need the file utility
+# the same as get_elf_class in bin/epm-sh-functions
+get_elf_class()
+{
+    [ -f "$1" ] && [ -r "$1" ] || return 1
+    case "$(od -An -tx1 -N5 "$1" 2>/dev/null | tr -d ' \n')" in
+        7f454c4601)
+            echo 32
+            ;;
+        7f454c4602)
+            echo 64
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 # check if <arg> is a real command
 is_command()
 {
@@ -552,7 +571,7 @@ add_unirequires()
     # FIXME: use package arch, not system arch
     if [ "$EPMARCH" = "64" ] ; then
         while IFS= read -r file ; do
-            if file "$file" | grep -q "ELF 32-bit" ; then
+            if [ "$(get_elf_class "$file")" = "32" ] ; then
                 X32_ARCH="true"
                 break
             fi

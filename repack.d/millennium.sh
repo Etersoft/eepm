@@ -17,7 +17,7 @@ pack_file /usr/lib/millennium
 # Upstream ships executable ELF helpers without an executable mode in some
 # releases. Fix all ELF files, including shared libraries, without naming helpers.
 find "$BUILDROOT$PRODUCTDIR" -type f | while IFS= read -r file ; do
-    file -b "$file" | grep -q '^ELF ' || continue
+    get_elf_class "$file" >/dev/null || continue
     chmod 755 "$file" || exit 1
 done || fatal "Can't fix Millennium executable permissions"
 
