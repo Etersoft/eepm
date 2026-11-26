@@ -15,6 +15,9 @@ add_conflicts portmaster
 # portmaster (Tauri GUI) needs webkit2gtk
 add_requires 'libwebkit2gtk-4.1.so.0()(64bit)'
 
+# The GUI loads the tray library dynamically, so ELF dependency scanning misses it.
+add_unirequires libayatana-appindicator3.so.1
+
 # create systemd service
 cat <<'EOF' | create_file /lib/systemd/system/portmaster.service
 [Unit]
@@ -28,7 +31,7 @@ Conflicts=firewalld.service
 Type=simple
 Restart=on-failure
 RestartSec=10
-ExecStart=/opt/portmaster2/portmaster-core --data /var/lib/portmaster
+ExecStart=/opt/portmaster2/portmaster-core --data-dir /var/lib/portmaster --bin-dir /opt/portmaster2
 PIDFile=/var/lib/portmaster/core-lock.pid
 
 [Install]
