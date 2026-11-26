@@ -4,14 +4,18 @@
 BUILDROOT="$1"
 SPEC="$2"
 
+# Keep the installed package and launcher names when upgrading from CE builds.
+PRODUCT=gigaideCE
+
 . $(dirname $0)/common.sh
 
+subst "s|^Name:.*|Name: $PRODUCT|" "$SPEC"
 subst "s|^Group:.*|Group: Development/C|" $SPEC
 #subst "s|^License: unknown$|License: GPLv2|" $SPEC
 subst "s|^URL:.*|URL: https://gitverse.ru/services/gigaide|" $SPEC
-subst "s|^Summary:.*|Summary: GigaIDE Desktop Community Edition|" $SPEC
+subst "s|^Summary:.*|Summary: GigaIDE Desktop|" $SPEC
 
-move_to_opt "/gigaide-CE-*"
+move_to_opt "/gigaide-CE-*" "/gigaide-[0-9]*"
 # use native launcher as recommended
 add_bin_link_command $PRODUCT $PRODUCTDIR/bin/idea
 
@@ -22,7 +26,7 @@ cat <<EOF | create_file /usr/share/applications/$wmClass.desktop
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=GigaIDE Desktop Community Edition
+Name=GigaIDE Desktop
 Comment=GigaIDE
 Exec=$PRODUCT %f
 Icon=$PRODUCT
