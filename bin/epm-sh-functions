@@ -1116,6 +1116,24 @@ onefile_eget()
     internal_tools_eget "$@"
 }
 
+# print ELF class of the file (32 or 64), fail if it is not an ELF file
+# reads the header with od (coreutils), so it does not need the file utility
+get_elf_class()
+{
+    [ -f "$1" ] && [ -r "$1" ] || return 1
+    case "$(od -An -tx1 -N5 "$1" 2>/dev/null | tr -d ' \n')" in
+        7f454c4601)
+            echo 32
+            ;;
+        7f454c4602)
+            echo 64
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 # Check if file is a package file (rpm, deb, etc.), not ELF binary or other
 is_package_file()
 {
@@ -1168,7 +1186,7 @@ get_package_type()
             return
             ;;
         *)
-            if [ -r "$1" ] && file -L "$1" | grep -q " ELF " ; then
+            if get_elf_class "$1" >/dev/null ; then
                 echo "ELF"
                 return
             fi

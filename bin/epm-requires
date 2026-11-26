@@ -70,13 +70,17 @@ __epm_elf_requires()
     fi
 
     for i in $* ; do
-        if file -L "$i" | grep -q " ELF 32-bit " ; then
-            __epm_elf32_requires "$i"
-        elif file -L "$i" | grep -q " ELF 64-bit " ; then
-            __epm_elf64_requires "$i"
-        else
-            warning "Unknown ELF binary"
-        fi
+        case "$(get_elf_class "$i")" in
+            32)
+                __epm_elf32_requires "$i"
+                ;;
+            64)
+                __epm_elf64_requires "$i"
+                ;;
+            *)
+                warning 'Unknown ELF binary $i'
+                ;;
+        esac
     done
 }
 

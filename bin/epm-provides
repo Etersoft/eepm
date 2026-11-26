@@ -46,7 +46,7 @@ epm_provides_files()
             local soname
             soname="$(LC_ALL=C a="" readelf -d "$pkg_files" 2>/dev/null | grep "(SONAME)" | sed -e 's|.*\[\(.*\)\]|\1|')"
             if [ -n "$soname" ] ; then
-                if file -L "$pkg_files" | grep -q " ELF 64-bit " ; then
+                if [ "$(get_elf_class "$pkg_files")" = "64" ] ; then
                     echo "$soname()(64bit)"
                 else
                     echo "$soname"
