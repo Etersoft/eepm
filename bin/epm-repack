@@ -257,6 +257,11 @@ __prepare_source_package()
     # it is possible there are a few files, we don't support it
     [ -s "$returntarname" ] || fatal 'Can'\''t read result from pack: $returntarname is not a readable file.'
 
+    # a pack.d script from packrules.list can return a tar with yaml metadata: pack it directly, not via alien
+    if [ -z "$SUBGENERIC" ] && rhas "$returntarname" "\.(tar|tar\.gz|tar\.bz2|tar\.xz|tgz)$" && [ -r "$returntarname.eepm.yaml" ] ; then
+        SUBGENERIC='tar'
+    fi
+
     alpkg=$(basename $returntarname)
     # FIXME: looks like a hack with current dir
     if ! [ "$returntarname" -ef "$alpkg" ] ; then
