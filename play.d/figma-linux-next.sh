@@ -12,6 +12,9 @@ URL="https://github.com/arximus88/figma-linux-next"
 
 pkgtype="$(epm print info -p)"
 
+# On ALT, Alien fails to extract the upstream RPM. Repack the DEB instead.
+[ "$(epm print info -s)" = "alt" ] && pkgtype=deb
+
 # Figma Linux Next uses Debian architecture names for .deb and distro
 # architecture names for .rpm. Its Pacman build is currently x86_64 only.
 case "$pkgtype" in
