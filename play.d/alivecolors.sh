@@ -18,6 +18,9 @@ esac
 
 # Vendor instruction: https://alivecolors.com/ru/tutorial/howwork/install-linux.php
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for alivecolors."
+
 case $(epm print info -s) in
     alt)
         epm repo add --disabled --name akvis "rpm https://akvis-alt.sfo2.cdn.digitaloceanspaces.com x86_64 akvis"

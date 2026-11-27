@@ -15,15 +15,21 @@ epm installed $REPOPKGNAME && PKGNAME=$REPOPKGNAME
 warn_version_is_not_supported
 
 if [ "$(epm print info -s)" = "alt" ] ; then
+    [ -z "$print_url" ] || fatal "--print-url is not supported for steam from the system repository."
     epm install $REPOPKGNAME || exit
     epm play i586-fix
     exit
 fi
 
 if epm status --installable $REPOPKGNAME ; then
+    [ -z "$print_url" ] || fatal "--print-url is not supported for steam from the system repository."
     epm install $REPOPKGNAME || exit
 else
     PKGURL="https://cdn.akamai.steamstatic.com/client/installer/steam.deb"
+    if [ -n "$print_url" ] ; then
+        echo "$PKGURL"
+        exit 0
+    fi
     epm install $PKGURL || exit
 
     if [ "$(epm print info -s)" = "alt" ] ; then

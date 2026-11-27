@@ -12,6 +12,9 @@ reponame=$(epm print info --repo-name)
 vendor=$(epm print info -s)
 version=$(epm print info --base-version)
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for angie."
+
 # Strict supported list
 case $(epm print info -e) in
     Alpine/3.*)

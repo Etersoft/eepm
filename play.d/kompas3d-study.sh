@@ -37,6 +37,11 @@ install_repacked()
     done
     urls="$urls $(get_ascon_rpm_url $PKGNAME "$PERSONALREPOURL")" || exit
 
+    if [ -n "$print_url" ] ; then
+        echo "$urls"
+        exit 0
+    fi
+
     export EEPM_INTERNAL_PKGNAME="$REPACKLIST $PKGNAME"
     epm install --repack $urls || exit
 
@@ -57,16 +62,19 @@ install_repacked()
 # so both are added to the same disabled named repository used for ascon/<package> installs.
 case $(epm print info -e) in
     ALTLinux/p10|ALTLinux/c10f*)
+        [ -z "$print_url" ] || fatal "--print-url is not supported for kompas3d-study from the vendor repository."
         epm repo addkey "$REPOURL/alt/ascon.gpg"
         epm repo add --disabled --name ascon "rpm [ascon] $REPOURL/alt/ p10/x86_64 main"
         epm repo add --disabled --name ascon "rpm [ascon] $PERSONALREPOURL/alt/ p10/x86_64 main"
         ;;
     ALTLinux/p11|ALTLinux/Sisyphus)
+        [ -z "$print_url" ] || fatal "--print-url is not supported for kompas3d-study from the vendor repository."
         epm repo addkey "$REPOURL/alt/ascon.gpg"
         epm repo add --disabled --name ascon "rpm [ascon] $REPOURL/alt/ p11/x86_64 main"
         epm repo add --disabled --name ascon "rpm [ascon] $PERSONALREPOURL/alt/ p11/x86_64 main"
         ;;
     RedOS/8.0)
+        [ -z "$print_url" ] || fatal "--print-url is not supported for kompas3d-study from the vendor repository."
         # Ascon signs the repo metadata only, packages are signed by a not published key
         # (repo_gpgcheck as in the Ascon install script)
         cd_to_temp_dir
@@ -86,6 +94,7 @@ EOF
     *)
         case $(epm print info -g) in
             apt-dpkg)
+                [ -z "$print_url" ] || fatal "--print-url is not supported for kompas3d-study from the vendor repository."
                 # Ascon repo is for Astra Linux 1.8 (Debian 12 based), use it on any deb based distro
                 epm repo addkey "$REPOURL/deb/ascon.gpg"
                 epm repo add --disabled --name ascon "deb [signed-by=/etc/apt/trusted.gpg.d/ascon.gpg] $REPOURL/deb 1.8_x86-64 main"

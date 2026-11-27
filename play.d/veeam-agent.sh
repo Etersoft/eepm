@@ -8,6 +8,9 @@ URL="https://www.veeam.com/linux-backup-free.html"
 
 . $(dirname $0)/common.sh
 
+# URL queries must not configure the repository, install dependencies or run DKMS.
+[ -z "$print_url" ] || fatal "--print-url is not supported for veeam-agent."
+
 # Veeam ships as several rpms (veeam, veeam-libs, blksnap, blksnap-ueficert);
 # allow repack to produce all of them.
 export EEPM_INTERNAL_PKGNAME='veeam veeam-libs blksnap blksnap-ueficert'

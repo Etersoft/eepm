@@ -11,6 +11,9 @@ URL="https://www.aseprite.org"
 # but it allows building the app yourself for personal use. So we do not
 # repackage a binary - we set up Stapler (stplr) with the community 'aides'
 # recipe repo and let epm build+install aseprite locally from source.
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for aseprite."
+
 epm prescription stplr || fatal "Can't set up Stapler (stplr)"
 
 epm install stplr:aseprite

@@ -51,6 +51,9 @@ case "$MSSQL_YEAR" in
     *)         RHEL_VERSION=9 ;;
 esac
 
+# This path installs packages or configures repositories rather than resolving URLs.
+[ -z "$print_url" ] || fatal "--print-url is not supported for mssql-server."
+
 serv mssql-server stop
 
 dname="$(epm print info -s)"
