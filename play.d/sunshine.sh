@@ -6,7 +6,7 @@ VERSION="$2"
 RELEASE="$3"
 DESCRIPTION="Self-hosted game stream host for Moonlight"
 TIPS="Run epm play Sunshine=<version> to install specific version (e.g. 2026.516.143833)."
-URL="https://github.com/LizardByte/Sunshine"
+URL="https://github.com/SunshineStream/Sunshine"
 
 . $(dirname $0)/common.sh
 
@@ -14,11 +14,16 @@ is_openssl_enough 3 || fatal "There is no needed OpenSSL 3 in the system."
 
 arch=$(epm print info -a)
 
-# Use GitHub releases (Fedora packages work for ALT via repack)
+# Use the Fedora 43 build (Fedora packages work for ALT via repack)
+# Sunshine up to 2026.5xx links ICU 77, it is installed via epm play libicu77 in repack.d/Sunshine.sh
+FEDORA=fc43
+
+# Use GitHub releases
 if [ "$VERSION" != "*" ] ; then
-    PKGURL="https://github.com/LizardByte/Sunshine/releases/download/v${VERSION}/Sunshine-${VERSION}-${RELEASE}.$arch.rpm"
+    # RELEASE from app-versions can be for another Fedora (1.fc42), take the build number only
+    PKGURL="https://github.com/SunshineStream/Sunshine/releases/download/v${VERSION}/Sunshine-${VERSION}-${RELEASE%%.*}.$FEDORA.$arch.rpm"
 else
-    PKGURL=$(eget --list --latest https://github.com/LizardByte/Sunshine/releases "Sunshine-*-*.fc42.$arch.rpm")
+    PKGURL=$(eget --list --latest https://github.com/SunshineStream/Sunshine/releases "Sunshine-*-*.$FEDORA.$arch.rpm")
 fi
 
 install_pkgurl
