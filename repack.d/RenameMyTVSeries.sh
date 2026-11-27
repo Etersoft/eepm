@@ -10,3 +10,4 @@ SPEC="$2"
 
 add_requires libssl-devel
 
+fix_desktop_file /usr/share/RenameMyTVSeries/RenameMyTVSeries RenameMyTVSeries
