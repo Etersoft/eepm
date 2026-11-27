@@ -10,14 +10,20 @@ fix_python_path()
     local py_sys_site=$(python3 -c 'import sysconfig; print(sysconfig.get_path("purelib") or "")' 2>/dev/null)
     [ -n "$py_sys_site" ] || py_sys_site=$(python3 -c 'import sys; print("/usr/lib/python%d.%d/site-packages" % sys.version_info[:2])' 2>/dev/null)
     [ -n "$py_sys_site" ] || return 0
+    local py_ext_suffix=$(python3 -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX") or "")' 2>/dev/null)
     local found_site
 
     for found_site in $(find "$BUILDROOT" -type d \( -path "*/python3.*/site-packages" -o -path "*/python*/dist-packages" \) 2>/dev/null | sed "s|^$BUILDROOT||") ; do
-        [ "$found_site" = "$py_sys_site" ] && continue
-
-        if find "$BUILDROOT$found_site" -type f -name "*.so" 2>/dev/null | grep -q .; then
+        # Directory layout may differ (lib/lib64 or site/dist-packages) even
+        # when the Python ABI matches. Check CPython's version/platform tag.
+        if find "$BUILDROOT$found_site" -type f -name "*.cpython-*.so" ! -name "*$py_ext_suffix" 2>/dev/null | grep -q .; then
             fatal "Python ABI mismatch"
         fi
+        if [ -z "$py_ext_suffix" ] && find "$BUILDROOT$found_site" -type f -name "*.cpython-*.so" 2>/dev/null | grep -q .; then
+            fatal "Cannot determine Python ABI"
+        fi
+
+        [ "$found_site" = "$py_sys_site" ] && continue
 
         info "Fixing python path: $found_site -> $py_sys_site"
         move_dir "$found_site" "$py_sys_site"
@@ -27,15 +33,41 @@ fix_python_path()
     done
 }
 
+# Detect the Python package naming convention once per scan.
+__python_requires_prefix()
+{
+    local packages prefix
+    packages=$(epm search --short 'python*' 2>/dev/null) || return 0
+    for prefix in python3- python-module- python-; do
+        if printf '%s\n' "$packages" | grep -q "^$prefix"; then
+            echo "$prefix"
+            return
+        fi
+    done
+}
+
 # get python requires
 get_python_requires()
 {
     local fdir="$BUILDROOT"
 
     local LANG=C
+    local python_prefix
+    if [ "$(epm print info -s)" = "alt" ]; then
+        python_prefix='python3('
+    else
+        python_prefix=$(__python_requires_prefix)
+        [ -n "$python_prefix" ] || warning 'Cannot determine Python package prefix'
+    fi
 
     # Keep standard library modules out of generated package requires.
-    local STD_LIBS="abc|argparse|asyncio|base64|calendar|collections|contextlib|copy|csv|datetime|enum|errno|fcntl|functools|gc|getopt|gettext|glob|hashlib|importlib|inspect|io|itertools|json|locale|logging|math|multiprocessing|os|pathlib|pickle|platform|posix|pwd|queue|random|re|selectors|shlex|shutil|signal|site|socket|sqlite3|ssl|stat|string|subprocess|sys|tarfile|tempfile|threading|time|traceback|types|typing|unittest|urllib|uuid|warnings|weakref|webbrowser|xml|zipfile"
+    local STD_LIBS="__future__|abc|argparse|ast|asyncio|base64|calendar|codecs|collections|concurrent|configparser|contextlib|copy|csv|ctypes|dataclasses|datetime|enum|errno|fcntl|functools|gc|getopt|gettext|glob|hashlib|html|importlib|inspect|io|itertools|json|locale|logging|math|multiprocessing|os|pathlib|pickle|platform|posix|pty|pwd|queue|random|re|select|selectors|shlex|shutil|signal|site|socket|sqlite3|ssl|stat|string|struct|subprocess|sys|tarfile|tempfile|termios|threading|time|traceback|types|typing|unittest|urllib|uuid|warnings|weakref|webbrowser|xml|zipfile|zlib"
+
+    local detected_stdlibs
+    detected_stdlibs=$(python3 -c 'import sys; print("|".join(sorted(sys.stdlib_module_names)))' 2>/dev/null) || detected_stdlibs=
+    if [ -n "$detected_stdlibs" ]; then
+        STD_LIBS="$detected_stdlibs"
+    fi
 
     local INTERNAL_PKGS=$(find "$fdir" -type d \( -path "*/site-packages/*" -o -path "*/dist-packages/*" \) -not -path "*/__pycache__*" 2>/dev/null | sed -E 's#.*/(site|dist)-packages/([^/]+).*#\2#' | sort -u)
 
@@ -58,7 +90,12 @@ get_python_requires()
         grep -vE "$EXCLUDE_PATTERN" | \
         sort -u | \
         while read -r lib; do
-            [ -n "$lib" ] && echo "python3($lib)"
+            [ -n "$lib" ] || continue
+            case "$python_prefix" in
+                'python3(') echo "python3($lib)" ;;
+                '') ;;
+                *) printf '%s%s\n' "$python_prefix" "$(printf '%s' "$lib" | tr '[:upper:]_' '[:lower:]-')" ;;
+            esac
         done
 
     # GObject Typelibs
