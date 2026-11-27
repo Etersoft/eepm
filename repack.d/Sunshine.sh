@@ -22,10 +22,16 @@ fi
 
 a='' patchelf --replace-needed "libappindicator3.so.1" "libayatana-appindicator3.so.1" "usr/bin/sunshine"
 
+# newer Sunshine (2026.1127+) has a Qt 6 tray, it uses system Qt 6
+qtlibs="$(a='' patchelf --print-needed "usr/bin/sunshine" | grep '^libQt6')"
+[ -n "$qtlibs" ] && add_unirequires $qtlibs
+
 fix_desktop_file "^Exec=.*" "Exec=sunshine"
 
-# The binary has libminiupnpc in NEEDED, but does not import any symbols from it.
-# Loading Fedora's libminiupnpc on ALT can crash at process start, so drop this unused entry.
-patchelf --print-needed "usr/bin/sunshine" | grep '^libminiupnpc\.so\.' | while read -r lib ; do
-    a='' patchelf --remove-needed "$lib" "usr/bin/sunshine" || fatal
-done
+# Older Sunshine has libminiupnpc in NEEDED, but does not import any symbols from it,
+# drop this unused entry. Newer Sunshine uses it (libminiupnpc.so.21 is in ALT).
+if ! LC_ALL=C a='' readelf --dyn-syms -W "usr/bin/sunshine" | grep -qiE ' UND .*upnp' ; then
+    a='' patchelf --print-needed "usr/bin/sunshine" | grep '^libminiupnpc\.so\.' | while read -r lib ; do
+        a='' patchelf --remove-needed "$lib" "usr/bin/sunshine" || fatal
+    done
+fi
