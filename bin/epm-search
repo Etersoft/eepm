@@ -197,7 +197,7 @@ __epm_search_make_grep()
     listN=$(__convert_glob__to_regexp "$listN")
 
     if [ -n "$short" ] ; then
-        echon " | sed -e \"s| .*||g\""
+        echon " | sed -e \"s|^[[:blank:]]*||\" -e \"s|[[:blank:]].*||\""
     fi
 
     [ -n "$listN" ] && echon " | grep -E -i -v -- \"$listN\""
