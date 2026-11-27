@@ -1,10 +1,10 @@
 #!/bin/sh
 
-PKGNAME=abacusai
+PKGNAME=abacusai-cli
 SUPPORTEDARCHES="x86_64 aarch64"
 VERSION="$2"
 DESCRIPTION="AbacusAI's powerful CLI AI assistant with agentic browsing, listening, and coding capabilities"
-URL="https://github.com/abacusai/deepagent-releases"
+URL="https://abacus.ai/help/abacusai-desktop/cli-installation"
 
 . $(dirname $0)/common.sh
 
@@ -20,10 +20,17 @@ case "$arch" in
         ;;
 esac
 
-if [ "$VERSION" = "*" ]; then
-    PKGURL=$(get_github_url "$URL" "abacusai-agent-cli-linux-$ARCH-$VERSION.tar.gz")
-else
-    PKGURL="https://github.com/abacusai/deepagent-releases/releases/download/$VERSION/abacusai-agent-cli-linux-$ARCH-$VERSION.tar.gz"
+if [ "$VERSION" = "*" ] ; then
+    VERSION="$(get_json_value 'https://apps.abacus.ai/api/v0/_getCodellmCliVersion?channel=latest' '["result","version"]')"
+    [ -n "$VERSION" ] || fatal "Can't get latest Abacus AI CLI version"
 fi
 
-install_pack_pkgurl
+suffix=''
+# The baseline build also supports x86_64 CPUs without AVX2.
+[ "$ARCH" = "x64" ] && suffix=-baseline
+if ldd /bin/ls 2>&1 | grep -q musl ; then
+    suffix=-musl
+fi
+PKGURL="https://static.abacus.ai/cli/releases/$VERSION/abacusai-linux-$ARCH$suffix.tar.gz"
+
+install_pack_pkgurl "$VERSION"
