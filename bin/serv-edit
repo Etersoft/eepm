@@ -39,11 +39,16 @@ serv_edit()
             $SYSTEMCTL is-active --quiet "$SERVICE" 2>/dev/null && wasactive=1
 
             # systemctl edit is interactive and uses $SYSTEMD_EDITOR/$EDITOR/$VISUAL;
-            # sudo resets the environment, so preserve those across it
+            # preserve those variables when elevating privileges
             local sudoenv=''
             [ "$SYSTEMCTL_RUNNER" = "docmd" ] || set_sudo
             case "$SUDO" in
                 sudo*) sudoenv='--preserve-env=SYSTEMD_EDITOR,EDITOR,VISUAL' ;;
+                run0)
+                    [ -n "$SYSTEMD_EDITOR" ] && sudoenv="$sudoenv --setenv=SYSTEMD_EDITOR"
+                    [ -n "$EDITOR" ] && sudoenv="$sudoenv --setenv=EDITOR"
+                    [ -n "$VISUAL" ] && sudoenv="$sudoenv --setenv=VISUAL"
+                    ;;
             esac
 
             # systemctl edit reloads the systemd manager (daemon-reload) by itself

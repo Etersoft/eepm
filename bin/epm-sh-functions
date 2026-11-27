@@ -558,7 +558,12 @@ set_sudo()
     fi
 
     if ! is_command $SUDO_CMD ; then
-        [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or install and tune sudo (http://altlinux.org/sudo)'"
+        if is_command run0 && [ -r /dev/tty ] && [ -w /dev/tty ] ; then
+            SUDO="run0"
+            SUDO_TESTED="0"
+            return "$SUDO_TESTED"
+        fi
+        [ "$nofail" = "nofail" ] || SUDO="fatal 'For this operation run epm under root, or configure sudo (http://altlinux.org/sudo), doas or run0'"
         SUDO_TESTED="2"
         return "$SUDO_TESTED"
     fi
