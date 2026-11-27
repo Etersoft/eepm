@@ -10,29 +10,20 @@ URL="$4"
 [ -n "$VERSION" ] || VERSION="$(echo "$URL" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?' | head -n1)"
 [ -n "$VERSION" ] || fatal "Can't get package version"
 
-mkdir -p usr/bin
-mkdir -p opt/abacusai
+mkdir -p opt/$PRODUCT
 
-erc -C opt/abacusai unpack $TAR || fatal
-
-rm -r opt/abacusai/bin
-
-cat <<EOF > usr/bin/abacusai
-#!/bin/sh
-node /opt/abacusai/out/cli.js agent \$@
-EOF
-
-chmod 755 usr/bin/abacusai
+erc --here -C opt/$PRODUCT unpack "$TAR" || fatal
 
 PKGNAME=$PRODUCT-$VERSION
 
-erc pack $PKGNAME.tar opt usr || fatal
+erc pack $PKGNAME.tar opt || fatal
 
 cat <<EOF >$PKGNAME.tar.eepm.yaml
 name: $PRODUCT
+version: $VERSION
 group: Development/Tools
 license: Proprietary
-url: https://github.com/abacusai/deepagent-releases
+url: https://abacus.ai/help/abacusai-desktop/cli-installation
 summary: Powerful CLI AI assistant
 description: AbacusAI's powerful CLI AI assistant with agentic browsing, listening, and coding capabilities. Automate all your work with state of the art AI and the most powerful agent in the world.
 EOF
