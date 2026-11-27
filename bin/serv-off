@@ -26,6 +26,11 @@ serv_off()
 {
     local SERVICE="$1"
 
+    if [ -n "$show_command_only" ] ; then
+        serv_stop "$SERVICE" || return
+        serv_disable "$SERVICE"
+        return
+    fi
     is_service_running $SERVICE && { serv_stop $SERVICE || return ; }
     is_service_autostart $SERVICE || { info 'Service $SERVICE already disabled for startup' && return ; }
     serv_disable $SERVICE

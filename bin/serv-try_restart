@@ -31,7 +31,9 @@ serv_try_restart()
             ;;
         *)
             info "Fallback to restart..."
-            is_service_running $SERVICE || { info "Service $SERVICE is not running, restart skipping…" ; return 0 ; }
+            if [ -z "$show_command_only" ] ; then
+                is_service_running $SERVICE || { info "Service $SERVICE is not running, restart skipping…" ; return 0 ; }
+            fi
             load_helper serv-restart
             serv_restart "$SERVICE" "$@"
             ;;

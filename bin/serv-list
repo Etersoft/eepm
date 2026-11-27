@@ -41,6 +41,11 @@ serv_list()
             sudocmd rc-status
             ;;
         *)
+            if [ -n "$show_command_only" ] ; then
+                load_helper serv-list_all
+                serv_list_all "$@"
+                return
+            fi
             # hack to improve list speed
             [ "$UID" = 0 ] || { sudocmd $PROGDIR/serv --quiet list ; return ; }
             load_helper serv-list_all

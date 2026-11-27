@@ -101,6 +101,7 @@ ANYSERVICE=$(print_command_path anyservice)
 # TODO: done it on anyservice part
 is_anyservice()
 {
+    [ -n "$show_command_only" ] && return 1
     [ -n "$ANYSERVICE" ] || return
     [ -n "$1" ] || return
     # check if anyservice is exists and checkd returns true
@@ -281,6 +282,7 @@ check_option()
 # Check if daemon-reload is needed and run it automatically
 check_daemon_reload()
 {
+        [ -n "$show_command_only" ] && return 0
         local service="$1"
         [ -z "$service" ] && return 0
         # Check NeedDaemonReload property (read-only, no sudo needed)
@@ -339,6 +341,19 @@ for opt in "$@" ; do
     [ -z "$service_name" ] && service_name=$opt && continue
     params="$params $opt"
 done
+
+if [ -n "$show_command_only" ] ; then
+    short=
+    # Keep dry-run handling local to serv, including sudo and helper commands.
+    docmd()
+    {
+        local quiet=
+        showcmd "$@"
+        return 0
+    }
+    sudocmd() { docmd "$@"; }
+    sudorun() { docmd "$@"; }
+fi
 
 if [ "$systemctl_scope" = "user" ]; then
     if [ "$SERVICETYPE" != "systemd" ]; then

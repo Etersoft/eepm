@@ -25,7 +25,9 @@ serv_disable()
 {
     local SERVICE="$1"
 
-    is_service_autostart $SERVICE || { info 'Service $SERVICE already disabled for startup' && return ; }
+    if [ -z "$show_command_only" ] ; then
+        is_service_autostart $SERVICE || { info 'Service $SERVICE already disabled for startup' && return ; }
+    fi
 
     case $SERVICETYPE in
         service-chkconfig|service-upstart)
