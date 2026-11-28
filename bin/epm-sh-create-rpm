@@ -173,11 +173,16 @@ __unpack_files_from_tarball()
 
     # append %files list to spec
     local specfile="$tmpbuilddir/$name.spec"
+    # '%' is escaped as '%%' (rpm expands macros in the file list)
     ( cd "$buildroot" && find . -mindepth 1 | sed 's|^\./|/|' | LANG=C sort | while read -r f ; do
+        local ef="$f"
+        case "$f" in
+            *%*) ef="$(printf '%s' "$f" | sed -e 's|%|%%|g')" ;;
+        esac
         if [ -d "$buildroot$f" ] && [ ! -L "$buildroot$f" ] ; then
-            echo "%dir \"$f\""
+            echo "%dir \"$ef\""
         else
-            echo "\"$f\""
+            echo "\"$ef\""
         fi
     done ) >> "$specfile"
 }
