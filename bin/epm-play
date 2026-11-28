@@ -179,6 +179,26 @@ __get_all_rpm_repacked_packages()
     a= rpmquery --queryformat "$FORMAT" -a | grep "EPM <support@e"
 }
 
+# vendor packages installed as is by apps with SKIPREPACK (not repacked, so missed above)
+__get_rpm_skiprepack_packages()
+{
+    local pkg line
+    FORMAT="%{Name} %{Version} %{Packager}\n"
+    grep -l "^SKIPREPACK=" $psdir/*.sh 2>/dev/null | xargs -r grep -ohP "^PKGNAME=[\"']*\K[^\"' ]+" | LC_ALL=C sort -u | while read -r pkg ; do
+        line="$(a= rpmquery --queryformat "$FORMAT" "$pkg" 2>/dev/null)" || continue
+        # skip the package installed from the distro repo
+        epm status --thirdparty "$pkg" </dev/null >/dev/null 2>&1 || continue
+        echo "$line"
+    done
+}
+
+# all packages installed by epm play: repacked and vendor ones installed as is
+__get_all_rpm_play_packages()
+{
+    __get_all_rpm_repacked_packages
+    __get_rpm_skiprepack_packages
+}
+
 __filter_by_repacked_rpm_packages()
 {
     local i
@@ -220,9 +240,8 @@ __get_installed_table()
     remove_on_exit $pkglist
 
     if [ "$PKGFORMAT" = "rpm" ] ; then
-        # fast hack to get all repacked packages
-        # it misses all thirdparty packages installed as is
-        __get_all_rpm_repacked_packages | LC_ALL=C sort -u >$pkglist
+        # repacked packages (fast, by Packager) and vendor packages of SKIPREPACK apps
+        __get_all_rpm_play_packages | LC_ALL=C sort -u >$pkglist
         __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
         __filter_by_repacked_rpm_packages $tapt $pkglist
     else
@@ -413,10 +432,10 @@ __get_installed_table_with_versions()
     remove_on_exit $pkglist
 
     if [ "$PKGFORMAT" = "rpm" ] ; then
-        # pkglist: pkg version EPM <support@...>
-        __get_all_rpm_repacked_packages | LC_ALL=C sort -u >$pkglist
+        # pkglist: pkg version packager
+        __get_all_rpm_play_packages | LC_ALL=C sort -u >$pkglist
         __list_app_packages_table $pkglist | LC_ALL=C sort -u >$tapt
-        # join gives: pkg app version EPM <support@...>
+        # join gives: pkg app version packager
         LC_ALL=C join -11 -21 $tapt $pkglist | uniq | awk '{print $1, $2, $3}'
     else
         local verlist
