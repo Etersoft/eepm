@@ -6,23 +6,43 @@ PRODUCT=davinci-resolve
 PRODUCTDIR=opt/davinci-resolve
 
 . $(dirname $0)/common.sh
+
+# Blackmagic's signed URL downloads a ZIP archive, while direct/manual use may
+# still pass the extracted .run installer. Accept both forms.
+case "$TAR" in
+    *.zip)
+        erc --here unpack "$TAR" || fatal "Can't unpack $TAR"
+        RUNFILE="$(find . -type f -name 'DaVinci_Resolve_*_Linux.run' -print)"
+        [ "$(printf '%s\n' "$RUNFILE" | grep -c .)" -eq 1 ] || \
+            fatal "Expected exactly one DaVinci Resolve .run installer in $TAR"
+        TAR="$(pwd)/${RUNFILE#./}"
+        ;;
+esac
+
+chmod u+x "$TAR" || fatal "Can't make $TAR executable"
+
 # DaVinci_Resolve_Studio_20.0.1_Linux.run
 # DaVinci_Resolve_18.6.5_Linux.run
 BASENAME="$(basename "$TAR" .run)"
 
 case "$BASENAME" in
     DaVinci_Resolve_Studio_*_Linux)
-        PRODUCT=davinci-resolve-Studio
+        PRODUCT=davinci-resolve-studio
         VERSION="${BASENAME#DaVinci_Resolve_Studio_}"
-        VERSION="${VERSION%_Linux}"
         ;;
     DaVinci_Resolve_*_Linux)
         VERSION="${BASENAME#DaVinci_Resolve_}"
-        VERSION="${VERSION%_Linux}"
         ;;
     *)
         fatal "Can't extract DaVinci Resolve edition and version from $BASENAME"
         ;;
+esac
+
+VERSION="${VERSION%_Linux}"
+
+# Beta installers use versions such as 21.0b4, for both direct and ZIP input.
+case "$VERSION" in
+    *b[0-9]*) PRODUCT="$PRODUCT-beta" ;;
 esac
 
 epm assure unsquashfs squashfs-tools || fatal
@@ -31,7 +51,14 @@ mkdir -p "$PRODUCTDIR" || fatal
 OFFSET="$("$TAR" --appimage-offset)" || fatal "Can't get AppImage offset from $TAR"
 [ -n "$OFFSET" ] || fatal "Can't get AppImage offset from $TAR"
 unsquashfs -no-progress -o "$OFFSET" "$TAR" || fatal "Can't unpack $TAR"
-mv -v squashfs-root/* "$PRODUCTDIR/" || fatal
+# Include hidden payload entries such as .ddm (bundled Extras) and .DirIcon.
+find squashfs-root -mindepth 1 -maxdepth 1 -exec mv -v -t "$PRODUCTDIR/" -- {} + || fatal
+
+# AppImage entry points and CentOS updates belong to the vendor installer.
+rm -rvf "$PRODUCTDIR"/installer* "$PRODUCTDIR"/AppRun* "$PRODUCTDIR/CentOSUpdate" || fatal
+
+# Resolve looks for the bundled Blackmagic RAW API below bin/.
+ln -s ../BlackmagicRAWPlayer/BlackmagicRawAPI "$PRODUCTDIR/bin/BlackmagicRawAPI" || fatal
 
 install -Dm0644 "$PRODUCTDIR/share/default-config.dat" -t "$PRODUCTDIR/configs"
 install -Dm0644 "$PRODUCTDIR/share/log-conf.xml" -t "$PRODUCTDIR/configs"

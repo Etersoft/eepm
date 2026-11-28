@@ -1,14 +1,18 @@
 #!/bin/sh
 
-PKGNAME=davinci-resolve
+BASEPKGNAME=davinci-resolve
+PRODUCTALT="'' beta"
 SUPPORTEDARCHES="x86_64"
-DESCRIPTION="Professional A/V post-production software suite from Blackmagic Design (stub for epm pack)"
-URL="https://www.blackmagicdesign.com"
+VERSION="$2"
+DESCRIPTION="DaVinci Resolve - professional video editing software from Blackmagic Design"
+URL="https://www.blackmagicdesign.com/products/davinciresolve"
 
-. $(dirname $0)/common.sh
+BLACKMAGIC_PRODUCT_NAME="DaVinci Resolve"
 
-cat <<EOF
-Since Blackmagic provides the DaVinci Resolve download link only to registered users, we cannot create a complete play script. Therefore, to repackage DaVinci Resolve, run:
+. $(dirname $0)/common-blackmagic.sh
 
-epm install D****.run
-EOF
+PKGURL="$(get_blackmagic_pkgurl)" || exit 1
+
+install_pack_pkgurl || exit 1
+
+assure_blackmagic_gpu_dependencies
